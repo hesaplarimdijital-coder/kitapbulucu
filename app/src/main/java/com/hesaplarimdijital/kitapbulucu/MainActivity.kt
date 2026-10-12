@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import com.hesaplarimdijital.kitapbulucu.ui.AppShell
 import com.hesaplarimdijital.kitapbulucu.ui.AppShortcuts
 import desktopkit.DesktopKitRoot
+import com.hesaplarimdijital.kitapbulucu.ui.theme.AppPalette
 import desktopkit.settings.rememberDeskPreferences
 import desktopkit.shell.ShellNavigator
 
@@ -32,11 +33,11 @@ class MainActivity : ComponentActivity() {
         }
         enableEdgeToEdge()
         setContent {
-            val prefs = rememberDeskPreferences()
+            val prefs = rememberDeskPreferences(accents = AppPalette.accents)
             val navController = rememberNavController()
             val navigator = remember(navController) { ShellNavigator(navController) }
             perform = { id -> AppShortcuts.perform(id, navigator, prefs) }
-            DesktopKitRoot(prefs) { widthClass ->
+            DesktopKitRoot(prefs, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
                 AppShell(prefs, widthClass, navController, onShortcut = { perform(it) })
             }
         }

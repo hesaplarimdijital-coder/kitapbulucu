@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.hesaplarimdijital.kitapbulucu.ui.AppShell
 import com.hesaplarimdijital.kitapbulucu.ui.Routes
+import com.hesaplarimdijital.kitapbulucu.ui.theme.AppPalette
 import desktopkit.settings.rememberDeskPreferences
 import desktopkit.shell.ShellNavigator
 import desktopkit.shell.WidthClass
@@ -47,9 +48,9 @@ class ShellScreenshotTest {
         // the test activity's theme has an action bar; the app's theme has none
         compose.runOnUiThread { compose.activity.actionBar?.hide() }
         compose.setContent {
-            DesktopKitTheme(themeMode = theme, inputMode = input) {
+            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) {
-                    val prefs = rememberDeskPreferences()
+                    val prefs = rememberDeskPreferences(accents = AppPalette.accents)
                     val navController = rememberNavController()
                     LaunchedEffect(route) {
                         if (route != Routes.SEARCH) ShellNavigator(navController).navigate(route)
