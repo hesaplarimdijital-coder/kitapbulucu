@@ -53,10 +53,10 @@ Bir sprint bitince hikâyeleri `docs/DONE.md` dosyasına taşınır; burada spri
 
 ## Sprint 1: Dosya okunuyor, yazılıyor; arama motorunun temeli
 
-### S-06 Spike: Drive ve SAF denemesi · 3 · [F] · bekliyor
-Gerçek listelere dokunmadan, ayrı bir `Deneme.xlsx` ile yapılır.
-- [ ] Deneme APK'sı: dosya seç, oku, içine saat yazıp geri yaz, kalıcı izni göster; klasör seçmeyi de dener.
-- [ ] Kullanıcıya adım adım deneme listesi verildi (tablet ve babanın telefonu).
+### S-06 Spike: Drive ve SAF denemesi · 3 · [F] · sürüyor (kullanıcının deneme sonuçları bekleniyor)
+Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosyasıyla yapılır. Geçici "Deneme" ekranı (`trial/`), kurulum ekranı gelince kaldırılır.
+- [x] Deneme ekranı: dosya oluştur ya da seç, oku, içine saat yazıp geri yaz, kalıcı izni göster, klasör seç ve listele, sonuçları kopyala.
+- [x] Kullanıcıya adım adım deneme listesi verildi (tablet ve babanın telefonu). APK: `ci/apk` dalında `kitapbulucu.apk`.
 - [ ] Ölçüldü: Drive'da okuma ve geri yazma; tablet yeniden başladıktan sonra izin; paylaşılan dosyanın babanın telefonunda görünmesi (gerekirse Drive'a kısayol); değişikliğin öteki cihaza ulaşma süresi; klasör seçimi; son değişme zamanının doğruluğu.
 - [ ] Çalışmayan yol için alternatif seçildi; sonuçlar `STATE.md` ve ARCHITECTURE 8'e yazıldı.
 

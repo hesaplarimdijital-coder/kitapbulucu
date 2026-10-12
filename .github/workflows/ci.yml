@@ -105,6 +105,23 @@ jobs:
           name: kitapbulucu-apk
           path: app/build/outputs/apk/release/*.apk
 
+      # The same APK as a plain file on the ci/apk branch, so a tablet can download it from
+      # https://github.com/<owner>/<repo>/raw/ci/apk/kitapbulucu.apk without unpacking a zip.
+      - name: Push APK to ci/apk
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          out="$RUNNER_TEMP/apk"
+          rm -rf "$out" && mkdir -p "$out"
+          cp app/build/outputs/apk/release/*.apk "$out/kitapbulucu.apk"
+          printf 'Kitap Bulucu %s\nCommit %s\n' "$(date -u +%Y-%m-%dT%H:%MZ)" "${GITHUB_SHA::7}" > "$out/SURUM.txt"
+          cd "$out"
+          git init -q && git checkout -q --orphan ci/apk
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -q -m "APK for ${GITHUB_SHA::7}"
+          git push -q --force "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/ci/apk
+
       - name: Test reports
         if: always()
         uses: actions/upload-artifact@v4
