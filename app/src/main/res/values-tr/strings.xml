@@ -70,6 +70,7 @@
     <!-- sütun eşleme (S-13) -->
     <string name="mapping_title">Sütunları eşle</string>
     <string name="mapping_intro">%1$s dosyasındaki sütun başlıkları tanınmadı. Her sütunda ne yazdığını seçin; bu eşleme saklanır ve bir daha sorulmaz.</string>
+    <string name="mapping_columns">Sütunlar</string>
     <string name="mapping_header_row">Başlık satırı</string>
     <string name="mapping_no_header">Başlık yok, kitaplar 1. satırdan başlıyor</string>
     <string name="mapping_row">%1$d. satır: %2$s</string>

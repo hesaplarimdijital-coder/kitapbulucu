@@ -120,7 +120,7 @@ private fun MappingEditor(
         }
         DropdownChoice(rowOptions, headerRow, { headerRow = it }, modifier = Modifier.fillMaxWidth(), menuWidth = 360.dp)
     }
-    SettingsSection(stringResource(R.string.mapping_title)) {
+    SettingsSection(stringResource(R.string.mapping_columns)) {
         val unused = stringResource(R.string.mapping_unused)
         val roleOptions: List<Pair<BookColumn?, String>> = listOf<Pair<BookColumn?, String>>(null to unused) + BookColumn.entries.map { it to it.header }
         val body = sheet.rows.drop(headerRow + 1).take(25)

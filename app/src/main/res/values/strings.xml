@@ -71,6 +71,7 @@
     <!-- column mapping (S-13) -->
     <string name="mapping_title">Map the columns</string>
     <string name="mapping_intro">The column headers of %1$s were not recognised. Choose what each column holds; the mapping is kept and not asked again.</string>
+    <string name="mapping_columns">Columns</string>
     <string name="mapping_header_row">Header row</string>
     <string name="mapping_no_header">No header, books start in row 1</string>
     <string name="mapping_row">Row %1$d: %2$s</string>

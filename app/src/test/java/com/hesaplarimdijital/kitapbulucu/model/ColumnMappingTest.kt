@@ -100,7 +100,9 @@ class ColumnMappingTest {
             ),
         )
         assertEquals(-1, BookTable.detectHeaderRow(sheet))
-        val parsed = BookTable.parse(sheet, ColumnMapping.guess(sheet).let { if (it.headerRow >= 0) ColumnMapping(-1, mapOf(0 to BookColumn.TITLE, 1 to BookColumn.AUTHOR)) else it })!!
+        val guess = ColumnMapping.guess(sheet)
+        assertEquals(ColumnMapping(-1, mapOf(0 to BookColumn.TITLE, 1 to BookColumn.AUTHOR)), guess)
+        val parsed = BookTable.parse(sheet, guess)!!
         assertEquals(listOf("A KİTABI", "B KİTABI", "C KİTABI", "D KİTABI", "E KİTABI"), parsed.table.books.map { it.title })
     }
 }

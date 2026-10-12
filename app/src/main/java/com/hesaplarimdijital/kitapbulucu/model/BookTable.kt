@@ -134,9 +134,12 @@ class BookTable(val books: List<Book>, val extraHeaders: List<String> = emptyLis
         fun detectHeaderRow(sheet: Sheet): Int {
             val row = sheet.rows.take(HEADER_SEARCH_ROWS).indexOfFirst { looksLikeHeader(it) }
             if (row < 0) return -1
-            val filledAbove = sheet.rows.take(row).count { cells -> cells.any { it.isNotBlank() } }
-            return if (filledAbove <= MAX_TITLE_LINES) row else -1
+            return if (fewRowsAbove(sheet, row)) row else -1
         }
+
+        /** True when at most a few title lines stand above [row], so nothing is lost by starting below it. */
+        fun fewRowsAbove(sheet: Sheet, row: Int): Boolean =
+            sheet.rows.take(row).count { cells -> cells.any { it.isNotBlank() } } <= MAX_TITLE_LINES
 
         /** The widest of the first rows: how many columns a mapping screen shows. */
         fun columnCount(sheet: Sheet): Int = sheet.rows.take(PREVIEW_SCAN_ROWS).maxOfOrNull { it.size } ?: 0

@@ -61,14 +61,14 @@ data class ColumnMapping(
             ColumnMapping(headerRow, columns, if (headerRow >= 0) normalise(sheet.rows.getOrNull(headerRow).orEmpty()) else emptyList())
 
         /**
-         * The app's best guess to start the mapping screen with: a row that names at least one
-         * known column, else no header with the title in the first column and the author in the
+         * The app's best guess to start the mapping screen with: a row near the top that names at
+         * least one known column, else no header with the title in the first column and the author in the
          * second (the old hand-kept layout).
          */
         fun guess(sheet: Sheet): ColumnMapping {
             val rows = sheet.rows.take(BookTable.HEADER_SEARCH_ROWS)
             val headerRow = rows.indexOfFirst { row -> row.any { BookColumn.match(it) != null } }
-            if (headerRow >= 0) {
+            if (headerRow >= 0 && BookTable.fewRowsAbove(sheet, headerRow)) {
                 val columns = HashMap<Int, BookColumn>()
                 rows[headerRow].forEachIndexed { index, text ->
                     val column = BookColumn.match(text)
