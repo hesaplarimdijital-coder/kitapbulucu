@@ -77,14 +77,14 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [x] CI örnek çıktıları saklar; bu dosyalar LibreOffice ve openpyxl ile hatasız açıldı.
 - [ ] Kullanıcı örnek dosyayı tablette Excel, Office NX ve Google E-Tablolar'da açtı. (Dosyalar: `ci/apk` dalında `ornek/Babam.xlsx`, `ornek/Benim.xlsx`, `ornek/Ortak.xlsx`.)
 
-### S-09 Arama motoru 1: katlama, dizin, sıralama · 5 · [F] · bekliyor
-- [ ] "islik" → "Islık", "sefiller" → "Sefiller", "hala" → "hâlâ" bulunur.
-- [ ] Sözcük sırası önemsiz: "madonna kürk" → "Kürk Mantolu Madonna".
-- [ ] Arama ad ve yazarda yapılır; "orhan pamuk kar" gibi karışık sorgu çalışır.
-- [ ] Sıralama: tam eşleşme > başlangıç eşleşmesi > içerme; katman içi kurallar ARCHITECTURE 9'daki gibi.
-- [ ] Kesme işaretli adlar hem ayrık hem bitişik bulunur ("istanbulun", "istanbul'un").
-- [ ] İki kütüphanede birden arar; "Hepsi / Babam / Benim" süzgeci.
-- [ ] Türkçe harfsiz sorgu da bulur ("kurk"), ama Türkçe harfli eşleşmenin altında sıralanır.
+### S-09 Arama motoru 1: katlama, dizin, sıralama · 5 · [F] · bitti
+- [x] "islik" → "Islık", "sefiller" → "Sefiller", "hala" → "hâlâ" bulunur.
+- [x] Sözcük sırası önemsiz: "madonna kürk" → "Kürk Mantolu Madonna".
+- [x] Arama ad ve yazarda yapılır; "orhan pamuk kar" gibi karışık sorgu çalışır.
+- [x] Sıralama: tam eşleşme > başlangıç eşleşmesi > içerme; katman içi kurallar ARCHITECTURE 9'daki gibi.
+- [x] Kesme işaretli adlar hem ayrık hem bitişik bulunur ("istanbulun", "istanbul'un").
+- [x] İki kütüphanede birden arar; "Hepsi / Babam / Benim" süzgeci.
+- [x] Türkçe harfsiz sorgu da bulur ("kurk"), ama Türkçe harfli eşleşmenin altında sıralanır.
 
 ## Sprint 2: İlk kullanılabilir sürüm
 
