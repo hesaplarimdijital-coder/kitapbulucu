@@ -132,4 +132,51 @@ class SearchIndexTest {
         val sameLayer = SearchIndex.build(mapOf(Owner.DAD to listOf(Book("Zar Oyunu"), Book("Çar Oyunu"), Book("Üst Oyunu"), Book("Var Oyunu"), Book("Car Oyunu"))))
         assertEquals(listOf("Car Oyunu", "Çar Oyunu", "Üst Oyunu", "Var Oyunu", "Zar Oyunu"), sameLayer.search("oyunu").map { it.book.title })
     }
+
+    @Test
+    fun toleratesTyposOnlyWhenNothingElseMatches() {
+        val hits = index.search("kurk mantlu")
+        assertEquals(listOf("Kürk Mantolu Kedi"), hits.map { it.book.title })
+        assertEquals(5, hits.single().layer)
+        assertEquals(listOf("Kürk Mantolu Kedi"), titles("krük"))          // two letters swapped count as one typo
+        assertEquals(listOf("Kürk Mantolu Kedi", "İstanbul'un Kedileri"), titles("kedy")) // four letters allow one typo; the last word may also be a prefix
+        assertEquals(listOf("Sefil Fenerciler"), titles("fenarcilar"))     // eight or more allow two
+        assertEquals(emptyList<String>(), titles("fenarcilarr"))           // three is too many
+        assertEquals(emptyList<String>(), titles("kat"))                   // three letters allow none
+        assertEquals(listOf("Kürk Mantolu Kedi"), titles("kürk mantl"))    // the word being typed may have a typo in its prefix
+        assertEquals(3, index.search("kürk mant").single().layer)         // but a clean prefix is a plain match, not a typo
+    }
+
+    @Test
+    fun nearMatchesStayBelowPlainOnes() {
+        val local = SearchIndex.build(mapOf(Owner.DAD to listOf(Book("Kat Tanesi"), Book("Kar Tanesi"), Book("Kar Tanesi Üstüne"))))
+        assertEquals(listOf("Kar Tanesi", "Kar Tanesi Üstüne"), local.search("kar tanesi").map { it.book.title })
+        val suggested = local.suggest("kar tanesi")
+        assertEquals(listOf("Kar Tanesi", "Kar Tanesi Üstüne", "Kat Tanesi"), suggested.map { it.book.title })
+        assertEquals(listOf(2, 2, 1), suggested.map { it.matchedWords })
+        assertEquals(listOf(1, 2, 3), suggested.map { it.layer })
+    }
+
+    @Test
+    fun suggestsTheClosestBooksWhenNothingMatches() {
+        assertEquals(emptyList<String>(), titles("kürk mantolu kaplan"))
+        val suggested = index.suggest("kürk mantolu kaplan")
+        assertEquals(listOf("Kürk Mantolu Kedi", "Kurk Dergisi"), suggested.map { it.book.title }) // two words, then one word with a typo
+        assertEquals(listOf(2, 1), suggested.map { it.matchedWords })
+        assertEquals(listOf("Kar", "Kar Tanesi", "Kar Tanesi"), index.suggest("kar").map { it.book.title })
+        assertEquals(listOf("Kar Tanesi"), index.suggest("kar tanesi", Owner.ME).map { it.book.title })
+        assertEquals(emptyList<SearchHit>(), index.suggest(""))
+        assertEquals(emptyList<SearchHit>(), index.suggest("zxqwv"))
+    }
+
+    @Test
+    fun oddQueriesAreHarmless() {
+        assertTrue(index.search("k").isNotEmpty())
+        assertEquals(emptyList<String>(), titles("x"))
+        assertEquals(listOf("Almanak 2006"), titles("2"))
+        val longQuery = (1..80).joinToString(" ") { "sözcük$it" }
+        assertEquals(emptyList<String>(), titles(longQuery))
+        assertEquals(emptyList<String>(), titles("a".repeat(500)))
+        assertEquals(listOf("Kürk Mantolu Kedi"), titles("KÜRK, MANTOLU; KEDİ!!!"))
+    }
 }
