@@ -106,6 +106,8 @@ Açılışta önbellek gösterilir, ardından iki dosya arka planda okunur; fark
 
 Ayarlar `SharedPreferences` içinde: kim olduğum, dosya URI'leri, sütun eşlemeleri, bir kerelik uyarı bayrakları. Bekleyen işlemler `org.json` ile dosyada (Android'de yerleşik, yeni kütüphane değil).
 
+- Uygulandı (S-12): `store.LibraryStore` — `start()` önce `LibraryCache` (uygulama klasöründe son iyi kopya + özet/okuma zamanı notu) ile listeyi gösterir, sonra iki dosyayı okur; `refresh()` her öne gelişte (`MainActivity.onStart`) ve F5 ile çağrılır, süren okuma varsa bir kez daha okumaya katlanır. Değişiklik yalnızca SHA-256 özetiyle anlaşılır (Drive'ın değişme zamanı gecikiyor, ARCHITECTURE 8); aynı özet tabloyu ve dizini yerinde bırakır. Okuma başarısız olursa son iyi liste kalır, `LoadFailure` nedeni ekrana yazılır. "Güncellendi" zamanı = sağlayıcının verdiği zaman ile değişikliğin görüldüğü anın büyüğü. Klasör izni varsa `~$` ve "çakışan kopya" adları bir kez uyarılır (`FileLinks.warnedFileNames`). Bağlantılar `FileLinks` (SharedPreferences `files`): uri, görünen ad, seçili sayfa, klasör.
+
 ## 8. Dosya erişimi (SAF) ve Sprint 1 spike'ı
 
 - Birincil yol: iki dosyayı tek tek seçmek (`ACTION_OPEN_DOCUMENT`, kalıcı okuma+yazma izni). Dosya yoksa `ACTION_CREATE_DOCUMENT` ile oluşturulur.

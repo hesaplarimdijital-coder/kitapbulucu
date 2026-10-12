@@ -88,24 +88,24 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 
 ## Sprint 2: İlk kullanılabilir sürüm
 
-### S-10 Arama motoru 2: yazım hatası, öneri, hız · 5 · [F] · bekliyor
-- [ ] "kurk mantlu" → "Kürk Mantolu Madonna" bulunur; bir iki harf hatası tolere edilir, yer değiştirme tek hata sayılır.
-- [ ] Yakın eşleşmeler her zaman tam, başlangıç ve içerme eşleşmelerinin altında.
-- [ ] Sonuç yoksa en yakın 3 öneri döner.
-- [ ] Üretilmiş 10.000 kitapta tuş başına 50 ms'nin altında; test süreyi ölçer ve yazar.
-- [ ] Kapsamlı test: Türkçe harfler, tek harfli sorgu, rakam, boş sorgu, çok uzun sorgu.
+### S-10 Arama motoru 2: yazım hatası, öneri, hız · 5 · [F] · bitti
+- [x] "kurk mantlu" → "Kürk Mantolu Madonna" bulunur; bir iki harf hatası tolere edilir, yer değiştirme tek hata sayılır.
+- [x] Yakın eşleşmeler her zaman tam, başlangıç ve içerme eşleşmelerinin altında.
+- [x] Sonuç yoksa en yakın 3 öneri döner.
+- [x] Üretilmiş 10.000 kitapta tuş başına 50 ms'nin altında; test süreyi ölçer ve yazar.
+- [x] Kapsamlı test: Türkçe harfler, tek harfli sorgu, rakam, boş sorgu, çok uzun sorgu.
 
-### S-11 Tema temeli · 3 · [F] · bekliyor
-- [ ] Taslak A'ya göre "Kâğıt" ve "Gece okuması" renkleri `colors = { it.copy(...) }` ile tanımlı; OLED siyah da okunur.
-- [ ] Vurgular: bordo, mürekkep laciverti, zeytin yeşili, eskitilmiş altın; kitin dört hazır rengi de seçilebilir.
-- [ ] Kontrast testi bütün tema × vurgu çiftlerinde her metin/arka plan çifti için en az 4.5:1 ister; geçmeyen renk kullanılmaz.
+### S-11 Tema temeli · 3 · [F] · bitti
+- [x] Taslak A'ya göre "Kâğıt" ve "Gece okuması" renkleri `colors = { it.copy(...) }` ile tanımlı; OLED siyah da okunur.
+- [x] Vurgular: bordo, mürekkep laciverti, zeytin yeşili, eskitilmiş altın; kitin dört hazır rengi de seçilebilir.
+- [x] Kontrast testi bütün tema × vurgu çiftlerinde her metin/arka plan çifti için en az 4.5:1 ister; geçmeyen renk kullanılmaz.
 
-### S-12 Açılışta ve öne gelişte yeniden okuma · 3 · [F] · bekliyor
-- [ ] Açılışta önbellekten anında liste gelir; ardından iki dosya okunur, fark varsa ekran sessizce güncellenir.
-- [ ] Uygulama her öne gelişinde ve F5'te iki dosya yeniden okunur.
-- [ ] "Babam'ın listesi 3 dk önce güncellendi" bilgisi üretilir.
-- [ ] Klasör izni varsa `~$` ile başlayan ve "çakışan kopya" dosyaları yok sayılır; görülürse bir kez uyarılır.
-- [ ] Dosya okunamazsa (silinmiş, izin gitmiş) anlaşılır mesaj ve "Başka dosya seç" yolu.
+### S-12 Açılışta ve öne gelişte yeniden okuma · 3 · [F] · bitti
+- [x] Açılışta önbellekten anında liste gelir; ardından iki dosya okunur, fark varsa ekran sessizce güncellenir.
+- [x] Uygulama her öne gelişinde ve F5'te iki dosya yeniden okunur.
+- [x] "Babam'ın listesi 3 dk önce güncellendi" bilgisi üretilir.
+- [x] Klasör izni varsa `~$` ile başlayan ve "çakışan kopya" dosyaları yok sayılır; görülürse bir kez uyarılır. (Uyarı `LibraryStore.warning` olarak hazır; pencere S-13'te bağlanır.)
+- [x] Dosya okunamazsa (silinmiş, izin gitmiş) anlaşılır mesaj ve "Başka dosya seç" yolu. (Mesajlar `LibraryTexts`; düğme S-13 kurulum ekranında.)
 
 ### S-13 Kurulum ekranı · 5 · [O] · bekliyor
 - [ ] İlk açılışta "Ben kimim? Babam / Ben" seçilir; Ayarlar'dan değiştirilebilir.
