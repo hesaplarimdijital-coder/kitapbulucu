@@ -44,5 +44,6 @@
 - Etkinlikte (`dispatchKeyEvent`) yalnızca Ctrl/Alt/Meta'lı kısayolları ve F tuşlarını yakala (`matchNative`); tek tuşlar metin kutusuna yazmayı bozar.
 - Kabuğun üst çubuğundaki arama kutusu düğmedir; gerçek arama kutusu Ara ekranındadır.
 - SAF tek belge izniyle geçici dosya + yeniden adlandırma yapamaz; güvenli yazma sırası ARCHITECTURE 7'de.
+- Oturum GitHub Actions gizli değerlerine ve iş günlüklerine, JitPack'e erişemez (proxy 403). Hata için check-run annotation'larını oku; gizli değerleri kullanıcı ekler.
 - Google Drive klasör seçmeyi desteklemeyebilir; birincil yol iki dosyayı tek tek seçmek.
 - Excel metin olmayan hücreleri tarihe çevirebilir ("Nis.53"); okuyucu tarih biçimli hücreyi metne çevirir, yazıcı her hücreyi metin biçiminde yazar.

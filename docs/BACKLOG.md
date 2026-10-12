@@ -41,14 +41,15 @@ Bir sprint bitince hikâyeleri `docs/DONE.md` dosyasına taşınır; burada spri
 - [x] Telefon (yalnızca dikey) taslakları: `taslak-a-telefon.png`, `taslak-b-telefon.png`.
 - [x] Kullanıcı Taslak A "Fiş"i seçti.
 
-### S-05 Depo iskeleti, CI, örnek test Excel'i · 3 · [O] · bekliyor
-- [ ] `app` modülü, kit bağımlılığı; boş kabuk açılıyor (Ara, Kütüphane, Raflar, Ayarlar).
-- [ ] Telefonda (en dar kenar 600 dp'den küçük) ekran dikeye kilitli; tablette ve DeX'te serbest.
-- [ ] `.gitignore` içinde `*.xlsx` (yalnızca test dosyaları klasörü hariç); uydurma kitaplı örnek test Excel'i var.
-- [ ] CI: derleme, birim testleri, ekran görüntüleri `ci/screenshots` dalında, APK indirilebilir.
-- [ ] CI, APK'da INTERNET izni görürse kırılır.
-- [ ] APK her seferinde aynı anahtarla imzalanır (eski sürümün üstüne kurulabilsin); anahtarın nerede duracağı kararlaştırıldı.
-- [ ] Robolectric `sdk=34`; ekran görüntüsü klasörü test çıktısı olarak tanımlı.
+### S-05 Depo iskeleti, CI, örnek test Excel'i · 3 · [O] · bitti
+- [x] `app` modülü, kit bağımlılığı; boş kabuk açılıyor (Ara, Kütüphane, Raflar, Ayarlar); Ayarlar kitin bölümleriyle çalışıyor.
+- [x] Telefonda (en dar kenar 600 dp'den küçük) ekran dikeye kilitli; tablette ve DeX'te serbest.
+- [x] `.gitignore` içinde `*.xlsx` (yalnızca test dosyaları klasörü hariç); uydurma kitaplı iki örnek test Excel'i var (`tools/fixtures/make_fixtures.py`).
+- [x] CI: derleme, birim testleri, ekran görüntüleri `ci/screenshots` dalında, APK `kitapbulucu-apk` olarak indirilebilir.
+- [x] CI, APK'da INTERNET izni görürse kırılır; manifest izni ayrıca siler.
+- [x] APK her seferinde aynı anahtarla imzalanır: anahtar GitHub gizli değerlerinde (`KB_KEYSTORE_BASE64`, `KB_KEYSTORE_PASSWORD`).
+- [ ] Kullanıcı iki gizli değeri GitHub'a ekledi (oturum ekleyemiyor, proxy izin vermiyor).
+- [x] Robolectric `sdk=34`; ekran görüntüsü klasörü test çıktısı olarak tanımlı; telefon ve DeX görüntüleri `app/src/test/screenshots` içinde referans.
 
 ## Sprint 1: Dosya okunuyor, yazılıyor; arama motorunun temeli
 

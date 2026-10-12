@@ -157,12 +157,17 @@ Başlıksız dosyada eşleme ekranı ilk satırları gösterip "1. sütun Kitap 
 
 | Konu | Durum |
 | --- | --- |
-| Paket adı (uygulama adı: Kitap Bulucu) | S-05'te kesinleşecek |
 | Excel biçimi | Genel olarak onaylı, kesin değil; kullanıcı sonradan değişiklik isteyebilir |
 | Kit 0.1.1 (serif başlık ailesi, tablo sütun stili) | Kullanıcı onayı ve Release gerekir |
-| APK imzası: güncelleme üstüne kurulabilsin diye sabit anahtar | S-05'te kararlaştırılacak |
 
-## 13. Sürümler
+## 13. Paket ve imza
+
+- Paket adı: `com.hesaplarimdijital.kitapbulucu` (uygulama kimliği ve Kotlin paketi).
+- CI release APK'sı üretir (küçültme kapalı). `versionCode` = CI çalıştırma numarası, böylece her yeni APK eskisinin üstüne kurulur.
+- İmza: GitHub gizli değerleri `KB_KEYSTORE_BASE64` (anahtar dosyası, base64) ve `KB_KEYSTORE_PASSWORD`; takma ad `kitapbulucu`. Yoksa CI uyarı verir ve atılık bir hata ayıklama anahtarıyla imzalar (o APK sonrakilerin üstüne kurulamaz).
+- JitPack bir kit sürümünü ilk istekte derler; CI derlemeden önce kitin JitPack'te hazır olmasını bekler.
+
+## 14. Sürümler
 
 Kotlin 2.1.0, AGP 8.7.3, Gradle 8.11.1, JDK 17, compileSdk/targetSdk 35, minSdk 26, Compose BOM 2024.12.01 (kit üzerinden), activity-compose 1.9.3, Robolectric 4.14.1 (sdk=34), JUnit 4.13.2.
 
