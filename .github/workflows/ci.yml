@@ -28,6 +28,21 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      # JitPack builds a kit version on its first request, which can outlast Gradle's read timeout.
+      - name: Wait for desktop-kit on JitPack
+        run: |
+          version=$(sed -n 's/^desktopKit = "\(.*\)"/\1/p' gradle/libs.versions.toml)
+          base="https://jitpack.io/com/github/hesaplarimdijital-coder/desktop-kit/$version"
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 "$base/desktop-kit-$version.pom" || true)
+            echo "attempt $i: HTTP $code"
+            [ "$code" = 200 ] && exit 0
+            sleep 15
+          done
+          echo "::error::desktop-kit $version is not available on JitPack; its build log follows"
+          curl -s --max-time 60 "$base/build.log" | tail -80
+          exit 1
+
       - name: Signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.KB_KEYSTORE_BASE64 }}
