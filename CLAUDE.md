@@ -23,10 +23,10 @@
 - Excel: `.xlsx` okuyucu ve yazıcı kendi kodumuz (`java.util.zip` + `XmlPullParser`). `.csv` desteklenir (`;` ya da `,`; UTF-8 ya da Windows-1254). `.xls` desteklenmez: ".xlsx olarak kaydedip tekrar deneyin".
 - Asıl kaynak Drive'daki `Babam.xlsx` ve `Benim.xlsx`. Herkes kendi dosyasına yazar, ikisini de okur. Öteki kişinin dosyası için onay sorulur ve yazmadan hemen önce yeniden okunur.
 - Veri güvenliği: her yazmadan önce dosya yeniden okunur; yedek alınır (son 10); içerik önce uygulama klasöründe üretilip doğrulanır, sonra yazılır ve geri okunur; yazılamayan değişiklik bekleyenlerde kalır, kaybolmaz.
-- Tanınmayan sütunlar silinmez. Bütün hücreler metin biçiminde yazılır.
+- Sütunlar: Kitap Adı, Yazar, Raf, Adet, İmzalı, Yayınevi, Yıl, ISBN, Not (biçim kesin değil; sütunlar başlık adıyla bulunur). Tanınmayan sütunlar silinmez. `Adet` sayı, diğer bütün hücreler metin biçiminde yazılır.
 - Dışarıdan gelen Excel dosyanın yerine konmaz, birleştirilir; ilk temizlikteki kurallar aynen uygulanır (ARCHITECTURE 10).
 - Arama Türkçe duyarlı (I/ı/İ/i, şapka), hataya toleranslı, sözcük sırası önemsiz; 10.000 kitapta tuş başına 50 ms altı.
-- Tema kit üzerinden: `Accent.custom`, `colors = { it.copy(...) }`, `DeskFonts`. Her metin/arka plan çifti en az 4.5:1 ve testle denetlenir. Sonuç ekranındaki raf yazısı en az 32 sp.
+- Tasarım: Taslak A "Fiş" (`docs/design/`). Tema kit üzerinden: `Accent.custom`, `colors = { it.copy(...) }`, `DeskFonts`. Her metin/arka plan çifti en az 4.5:1 ve testle denetlenir. Sonuç ekranındaki raf yazısı en az 32 sp.
 - Telefonda (dar ekran) yalnızca dikey kullanım; tablet ve DeX'te serbest.
 - Kitap listesi depoya girmez (depo herkese açık): `.gitignore` içinde `*.xlsx`; testlerde yalnızca uydurma kitaplar.
 

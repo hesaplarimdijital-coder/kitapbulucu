@@ -28,19 +28,22 @@ Kural: `model`, `text`, `search`, `importing` içinde `android.*` içe aktarılm
 enum class Owner { DAD, ME }          // ekranda "Babam" / "Benim"
 data class Book(
     val title: String, val author: String, val shelf: String,
+    val copies: Int = 1, val signed: Boolean = false,
     val publisher: String, val year: String, val isbn: String, val note: String,
     val extra: List<String> = emptyList(),   // tanımadığımız sütunlar, aynen geri yazılır
 )
 ```
 
 - Excel'de satırın kalıcı kimliği yok. Bir satır, alanlarının tamamıyla tanınır.
-- Aynı kitabın birden çok kopyası tek satırdır; adet şimdilik Not içinde `N adet` olarak durur (bkz. 12, açık karar).
-- İmzalı kopya ayrı satırdır; Not `İmzalı` ile başlar.
+- Aynı kitabın birden çok kopyası tek satırdır; kaç tane olduğu `Adet` sütunundadır.
+- İmzalı kopya ayrı satırdır; `İmzalı` sütununda `Evet` yazar. "Bülent Ecevit'e imzalı" gibi ithaflar ayrıca Not'ta durur.
 
 ## 4. Dosya biçimi (kullanıcı onayı bekliyor)
 
-- Kişi dosyası: tek sayfa. Başlık satırı: `Kitap Adı, Yazar, Raf, Yayınevi, Yıl, ISBN, Not`. Başlık kalın ve dondurulmuş, sütun genişlikleri ayarlı.
-- Bütün hücreler metin biçiminde (`@`). Neden: Excel "3-4" gibi raf kodlarını ve "Nis.53" gibi yazıları tarihe çevirmesin (kaynak dosyada 3 hücre böyle bozulmuştu), ISBN bilimsel gösterime dönmesin.
+- Biçim kullanıcı tarafından genel olarak onaylandı ama kesin değil; sonradan değişebilir. Okuyucu sütunları sıraya göre değil başlık adına göre bulur.
+- Kişi dosyası: tek sayfa. Başlık satırı: `Kitap Adı, Yazar, Raf, Adet, İmzalı, Yayınevi, Yıl, ISBN, Not`. Başlık kalın ve dondurulmuş, sütun genişlikleri ayarlı.
+- `Adet` sayı olarak yazılır; boşsa 1 sayılır. `İmzalı` sütununda `Evet` ya da boş; okurken `evet`, `e`, `x`, `var`, `imzalı`, `1` da imzalı sayılır.
+- `Adet` dışındaki bütün hücreler metin biçiminde (`@`). Neden: Excel "3-4" gibi raf kodlarını ve "Nis.53" gibi yazıları tarihe çevirmesin (kaynak dosyada 3 hücre böyle bozulmuştu), ISBN bilimsel gösterime dönmesin.
 - Okurken sayfa adı önemli değil; ilk dolu sayfa okunur. Birden çok dolu sayfa varsa kullanıcı seçer.
 - Tanınmayan sütunlar silinmez: okunur, `extra` içinde taşınır, standart sütunlardan sonra aynı başlıkla geri yazılır.
 - Dışa aktarılan ortak dosya: `Babam` ve `Benim` adlı iki sayfa. Uygulama bu dosyadan okumaz.
@@ -88,9 +91,9 @@ Bir dosyaya yazma sırası (tek iş parçacığı, `Mutex`):
 
 Çakışma kuralları (2. adım):
 
-- `Edit`: `before` satırı aynen bulunamazsa aynı ad+yazar+imza notlu satır aranır; bulunursa yalnızca kullanıcının değiştirdiği alanlar uygulanır, bulunamazsa `after` yeni satır olarak eklenir.
-- `Remove`: satır aynen ya da ad+yazar+imza notuyla bulunamazsa atlanır ve "zaten yok" diye bildirilir.
-- `Add`: aynı ad+yazar+imza notu varsa yeni satır eklenmez, adet artırılır.
+- `Edit`: `before` satırı aynen bulunamazsa aynı ad+yazar+İmzalı değerli satır aranır; bulunursa yalnızca kullanıcının değiştirdiği alanlar uygulanır, bulunamazsa `after` yeni satır olarak eklenir.
+- `Remove`: satır aynen ya da ad+yazar+İmzalı değeriyle bulunamazsa atlanır ve "zaten yok" diye bildirilir.
+- `Add`: aynı ad+yazar+İmzalı değeri varsa yeni satır eklenmez, `Adet` artırılır.
 
 Zorunlu gereksinimden bilinçli sapma: SAF tek belge izniyle "geçici dosyaya yaz, sonra yerine koy" yapamaz (kardeş dosya oluşturma ve yeniden adlandırma yok). Yerine 3–6. adımlar uygulanır: hedefe yalnızca eksiksiz ve doğrulanmış içerik yazılır, öncesinde yedek alınır, sonrasında geri okunur. Klasör izni çalışırsa (spike) gerçek geçici dosya yöntemi de denenir.
 
@@ -132,8 +135,8 @@ Hız: sözcük dağarcığı sıralı dizi (önek için ikili arama), sözcük �
 1. Baştaki, sondaki, çift boşluk silinir.
 2. Listenin içine karışmış başlık satırı (`KİTAP | YAZAR`) atılır.
 3. Tarih hücresi metne çevrilir (bkz. 5).
-4. `İMZALI` işareti addan ya da yazardan çıkarılır, Not'a `İmzalı` yazılır; "… 'E İMZALI" gibi ithaflar Not'a taşınır; `ŞİİR` türü adda kalır; `İMZASIZ` sözcüğüne dokunulmaz.
-5. Birebir aynı satırlar tek satır + adet olur.
+4. `İMZALI` işareti addan ya da yazardan çıkarılır, `İmzalı` sütununa `Evet` yazılır; "… 'E İMZALI" gibi ithaflar ayrıca Not'a taşınır; `ŞİİR` türü adda kalır; `İMZASIZ` sözcüğüne dokunulmaz.
+5. Birebir aynı satırlar tek satır olur, sayıları `Adet` sütununa yazılır.
 
 Karşılaştırma büyük/küçük harfe ve boşluğa duyarsızdır. Gelen dosyadaki boş alan dolu alanı asla silmez (özellikle Raf). Belirsiz eşleşmelerde verilen kararlar yerelde hatırlanır ki her birleştirmede yeniden sorulmasın.
 
@@ -144,7 +147,7 @@ Başlıksız dosyada eşleme ekranı ilk satırları gösterip "1. sütun Kitap 
 - Kit: `desktop-kit` 0.1.0. Kabuk `DesktopShell` + `ShellSpec`; ekranlar: Ara, Kütüphane, Raflar, Ayarlar.
 - Kabuğun üst çubuğundaki arama kutusu bir düğmedir, metin kutusu değildir. Gerçek arama kutusu Ara ekranının içindedir; Ctrl+K oraya götürüp odaklar.
 - Kabuğun alt çubuk yuvası durum satırı olarak kullanılır: eşitleme zamanı, bekleyen yazma, "Geri al".
-- Telefon: yalnızca dikey. En dar kenarı 600 dp'den küçük cihazda etkinlik dikeye kilitlenir (`requestedOrientation`); tablet ve DeX serbest kalır. Dar pencerede kit üst çubuk + alt gezinme çubuğu gösterir (Ara, Kütüphane, Raflar, Ayarlar). Taslak B seçilirse iki bölme yalnızca geniş pencerede kullanılır; dar pencerede liste ve dokununca açılan alt sayfa (Material 3 `ModalBottomSheet`, kitle birlikte gelir).
+- Telefon: yalnızca dikey. En dar kenarı 600 dp'den küçük cihazda etkinlik dikeye kilitlenir (`requestedOrientation`); tablet ve DeX serbest kalır. Dar pencerede kit üst çubuk + alt gezinme çubuğu gösterir (Ara, Kütüphane, Raflar, Ayarlar). Seçilen tasarım: Taslak A "Fiş" (`docs/design/taslak-a-*.png`); renkler `docs/design/tokens.json` içindeki `A/...` paletleri, başlık serifi Literata. Telefonda da aynı tek sütun düzeni.
 - Tablolar `DenseTable`; hücreler yalnızca metin. Sıralamayı uygulama yapar (`Collator`, Türkçe).
 - Kısayollar tek `ShortcutRegistry` içinde. Etkinlik düzeyinde yalnızca Ctrl/Alt/Meta'lı ve F tuşları (`matchNative`); F2, Del gibi tek tuşlar ekranın içinde yakalanır.
 - Tema: kitin renkleri `colors = { it.copy(...) }` ile ısıtılır, vurgular `Accent.custom`. Uygulamada kitin `PaletteContrastTest` benzeri bir test bütün tema × vurgu çiftlerini 4.5:1 için denetler.
@@ -154,9 +157,8 @@ Başlıksız dosyada eşleme ekranı ilk satırları gösterip "1. sütun Kitap 
 
 | Konu | Durum |
 | --- | --- |
-| Adet nerede dursun: Not içinde `N adet` mi, ayrı `Adet` sütunu mu | Kullanıcıya soruldu. Öneri: ayrı sütun |
 | Paket adı (uygulama adı: Kitap Bulucu) | S-05'te kesinleşecek |
-| Tasarım taslağı (A ya da B) | Kullanıcı seçecek |
+| Excel biçimi | Genel olarak onaylı, kesin değil; kullanıcı sonradan değişiklik isteyebilir |
 | Kit 0.1.1 (serif başlık ailesi, tablo sütun stili) | Kullanıcı onayı ve Release gerekir |
 | APK imzası: güncelleme üstüne kurulabilsin diye sabit anahtar | S-05'te kararlaştırılacak |
 

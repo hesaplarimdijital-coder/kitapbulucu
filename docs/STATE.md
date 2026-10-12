@@ -5,28 +5,26 @@ Son güncelleme: 12.10.2026, Sprint 0 sürüyor.
 ## Şu an
 
 - Uygulama adı: Kitap Bulucu. Depo: `hesaplarimdijital-coder/kitapbulucu` (herkese açık).
-- Sprint 0: S-01 onay bekliyor; S-02 ve S-03 bitti; S-04 taslakları gönderildi, seçim bekliyor; S-05 bekliyor (Opus).
+- Sprint 0: S-01 … S-04 bitti; S-05 sırada (Opus, effort önerisi: high).
+- Seçilen tasarım: Taslak A "Fiş".
 - Henüz kod yok. Depoda belgeler, tasarım taslakları ve temizleme betikleri var.
 
 ## Kullanıcıdan beklenenler
 
-1. `Babam.xlsx` için onay (dosyalar 12.10.2026'da gönderildi).
-2. Adet nerede dursun: Not içinde `N adet` mi, ayrı `Adet` sütunu mu. Öneri: ayrı sütun.
-3. Tasarım seçimi: Taslak A (Fiş) ya da Taslak B (İki bölme). `docs/design/`.
-4. Kit 0.1.1 için onay (başlık yazı tipi ailesi, tablo sütun stili). Onaylarsa Release'i kullanıcı oluşturur.
-5. S-05 için Opus'a geçiş.
+1. Kit 0.1.1 için onay (başlık yazı tipi ailesi, tablo sütun stili). Onaylarsa Release'i kullanıcı oluşturur. Sprint 3'te (K-01) sorulacak.
 
 ## Veri hakkında bilinenler
 
 - Kaynak `Kütüphane.xlsx` babanın listesi: 7.325 satır, 2 sütun (kitap adı, yazar), başlık satırı listenin içinde (6856. satır), hepsi büyük harf, raf bilgisi yok. Kullanıcının kendi listesi henüz yok.
 - Aynı satırın tekrarı o kitaptan birden çok kopya demek (kullanıcı söyledi).
-- Temiz `Babam.xlsx`: 6.775 satır, 7.324 adet. 499 kitabın birden çok kopyası var; 185 imzalı kopya; 164 benzer çift birleştirilmedi (raporun "Benzerler" sayfası, karar kullanıcıda).
+- Temiz `Babam.xlsx` (sütunlar: Kitap Adı, Yazar, Raf, Adet, İmzalı, Yayınevi, Yıl, ISBN, Not): 6.775 satır, 7.324 adet; 183 satır imzalı. 499 kitabın birden çok kopyası var; 185 imzalı kopya; 164 benzer çift birleştirilmedi (raporun "Benzerler" sayfası, karar kullanıcıda).
 - Yazar sütununda yer yer yayınevi ya da kurum adı var (dokunulmadı). 273 satırda yazar yok.
 - Kaynak dosya ve temiz dosyalar depoda değil. Betikler `tools/temizleme/` içinde; yeniden üretmek için kaynak dosyayı kullanıcıdan iste.
 
 ## Kararlar
 
-- Tekrar eden satırlar tek satır + adet; imzalı kopya ayrı satır, Not `İmzalı`.
+- Tekrar eden satırlar tek satır; sayı `Adet` sütununda. İmzalı kopya ayrı satır; `İmzalı` sütununda `Evet`, ithaf Not'ta (kullanıcı istedi).
+- Excel biçimi genel olarak onaylı ama kesin değil; kullanıcı sonradan değişiklik isteyebilir.
 - Büyük harfler, yazar adı yazımları ve yazar sütunundaki yayınevi adları olduğu gibi kalır.
 - Güvenli yazmada "geçici dosya + yerine koy" yerine "üret, doğrula, yedekle, yaz, geri oku" uygulanır (ARCHITECTURE 7). Kullanıcıya söylendi.
 - Sprint planı 6 kısa sprint olarak önerildi; her sprint başında onay alınır.
@@ -40,7 +38,7 @@ Son güncelleme: 12.10.2026, Sprint 0 sürüyor.
 
 ## Sıradaki adım
 
-Kullanıcı yanıt verince: gerekirse `Babam.xlsx`'i `Adet` sütunuyla yeniden üret, seçilen taslağı `docs/design/` içinde işaretle, sonra Opus ile S-05.
+S-05 Depo iskeleti, CI, örnek test Excel'i (Opus).
 
 ## Devam mesajı
 

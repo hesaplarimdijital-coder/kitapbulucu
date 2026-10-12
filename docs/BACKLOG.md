@@ -20,11 +20,12 @@ Bir sprint bitince hikâyeleri `docs/DONE.md` dosyasına taşınır; burada spri
 
 ## Sprint 0: Hazırlık
 
-### S-01 Excel'i temizleme · 3 · [F] · onay bekliyor
+### S-01 Excel'i temizleme · 3 · [F] · bitti
 - [x] Rapor verildi: 3 sayfa (biri dolu), 7.325 satır, 2 sütun, başlık satırı listenin içinde, birleştirilmiş hücre yok.
 - [x] Temizleme planı onaylandı.
 - [x] `Babam.xlsx` (6.775 satır, 7.324 adet), `Benim.xlsx` (boş) ve `Temizleme raporu.xlsx` üretildi; bağımsız denetim hiçbir satırın kaybolmadığını doğruladı.
-- [ ] Kullanıcı dosyaları kontrol edip onayladı; adet kararı verildi; veri biçimi kesinleşti.
+- [x] Kullanıcı dosyaları genel olarak onayladı; isteği üzerine `Adet` ve `İmzalı` ayrı sütun oldu (dosyalar yeniden gönderildi).
+- Not: biçim kesin değil; kullanıcı sonradan değişiklik isteyebilir. Betik `tools/temizleme/` içinde, yeniden çalıştırılabilir.
 
 ### S-02 Mimari, CLAUDE.md, STATE.md · 3 · [F] · bitti
 - [x] `desktop-kit` README'si okundu; kitin sınırları not edildi.
@@ -34,11 +35,11 @@ Bir sprint bitince hikâyeleri `docs/DONE.md` dosyasına taşınır; burada spri
 - [x] Bütün özellikler hikâye olarak yazıldı; kabul kriteri, puan ve model etiketi var.
 - [x] Sprint planı gözden geçirildi.
 
-### S-04 Ana ekran için 2 tasarım taslağı · 3 · [F] · onay bekliyor
+### S-04 Ana ekran için 2 tasarım taslağı · 3 · [F] · bitti
 - [x] İki farklı taslak (`docs/design/`): A "Fiş" ve B "İki bölme"; her biri açık ("Kâğıt") ve koyu ("Gece okuması") temada, DeX genişliğinde.
 - [x] Taslaklardaki her metin/arka plan çifti en az 4.5:1 (`docs/design/PALETTE.md`, 8 vurgu × 2 tema × 2 taslak); raf yazısı en az 32 sp.
 - [x] Telefon (yalnızca dikey) taslakları: `taslak-a-telefon.png`, `taslak-b-telefon.png`.
-- [ ] Kullanıcı birini seçti.
+- [x] Kullanıcı Taslak A "Fiş"i seçti.
 
 ### S-05 Depo iskeleti, CI, örnek test Excel'i · 3 · [O] · bekliyor
 - [ ] `app` modülü, kit bağımlılığı; boş kabuk açılıyor (Ara, Kütüphane, Raflar, Ayarlar).
@@ -94,7 +95,7 @@ Gerçek listelere dokunmadan, ayrı bir `Deneme.xlsx` ile yapılır.
 - [ ] Kapsamlı test: Türkçe harfler, tek harfli sorgu, rakam, boş sorgu, çok uzun sorgu.
 
 ### S-11 Tema temeli · 3 · [F] · bekliyor
-- [ ] Seçilen taslağa göre "Kâğıt" ve "Gece okuması" renkleri `colors = { it.copy(...) }` ile tanımlı; OLED siyah da okunur.
+- [ ] Taslak A'ya göre "Kâğıt" ve "Gece okuması" renkleri `colors = { it.copy(...) }` ile tanımlı; OLED siyah da okunur.
 - [ ] Vurgular: bordo, mürekkep laciverti, zeytin yeşili, eskitilmiş altın; kitin dört hazır rengi de seçilebilir.
 - [ ] Kontrast testi bütün tema × vurgu çiftlerinde her metin/arka plan çifti için en az 4.5:1 ister; geçmeyen renk kullanılmaz.
 
@@ -141,7 +142,7 @@ Gerçek listelere dokunmadan, ayrı bir `Deneme.xlsx` ile yapılır.
 - [ ] Dokunmatikte de rahat: hedefler parmak için yeterli.
 
 ### S-17 Kitap ekleme · 5 · [O] · bekliyor
-- [ ] Alanlar: Kitap adı, Yazar, Kimin (varsayılan: kullanıcının kendisi), Raf; isteğe bağlı Yayınevi, Yıl, ISBN, Not.
+- [ ] Alanlar: Kitap adı, Yazar, Kimin (varsayılan: kullanıcının kendisi), Raf; isteğe bağlı Adet (varsayılan 1), İmzalı, Yayınevi, Yıl, ISBN, Not.
 - [ ] Kayıt doğru dosyaya eklenir.
 - [ ] Aynı ad ve yazar o kütüphanede varsa uyarır: "Bu kitap zaten Babam'ın kütüphanesinde, Raf A2". "Bir kopya daha" adedi artırır, "Vazgeç" eklemez.
 - [ ] Ctrl+N formu açar; Tab alanlar arasında gezer; Enter kaydeder; form açık kalır, imleç kitap adına döner.
@@ -159,7 +160,7 @@ Gerçek listelere dokunmadan, ayrı bir `Deneme.xlsx` ile yapılır.
 ### S-18 Silme ve geri alma · 3 · [O] · bekliyor
 - [ ] Silmeden önce onay sorulur.
 - [ ] Sildikten sonra birkaç saniye "Geri al" görünür; Ctrl+Z de geri alır; kitap bütün alanlarıyla geri gelir.
-- [ ] Birden çok kopyası olan kitapta "bir kopyayı sil" ile "hepsini sil" ayrı.
+- [ ] Adet'i 1'den büyük kitapta "bir kopyayı sil" (Adet bir azalır) ile "hepsini sil" ayrı.
 - [ ] Öteki kişinin kitabı için: "Bu Babam'ın listesi, yine de değiştirilsin mi?"
 
 ### S-19 Düzenleme ve taşıma · 3 · [O] · bekliyor
@@ -194,7 +195,7 @@ Gerçek listelere dokunmadan, ayrı bir `Deneme.xlsx` ile yapılır.
 - [ ] İlk temizlikteki kurallar gelen dosyaya aynen uygulanır (ARCHITECTURE 10); eski 2 sütunlu dosya birleştirildiğinde sahte "yeni" ya da "değişen" çıkmaz.
 - [ ] Karşılaştırma Türkçe duyarlı ve hataya toleranslı; aynı kitap küçük yazım farkıyla iki kez sayılmaz.
 - [ ] Özet ekranı: yeni kitaplar (varsayılan: eklenir); değişenler eski ve yeni değer yan yana (varsayılan: yeni değer); gelen dosyada olmayanlar (varsayılan: silinmez, tek tek işaretlenirse silinir); belirsiz eşleşmeler ("Suç ve Ceza" ile "Suç ve Ceza 1. Cilt") kullanıcıya sorulur.
-- [ ] Gelen dosyadaki boş alan dolu alanı silmez (özellikle Raf).
+- [ ] Gelen dosyadaki boş alan dolu alanı silmez (özellikle Raf). Adet ve İmzalı farkları da "değişen" olarak gösterilir.
 - [ ] Her satır işaretlenip kaldırılabilir; "Uygula" denmeden dosyaya hiçbir şey yazılmaz; uygulamadan önce yedek alınır.
 - [ ] Belirsiz eşleşmelerde verilen kararlar hatırlanır; sonraki birleştirmede yeniden sorulmaz.
 - [ ] Sonuç tek satır: "47 kitap eklendi, 3 kitabın rafı güncellendi, 0 kitap silindi."

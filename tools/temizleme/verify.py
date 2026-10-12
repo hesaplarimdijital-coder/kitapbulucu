@@ -14,7 +14,8 @@ import sys
 
 import openpyxl
 
-EXPECTED_COLUMNS = ["Kitap Adı", "Yazar", "Raf", "Yayınevi", "Yıl", "ISBN", "Not"]
+EXPECTED_COLUMNS = ["Kitap Adı", "Yazar", "Raf", "Adet", "İmzalı", "Yayınevi", "Yıl", "ISBN", "Not"]
+COUNT_INDEX = EXPECTED_COLUMNS.index("Adet")
 MONTHS = ["OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN", "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK"]
 
 
@@ -75,45 +76,45 @@ def main(source_path, out_dir, decisions_path=None):
 
     out_plain, out_signed, out_special = collections.Counter(), [], []
     copies = 0
-    non_text, untrimmed, empty_title, bad_note, filled_extra = [], [], [], [], []
+    non_text, untrimmed, empty_title, bad_count, bad_signed, filled_extra = [], [], [], [], [], []
     seen = collections.Counter()
     for row in sheet.iter_rows(min_row=2):
-        values = [c.value for c in row[:7]]
-        for cell in row[:7]:
+        cells = row[:len(EXPECTED_COLUMNS)]
+        for index, cell in enumerate(cells):
+            if index == COUNT_INDEX:
+                if not isinstance(cell.value, int) or isinstance(cell.value, bool) or cell.value < 1:
+                    bad_count.append(cell.coordinate)
+                continue
             if cell.value is not None and (cell.data_type != "s" or not isinstance(cell.value, str)):
                 non_text.append(cell.coordinate)
             if isinstance(cell.value, str) and (cell.value != " ".join(cell.value.split())):
                 untrimmed.append(cell.coordinate)
             if cell.number_format != "@":
                 non_text.append(cell.coordinate + ":fmt")
-        title, author, shelf, publisher, year, isbn, note = [v or "" for v in values]
+        values = [c.value for c in cells]
+        count = values[COUNT_INDEX] if isinstance(values[COUNT_INDEX], int) else 0
+        title, author, shelf, _, signed_mark, publisher, year, isbn, note = [v or "" for v in values]
         if not title:
             empty_title.append(row[0].row)
         if shelf or publisher or isbn:
             filled_extra.append(row[0].row)
-        count = 1
-        match = re.search(r"(?:^|; )(\d+) adet$", note)
-        if match:
-            count = int(match.group(1))
-            if count < 2:
-                bad_note.append(row[0].row)
-        elif "adet" in note:
-            bad_note.append(row[0].row)
+        if signed_mark not in ("", "Evet") or (note and not signed_mark):
+            bad_signed.append(row[0].row)  # Not only carries dedications of signed copies here
         copies += count
-        signed_note = re.sub(r"(?:^|; )\d+ adet$", "", note)
-        seen[(key(title), key(author), key(year), key(signed_note))] += 1
+        seen[(key(title), key(author), key(year), signed_mark, key(note))] += 1
         if year or re.fullmatch(r"(\d+ )?(%s) \d{4}" % "|".join(MONTHS), author):
-            out_special.append((title, author, year, note, count))
-        elif signed_note:
-            out_signed.append((title, author, signed_note, count))
+            out_special.append((title, author, year, signed_mark, count))
+        elif signed_mark:
+            out_signed.append((title, author, note, count))
         else:
             out_plain[(key(title), key(author))] += count
 
-    check(not non_text, f"every filled cell is text with text format ({non_text[:5]})")
+    check(not non_text, f"every filled cell except Adet is text with text format ({non_text[:5]})")
+    check(not bad_count, f"every Adet is a whole number of at least 1 ({bad_count[:5]})")
+    check(not bad_signed, f"İmzalı is 'Evet' or empty; Not is used only for signed copies ({bad_signed[:5]})")
     check(not untrimmed, f"no leading, trailing or double spaces left ({untrimmed[:5]})")
     check(not empty_title, f"no row without a title ({empty_title[:5]})")
     check(not filled_extra, "Raf, Yayınevi and ISBN are empty everywhere")
-    check(not bad_note, f"every count note has the form 'N adet' with N >= 2 ({bad_note[:5]})")
     check(max(seen.values()) == 1, "no two output rows are identical")
 
     # ---- reconciliation

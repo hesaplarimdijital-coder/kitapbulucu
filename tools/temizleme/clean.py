@@ -26,8 +26,10 @@ from openpyxl.styles import Alignment, Font  # noqa: E402
 from openpyxl.utils import get_column_letter  # noqa: E402
 from rapidfuzz import fuzz, process  # noqa: E402
 
-COLUMNS = ["Kitap Adı", "Yazar", "Raf", "Yayınevi", "Yıl", "ISBN", "Not"]
-WIDTHS = [62, 42, 12, 24, 8, 18, 30]
+COLUMNS = ["Kitap Adı", "Yazar", "Raf", "Adet", "İmzalı", "Yayınevi", "Yıl", "ISBN", "Not"]
+WIDTHS = [62, 42, 12, 8, 9, 24, 8, 18, 30]
+COUNT_COLUMN = COLUMNS.index("Adet") + 1  # the only number column; everything else is text
+SIGNED_YES = "Evet"
 FONT = "Arial"
 HEADER_TITLES = {"kitap", "kitap adı"}
 HEADER_AUTHORS = {"yazar"}
@@ -37,7 +39,7 @@ HEADER_AUTHORS = {"yazar"}
 TITLE_AUTHOR_SPLITS = {}
 SUMMARY_NOTES = []
 
-Book = collections.namedtuple("Book", "title author year note")
+Book = collections.namedtuple("Book", "title author year signed note")
 
 
 def cell_text(cell, changes):
@@ -108,9 +110,11 @@ def clean(sheet):
         title, title_note = bl.extract_signed(raw_title)
         author, author_note = bl.extract_signed(raw_author)
         notes = [n for n in (title_note, author_note) if n]
-        note = "; ".join(dict.fromkeys(notes))
+        signed = SIGNED_YES if notes else ""
+        # a bare marker only fills İmzalı; a dedication ("X'e imzalı") is also kept in Not
+        note = "; ".join(dict.fromkeys(n for n in notes if n != bl.SIGNED_NOTE))
         if notes:
-            signed_moves.append((number, bl.squeeze(raw_title), bl.squeeze(raw_author), title, author, note))
+            signed_moves.append((number, bl.squeeze(raw_title), bl.squeeze(raw_author), title, author, signed, note))
 
         year = ""
         if not author and title in TITLE_AUTHOR_SPLITS:
@@ -118,7 +122,7 @@ def clean(sheet):
             splits.append((number, title, new_title, author, year))
             title = new_title
 
-        records.append((number, Book(title, author, year, note)))
+        records.append((number, Book(title, author, year, signed, note)))
     return records, deleted, value_changes, space_fixes, signed_moves, splits
 
 
@@ -132,8 +136,7 @@ def merge_copies(records):
     for members in groups.values():
         book = members[0][1]
         count = len(members)
-        note = "; ".join(part for part in (book.note, f"{count} adet" if count > 1 else "") if part)
-        merged.append({"book": book._replace(note=note), "count": count, "rows": [n for n, _ in members]})
+        merged.append({"book": book, "count": count, "rows": [n for n, _ in members]})
     return merged
 
 
@@ -225,7 +228,7 @@ def put(sheet, row, column, value, bold=False, wrap=False):
     return cell
 
 
-def write_library(path, sheet_name, books):
+def write_library(path, sheet_name, items):
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = sheet_name
@@ -233,12 +236,16 @@ def write_library(path, sheet_name, books):
         put(sheet, 1, index, name, bold=True)
         dimension = sheet.column_dimensions[get_column_letter(index)]
         dimension.width = width
-        dimension.number_format = "@"  # text: Excel must not turn "3-4" into a date
+        # text everywhere (Excel must not turn "3-4" into a date), a plain number for Adet
+        dimension.number_format = "0" if index == COUNT_COLUMN else "@"
         dimension.font = Font(name=FONT, size=11)
-    for offset, book in enumerate(books, start=2):
-        values = (book.title, book.author, "", "", book.year, "", book.note)
+    for offset, item in enumerate(items, start=2):
+        book = item["book"]
+        values = (book.title, book.author, "", item["count"], book.signed, "", book.year, "", book.note)
         for index, value in enumerate(values, start=1):
-            put(sheet, offset, index, value)
+            cell = put(sheet, offset, index, value)
+            if index == COUNT_COLUMN:
+                cell.number_format = "0"
     sheet.freeze_panes = "A2"
     workbook.properties.creator = "Kitap Bulucu"
     workbook.properties.title = sheet_name
@@ -287,7 +294,7 @@ def write_report(path, source_name, info, records, merged, deleted, value_change
         ("Babam.xlsx'teki toplam adet (kopyalar sayılarak)", total_copies, False),
         ("", None, False),
         ("Yapılan düzeltmeler", None, True),
-        ("\"İmzalı\" notu Not sütununa taşınan satır", len(signed_moves), False),
+        ("\"İMZALI\" yazısı İmzalı sütununa taşınan satır", len(signed_moves), False),
         ("Boşluğu düzeltilen satır", space_rows, False),
         ("Tarihe dönmüş hücre (metne çevrildi)", len(value_changes), False),
         ("Kitap adından yazarı ayrılan satır", len(splits), False),
@@ -305,7 +312,7 @@ def write_report(path, source_name, info, records, merged, deleted, value_change
         ("Sayfalar", None, True),
         ("Birleşen kopyalar: tek satıra inen her kitap ve eski satır numaraları.", None, False),
         ("Silinen satırlar: listeden çıkarılan satırlar.", None, False),
-        ("İmzalı notları: \"İMZALI\" yazısı kitap adından ya da yazardan Not sütununa taşınan satırlar.", None, False),
+        ("İmzalı kitaplar: \"İMZALI\" yazısı kitap adından ya da yazardan İmzalı sütununa taşınan satırlar; ithaflar Not'ta.", None, False),
         ("Diğer değişiklikler: tarih hücreleri ve ad–yazar ayrımı.", None, False),
         ("Boşluk düzeltmeleri: baştaki, sondaki ve çift boşluğu silinen hücreler.", None, False),
         ("Benzerler: aynı kitap olabilecek ama birleştirilmeyen çiftler. Karar senin.", None, False),
@@ -320,9 +327,9 @@ def write_report(path, source_name, info, records, merged, deleted, value_change
     summary.column_dimensions["B"].width = 12
 
     add_table(workbook, "Birleşen kopyalar",
-              ["Kitap Adı", "Yazar", "Not", "Adet", "Eski dosyadaki satırlar", "Babam.xlsx satırı"],
-              [58, 36, 24, 8, 30, 16],
-              [(item["book"].title, item["book"].author, item["book"].note, item["count"],
+              ["Kitap Adı", "Yazar", "İmzalı", "Adet", "Eski dosyadaki satırlar", "Babam.xlsx satırı"],
+              [58, 36, 9, 8, 30, 16],
+              [(item["book"].title, item["book"].author, item["book"].signed, item["count"],
                 ", ".join(str(n) for n in item["rows"]), out_row[id(item)]) for item in multi])
     add_table(workbook, "Silinen satırlar",
               ["Eski satır", "A sütunu", "B sütunu", "Neden"], [12, 30, 30, 70], deleted)
@@ -330,10 +337,11 @@ def write_report(path, source_name, info, records, merged, deleted, value_change
     for item in merged:
         for number in item["rows"]:
             row_of[number] = out_row[id(item)]
-    add_table(workbook, "İmzalı notları",
-              ["Eski satır", "Eski Kitap Adı", "Eski Yazar", "Yeni Kitap Adı", "Yeni Yazar", "Not", "Babam.xlsx satırı"],
-              [12, 52, 34, 46, 30, 24, 16],
-              [(n, old_t, old_a, new_t, new_a, note, row_of[n]) for n, old_t, old_a, new_t, new_a, note in signed_moves])
+    add_table(workbook, "İmzalı kitaplar",
+              ["Eski satır", "Eski Kitap Adı", "Eski Yazar", "Yeni Kitap Adı", "Yeni Yazar", "İmzalı", "Not", "Babam.xlsx satırı"],
+              [12, 52, 34, 46, 30, 9, 24, 16],
+              [(n, old_t, old_a, new_t, new_a, signed, note, row_of[n])
+               for n, old_t, old_a, new_t, new_a, signed, note in signed_moves])
     other = [(row, "Kitap Adı" if column == "A" else "Yazar", old, new, why, row_of[row])
              for row, column, old, new, why in value_changes]
     other += [(n, "Kitap Adı", old_title, f"{new_title}  |  Yazar: {author}  |  Yıl: {year}",
@@ -371,7 +379,7 @@ def main(source, out_dir, decisions_path=None):
     merged = merge_copies(records)
     similar = find_similar(merged)
     books = [item["book"] for item in merged]
-    write_library(os.path.join(out_dir, "Babam.xlsx"), "Babam", books)
+    write_library(os.path.join(out_dir, "Babam.xlsx"), "Babam", merged)
     write_library(os.path.join(out_dir, "Benim.xlsx"), "Benim", [])
     extra = write_report(os.path.join(out_dir, "Temizleme raporu.xlsx"), "Kütüphane.xlsx", info, records, merged,
                          deleted, value_changes, space_fixes, signed_moves, splits, similar)
