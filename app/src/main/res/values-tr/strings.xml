@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_section_library">Kitaplık</string>
+    <string name="nav_search">Ara</string>
+    <string name="nav_library">Kütüphane</string>
+    <string name="nav_shelves">Raflar</string>
+    <string name="nav_settings">Ayarlar</string>
+
+    <string name="placeholder_search_title">Burada kitap arayacaksın</string>
+    <string name="placeholder_search_text">Kitap adının ya da yazarın bir kısmını yazınca kimin rafında olduğunu göreceksin. Sonraki sürümde geliyor.</string>
+    <string name="placeholder_library_title">Bütün kitaplar burada listelenecek</string>
+    <string name="placeholder_library_text">Babam ve Benim listeleri iki sekmede. İleriki bir sürümde geliyor.</string>
+    <string name="placeholder_shelves_title">Raflar burada listelenecek</string>
+    <string name="placeholder_shelves_text">Her raf ve üzerindeki kitap sayısı. İleriki bir sürümde geliyor.</string>
+</resources>

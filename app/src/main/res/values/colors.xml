@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Draft A, "Kâğıt" background; values-night holds the "Gece okuması" one. -->
+    <color name="window_background">#F3ECDD</color>
+    <color name="launcher_background">#6B1E29</color>
+    <color name="launcher_foreground">#F3ECDD</color>
+</resources>

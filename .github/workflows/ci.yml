@@ -1,0 +1,98 @@
+# Builds the app, runs the unit tests (including the Robolectric screenshot tests), checks that
+# the APK never asks for internet access and publishes the APK as a workflow artifact. On main the
+# screenshots are pushed to the ci/screenshots branch for review. Build errors and failed tests
+# are reported as annotations on the commit.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KB_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/kitapbulucu.jks"
+            echo "KB_KEYSTORE=$RUNNER_TEMP/kitapbulucu.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::KB_KEYSTORE_BASE64 is not set; the APK is signed with a throwaway debug key."
+          fi
+
+      - name: Build and test
+        env:
+          KB_KEYSTORE_PASSWORD: ${{ secrets.KB_KEYSTORE_PASSWORD }}
+        run: |
+          ./gradlew :app:testDebugUnitTest :app:assembleRelease --continue --console=plain 2>&1 | tee build.log
+          exit ${PIPESTATUS[0]}
+
+      - name: No internet permission
+        run: |
+          apk=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          aapt2=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)aapt2
+          "$aapt2" dump permissions "$apk" | tee permissions.txt
+          if grep -q 'android.permission.INTERNET' permissions.txt; then
+            echo "::error::The APK requests android.permission.INTERNET"
+            exit 1
+          fi
+
+      - name: Annotate errors
+        if: failure()
+        run: |
+          python3 tools/ci/annotate_gradle_errors.py build.log
+          python3 tools/ci/annotate_test_failures.py app/build/test-results
+
+      - name: Compare screenshots
+        if: always()
+        run: |
+          pip install --quiet pillow
+          python3 tools/ci/screenshot_report.py app/build/outputs/screenshots app/src/test/screenshots app/build/outputs/screenshots/diff
+
+      - name: Push screenshots to ci/screenshots
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          src=app/build/outputs/screenshots
+          [ -d "$src" ] || exit 0
+          out="$RUNNER_TEMP/screenshots"
+          rm -rf "$out" && cp -r "$src" "$out"
+          cd "$out"
+          git init -q && git checkout -q --orphan ci/screenshots
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -q -m "Screenshots for ${GITHUB_SHA::7}"
+          git push -q --force "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/ci/screenshots
+
+      - name: APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kitapbulucu-apk
+          path: app/build/outputs/apk/release/*.apk
+
+      - name: Test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: app/build/reports/tests

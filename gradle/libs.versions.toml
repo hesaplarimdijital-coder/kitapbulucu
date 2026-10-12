@@ -1,0 +1,26 @@
+[versions]
+agp = "8.7.3"
+kotlin = "2.1.0"
+desktopKit = "0.1.0"
+activityCompose = "1.9.3"
+composeBom = "2024.12.01"
+junit = "4.13.2"
+robolectric = "4.14.1"
+testCore = "1.6.1"
+testExtJunit = "1.2.1"
+
+[libraries]
+desktop-kit = { module = "com.github.hesaplarimdijital-coder:desktop-kit", version.ref = "desktopKit" }
+activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+junit = { module = "junit:junit", version.ref = "junit" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+test-core = { module = "androidx.test:core", version.ref = "testCore" }
+test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "testExtJunit" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
