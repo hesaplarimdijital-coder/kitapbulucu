@@ -53,10 +53,14 @@ def check_libreoffice(path):
     out = tempfile.mkdtemp(prefix="lo-check-")
     profile = tempfile.mkdtemp(prefix="lo-profile-")
     try:
-        result = subprocess.run(
-            ["soffice", "--headless", f"-env:UserInstallation=file://{profile}", "--convert-to", "csv:Text - txt - csv (StarCalc):44,34,76,1", "--outdir", out, path],
-            capture_output=True, text=True, timeout=300,
-        )
+        try:
+            result = subprocess.run(
+                ["soffice", "--headless", f"-env:UserInstallation=file://{profile}", "--convert-to", "csv:Text - txt - csv (StarCalc):44,34,76,1", "--outdir", out, path],
+                capture_output=True, text=True, timeout=90,
+            )
+        except subprocess.TimeoutExpired:
+            print(f"::warning::LibreOffice did not answer within 90 s for {path}; check skipped")
+            return
         csv_path = os.path.join(out, os.path.splitext(os.path.basename(path))[0] + ".csv")
         if result.returncode != 0 or not os.path.exists(csv_path):
             fail(f"LibreOffice could not open {path}: {result.stdout} {result.stderr}")

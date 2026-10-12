@@ -73,9 +73,12 @@ jobs:
 
       - name: Check sample workbooks with openpyxl and LibreOffice
         if: success()
+        timeout-minutes: 8
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
           if ! command -v soffice >/dev/null; then
-            sudo apt-get update -qq >/dev/null && sudo apt-get install -y -qq --no-install-recommends libreoffice-calc-nogui >/dev/null \
+            timeout 240 sudo -E apt-get update -qq >/dev/null && timeout 300 sudo -E apt-get install -y -qq --no-install-recommends libreoffice-calc-nogui >/dev/null \
               || echo "::warning::LibreOffice could not be installed; only openpyxl checks the samples"
           fi
           pip install -q openpyxl
