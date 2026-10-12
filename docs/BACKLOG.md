@@ -69,13 +69,13 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [x] `.xls` ve bozuk dosya anlaşılır hata verir; uygulama çökmez.
 - [x] Test dosyaları uydurma kitaplarla: openpyxl ve LibreOffice çıktısı, elle yazılmış uç durumlar. 10.000 satır 1 saniyenin altında okunur.
 
-### S-08 Excel yazıcı · 3 · [F] · bekliyor
-- [ ] Tek sayfalı kişi dosyası ve iki sayfalı (`Babam`, `Benim`) ortak dosya üretir.
-- [ ] Başlık kalın ve dondurulmuş; sütun genişlikleri ayarlı; bütün hücreler metin biçiminde.
-- [ ] Tanınmayan sütunlar aynı başlıkla geri yazılır.
-- [ ] Yaz → oku testi: içerik birebir aynı (Türkçe harfler, `&`, `<`, tırnak, baştaki `=` dahil).
-- [ ] CI örnek çıktıları saklar; bu dosyalar LibreOffice ve openpyxl ile hatasız açıldı.
-- [ ] Kullanıcı örnek dosyayı tablette Excel, Office NX ve Google E-Tablolar'da açtı.
+### S-08 Excel yazıcı · 3 · [F] · bitti (tablet denemesi bekleniyor)
+- [x] Tek sayfalı kişi dosyası ve iki sayfalı (`Babam`, `Benim`) ortak dosya üretir.
+- [x] Başlık kalın ve dondurulmuş; sütun genişlikleri ayarlı; bütün hücreler metin biçiminde.
+- [x] Tanınmayan sütunlar aynı başlıkla geri yazılır.
+- [x] Yaz → oku testi: içerik birebir aynı (Türkçe harfler, `&`, `<`, tırnak, baştaki `=` dahil).
+- [x] CI örnek çıktıları saklar; bu dosyalar LibreOffice ve openpyxl ile hatasız açıldı.
+- [ ] Kullanıcı örnek dosyayı tablette Excel, Office NX ve Google E-Tablolar'da açtı. (Dosyalar: `ci/apk` dalında `ornek/Babam.xlsx`, `ornek/Benim.xlsx`, `ornek/Ortak.xlsx`.)
 
 ### S-09 Arama motoru 1: katlama, dizin, sıralama · 5 · [F] · bekliyor
 - [ ] "islik" → "Islık", "sefiller" → "Sefiller", "hala" → "hâlâ" bulunur.

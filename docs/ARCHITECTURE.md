@@ -64,6 +64,9 @@ data class Book(
 - Metinler satır içi (`inlineStr`) yazılır: tek geçişte yazılır, kod kısa kalır. Temizlenmiş Babam.xlsx de bu biçimde; tablette Excel, Office NX ve Google E-Tablolar'da açılması bu kararın ilk sınavı.
 - XML'de geçersiz denetim karakterleri atılır, özel karakterler kaçırılır.
 - Dosya her yazışta baştan oluşturulur; elle verilmiş renk ve biçim korunmaz. Uygulama bunu ilk yazmadan önce bir kez söyler.
+- Uygulandı (S-08): `XlsxWriter(sheets: List<SheetSpec>)`. Üç hücre biçemi: 0 metin (`numFmtId=49`), 1 kalın metin (başlık), 2 tam sayı (`numFmtId=1`). Boş hücreler de biçemle yazılır ve her sütuna `<col style>` verilir; böylece kullanıcının Excel'de sonradan yazdığı "3-4" de metin kalır. Başlık `pane ySplit=1` ile dondurulur. Sayfa adında yasak karakterler boşluğa çevrilir, 31 karakterde kesilir. Sayısal sütundaki sayı olmayan değer metin olarak yazılır, kaybolmaz.
+- Kitap ↔ satır eşlemesi `model.BookTable` içinde: başlıklar katlanarak (Türkçe küçültme, ASCII) ve takma adlarla tanınır ("Raf No", "Sayı", "İmza", "Basım Yılı", "Notlar"...); tanınmayan sütunlar `extraHeaders` ile taşınır; `Adet` boşsa 1, bozuksa 1 ve `Problem` listesine girer; `İmzalı` için `evet/e/x/var/imzalı/1/doğru/true/✓`. Başlık satırı ilk 20 satırda aranır (Kitap Adı + en az bir sütun daha); yoksa `parse` null döner (başlıksız eski biçim içe aktarmada, S-23).
+- CI her yapımda `Babam.xlsx`, `Benim.xlsx`, `Ortak.xlsx` örneklerini üretir, openpyxl ve LibreOffice ile açar (`tools/ci/check_samples.py`) ve `ci/apk` dalında `ornek/` altına koyar.
 
 ## 7. Saklama ve güvenli yazma (`store`)
 
