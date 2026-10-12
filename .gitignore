@@ -1,0 +1,25 @@
+# The book lists are private and this repository is public: no spreadsheets,
+# except the made-up fixtures used by the tests.
+*.xlsx
+*.xls
+*.csv
+!app/src/test/resources/fixtures/**
+
+# Signing keys never belong in the repository
+*.jks
+*.keystore
+
+# Gradle and Android
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+.kotlin/
+
+# IDE
+.idea/
+*.iml
+
+# Python tools
+__pycache__/

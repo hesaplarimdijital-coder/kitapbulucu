@@ -1,0 +1,235 @@
+# Backlog
+
+Başlık biçimi: `kimlik ad · puan · model · durum`. Puan: 1, 2, 3, 5, 8. Model: [F] Fable (düşünme isteyen), [O] Opus (tanımı net). Durum: bekliyor, sürüyor, bitti, onay bekliyor.
+
+Bir sprint bitince hikâyeleri `docs/DONE.md` dosyasına taşınır; burada sprint tablosundaki satırı kalır.
+
+## Sprint planı
+
+| Sprint | Hedef | Hikâyeler | Puan | Model |
+| --- | --- | --- | --- | --- |
+| 0 | Kod yazmaya hazır olmak | S-01 … S-05 | 15 | F, sonda O |
+| 1 | Dosya okunuyor, yazılıyor; arama motorunun temeli | S-06 … S-09 | 16 | F |
+| 2 | İlk kullanılabilir sürüm: dosyalara bağlan ve ara (salt okunur) | S-10 … S-14 | 21 | F, sonra O |
+| 3 | Değişiklikler güvenle yazılıyor; kitap ekleme | S-15, S-16, S-17, K-01 | 19 | F, sonra O |
+| 4 | Sil, düzelt, kütüphane, raflar | S-18 … S-22 | 19 | O |
+| 5 | Dışarıdan gelen Excel; ayarlar | S-23 … S-26 | 18 | F, sonra O |
+| 6 | Cilalama ve 1.0.0 | S-27 … S-29 | 10 | F, sonra O |
+
+İlk önerilen plandan farkı: 4 yerine 6 kısa sprint (ilk planda 1. ve 3. sprint 27'şer puandı, bir oturuma sığmaz) ve arama öne alındı; böylece 2. sprintin sonunda tablette denenebilen bir sürüm olur. Her sprintin başında onay alınır.
+
+## Sprint 0: Hazırlık
+
+### S-01 Excel'i temizleme · 3 · [F] · onay bekliyor
+- [x] Rapor verildi: 3 sayfa (biri dolu), 7.325 satır, 2 sütun, başlık satırı listenin içinde, birleştirilmiş hücre yok.
+- [x] Temizleme planı onaylandı.
+- [x] `Babam.xlsx` (6.775 satır, 7.324 adet), `Benim.xlsx` (boş) ve `Temizleme raporu.xlsx` üretildi; bağımsız denetim hiçbir satırın kaybolmadığını doğruladı.
+- [ ] Kullanıcı dosyaları kontrol edip onayladı; adet kararı verildi; veri biçimi kesinleşti.
+
+### S-02 Mimari, CLAUDE.md, STATE.md · 3 · [F] · bitti
+- [x] `desktop-kit` README'si okundu; kitin sınırları not edildi.
+- [x] `docs/ARCHITECTURE.md`, `CLAUDE.md` (60 satırın altında), `docs/STATE.md` yazıldı.
+
+### S-03 Backlog · 3 · [F] · bitti
+- [x] Bütün özellikler hikâye olarak yazıldı; kabul kriteri, puan ve model etiketi var.
+- [x] Sprint planı gözden geçirildi.
+
+### S-04 Ana ekran için 2 tasarım taslağı · 3 · [F] · onay bekliyor
+- [x] İki farklı taslak (`docs/design/`): A "Fiş" ve B "İki bölme"; her biri açık ("Kâğıt") ve koyu ("Gece okuması") temada, DeX genişliğinde.
+- [x] Taslaklardaki her metin/arka plan çifti en az 4.5:1 (`docs/design/PALETTE.md`, 8 vurgu × 2 tema × 2 taslak); raf yazısı en az 32 sp.
+- [ ] Kullanıcı birini seçti.
+
+### S-05 Depo iskeleti, CI, örnek test Excel'i · 3 · [O] · bekliyor
+- [ ] `app` modülü, kit bağımlılığı; boş kabuk açılıyor (Ara, Kütüphane, Raflar, Ayarlar).
+- [ ] `.gitignore` içinde `*.xlsx` (yalnızca test dosyaları klasörü hariç); uydurma kitaplı örnek test Excel'i var.
+- [ ] CI: derleme, birim testleri, ekran görüntüleri `ci/screenshots` dalında, APK indirilebilir.
+- [ ] CI, APK'da INTERNET izni görürse kırılır.
+- [ ] APK her seferinde aynı anahtarla imzalanır (eski sürümün üstüne kurulabilsin); anahtarın nerede duracağı kararlaştırıldı.
+- [ ] Robolectric `sdk=34`; ekran görüntüsü klasörü test çıktısı olarak tanımlı.
+
+## Sprint 1: Dosya okunuyor, yazılıyor; arama motorunun temeli
+
+### S-06 Spike: Drive ve SAF denemesi · 3 · [F] · bekliyor
+Gerçek listelere dokunmadan, ayrı bir `Deneme.xlsx` ile yapılır.
+- [ ] Deneme APK'sı: dosya seç, oku, içine saat yazıp geri yaz, kalıcı izni göster; klasör seçmeyi de dener.
+- [ ] Kullanıcıya adım adım deneme listesi verildi (tablet ve babanın telefonu).
+- [ ] Ölçüldü: Drive'da okuma ve geri yazma; tablet yeniden başladıktan sonra izin; paylaşılan dosyanın babanın telefonunda görünmesi (gerekirse Drive'a kısayol); değişikliğin öteki cihaza ulaşma süresi; klasör seçimi; son değişme zamanının doğruluğu.
+- [ ] Çalışmayan yol için alternatif seçildi; sonuçlar `STATE.md` ve ARCHITECTURE 8'e yazıldı.
+
+### S-07 Excel okuyucu · 5 · [F] · bekliyor
+- [ ] `.xlsx`: paylaşılan metin, satır içi metin, sayı, boş hücre, zengin metin; seyrek satır ve sütunlar doğru yerde.
+- [ ] Tam sayılar `.0` olmadan, uzun sayılar (ISBN) olduğu gibi okunur.
+- [ ] Tarih biçimli hücre metne çevrilir (`NİSAN 1953`, `15 MART 1998`).
+- [ ] Birden çok dolu sayfa varsa sayfa listesi döner.
+- [ ] `.csv`: `;` ve `,`; UTF-8 (BOM'lu, BOM'suz) ve Windows-1254.
+- [ ] `.xls` ve bozuk dosya anlaşılır hata verir; uygulama çökmez.
+- [ ] Test dosyaları uydurma kitaplarla: openpyxl ve LibreOffice çıktısı, elle yazılmış uç durumlar. 10.000 satır 1 saniyenin altında okunur.
+
+### S-08 Excel yazıcı · 3 · [F] · bekliyor
+- [ ] Tek sayfalı kişi dosyası ve iki sayfalı (`Babam`, `Benim`) ortak dosya üretir.
+- [ ] Başlık kalın ve dondurulmuş; sütun genişlikleri ayarlı; bütün hücreler metin biçiminde.
+- [ ] Tanınmayan sütunlar aynı başlıkla geri yazılır.
+- [ ] Yaz → oku testi: içerik birebir aynı (Türkçe harfler, `&`, `<`, tırnak, baştaki `=` dahil).
+- [ ] CI örnek çıktıları saklar; bu dosyalar LibreOffice ve openpyxl ile hatasız açıldı.
+- [ ] Kullanıcı örnek dosyayı tablette Excel, Office NX ve Google E-Tablolar'da açtı.
+
+### S-09 Arama motoru 1: katlama, dizin, sıralama · 5 · [F] · bekliyor
+- [ ] "islik" → "Islık", "sefiller" → "Sefiller", "hala" → "hâlâ" bulunur.
+- [ ] Sözcük sırası önemsiz: "madonna kürk" → "Kürk Mantolu Madonna".
+- [ ] Arama ad ve yazarda yapılır; "orhan pamuk kar" gibi karışık sorgu çalışır.
+- [ ] Sıralama: tam eşleşme > başlangıç eşleşmesi > içerme; katman içi kurallar ARCHITECTURE 9'daki gibi.
+- [ ] Kesme işaretli adlar hem ayrık hem bitişik bulunur ("istanbulun", "istanbul'un").
+- [ ] İki kütüphanede birden arar; "Hepsi / Babam / Benim" süzgeci.
+- [ ] Türkçe harfsiz sorgu da bulur ("kurk"), ama Türkçe harfli eşleşmenin altında sıralanır.
+
+## Sprint 2: İlk kullanılabilir sürüm
+
+### S-10 Arama motoru 2: yazım hatası, öneri, hız · 5 · [F] · bekliyor
+- [ ] "kurk mantlu" → "Kürk Mantolu Madonna" bulunur; bir iki harf hatası tolere edilir, yer değiştirme tek hata sayılır.
+- [ ] Yakın eşleşmeler her zaman tam, başlangıç ve içerme eşleşmelerinin altında.
+- [ ] Sonuç yoksa en yakın 3 öneri döner.
+- [ ] Üretilmiş 10.000 kitapta tuş başına 50 ms'nin altında; test süreyi ölçer ve yazar.
+- [ ] Kapsamlı test: Türkçe harfler, tek harfli sorgu, rakam, boş sorgu, çok uzun sorgu.
+
+### S-11 Tema temeli · 3 · [F] · bekliyor
+- [ ] Seçilen taslağa göre "Kâğıt" ve "Gece okuması" renkleri `colors = { it.copy(...) }` ile tanımlı; OLED siyah da okunur.
+- [ ] Vurgular: bordo, mürekkep laciverti, zeytin yeşili, eskitilmiş altın; kitin dört hazır rengi de seçilebilir.
+- [ ] Kontrast testi bütün tema × vurgu çiftlerinde her metin/arka plan çifti için en az 4.5:1 ister; geçmeyen renk kullanılmaz.
+
+### S-12 Açılışta ve öne gelişte yeniden okuma · 3 · [F] · bekliyor
+- [ ] Açılışta önbellekten anında liste gelir; ardından iki dosya okunur, fark varsa ekran sessizce güncellenir.
+- [ ] Uygulama her öne gelişinde ve F5'te iki dosya yeniden okunur.
+- [ ] "Babam'ın listesi 3 dk önce güncellendi" bilgisi üretilir.
+- [ ] Klasör izni varsa `~$` ile başlayan ve "çakışan kopya" dosyaları yok sayılır; görülürse bir kez uyarılır.
+- [ ] Dosya okunamazsa (silinmiş, izin gitmiş) anlaşılır mesaj ve "Başka dosya seç" yolu.
+
+### S-13 Kurulum ekranı · 5 · [O] · bekliyor
+- [ ] İlk açılışta "Ben kimim? Babam / Ben" seçilir; Ayarlar'dan değiştirilebilir.
+- [ ] İki dosya seçilir (spike sonucuna göre klasör de); kalıcı izin alınır; yeniden başlatmada sorulmaz.
+- [ ] Dosyalardan biri yoksa "Oluştur" boş, başlıklı dosya oluşturur.
+- [ ] Sütun başlıkları farklıysa ("Ad", "Eser", "Konum") ya da başlık yoksa bir kerelik eşleme ekranı çıkar; ilk satırlar önizlenir; eşleme saklanır.
+- [ ] Birden çok dolu sayfa varsa sayfa seçtirir.
+- [ ] `.xls` seçilirse "Excel'de .xlsx olarak kaydedip tekrar deneyin" der.
+- [ ] Klavye ve fareyle tamamlanabilir; açık ve koyu ekran görüntüsü.
+
+### S-14 Ara ekranı ve sonuç görünümü · 5 · [O] · bekliyor
+- [ ] Yazdıkça sonuç gelir; üstte "Hepsi / Babam / Benim" süzgeci.
+- [ ] Kitap varsa kimde ve hangi rafta olduğu büyük ve net: "Babam · Raf B3"; raf yazısı en az 32 sp, raf kodu mono.
+- [ ] Raf boşsa "Raf yazılmamış" görünür (şu an bütün raflar boş).
+- [ ] İki kütüphanede de varsa ikisi de gösterilir; birden çok kopya ve imzalı kopya belirtilir.
+- [ ] Yoksa "Bu kitap iki kütüphanede de yok", en yakın 3 öneri ve "Ekle" düğmesi (form S-17'de bağlanır).
+- [ ] DeX genişliğinde açık ve koyu ekran görüntüsü.
+
+## Sprint 3: Güvenli yazma ve kitap ekleme
+
+### S-15 Güvenli yazma, yedek, bekleyen değişiklikler · 8 · [F] · bekliyor
+- [ ] Değişiklikler işlem olarak tutulur (ekle, düzenle, sil); taşıma önce hedefe ekler, sonra kaynaktan siler.
+- [ ] Her yazmadan önce dosya yeniden okunur; dışarıda yapılan değişiklik kaybolmaz (testte araya girilerek dosya değiştirilir).
+- [ ] Çakışma kuralları ARCHITECTURE 7'deki gibi çalışır ve testlidir.
+- [ ] Yazmadan önce yedek alınır; dosya başına son 10 yedek kalır.
+- [ ] İçerik önce uygulama klasöründe üretilip geri okunarak doğrulanır; yazdıktan sonra belge geri okunup karşılaştırılır.
+- [ ] Yazma başarısız olursa hata açıkça görünür; değişiklik bekleyenlerde kalır; uygulama kapanıp açılsa da öne gelişte ve F5'te yeniden denenir.
+- [ ] İlk yazmadan önce bir kez "Excel'deki renk ve biçimler korunmaz" bilgisi gösterilir.
+- [ ] Dosyada başka dolu sayfa varsa yazmadan önce uyarır.
+
+### S-16 Ara ekranında klavye · 3 · [O] · bekliyor
+- [ ] Uygulama açılınca imleç arama kutusunda; herhangi bir harfe basınca aramaya yazılır.
+- [ ] Ctrl+K her ekrandan aramaya götürür ve odaklar.
+- [ ] Ok tuşları sonuçlarda gezer, Enter kitabın detayını açar, Esc aramayı temizler.
+- [ ] Dokunmatikte de rahat: hedefler parmak için yeterli.
+
+### S-17 Kitap ekleme · 5 · [O] · bekliyor
+- [ ] Alanlar: Kitap adı, Yazar, Kimin (varsayılan: kullanıcının kendisi), Raf; isteğe bağlı Yayınevi, Yıl, ISBN, Not.
+- [ ] Kayıt doğru dosyaya eklenir.
+- [ ] Aynı ad ve yazar o kütüphanede varsa uyarır: "Bu kitap zaten Babam'ın kütüphanesinde, Raf A2". "Bir kopya daha" adedi artırır, "Vazgeç" eklemez.
+- [ ] Ctrl+N formu açar; Tab alanlar arasında gezer; Enter kaydeder; form açık kalır, imleç kitap adına döner.
+- [ ] Ara ekranındaki "Ekle" formu aranan adla açar.
+- [ ] Öteki kişinin listesine eklerken onay sorar.
+
+### K-01 Kit 0.1.1: başlık yazı tipi ve tablo sütun stili · 3 · [O] · bekliyor (kit deposunda)
+- [ ] `DeskFonts` başlıklar için ayrı bir aile alır (varsayılanı `sans`); `display`, `headline`, `title` onu kullanır.
+- [ ] `TableColumn` hücre yazı stilini seçebilir (kitap adı serif olabilsin).
+- [ ] Kitin testleri ve ekran görüntüleri güncel; CHANGELOG yazıldı.
+- [ ] Kullanıcı GitHub'da 0.1.1 Release'ini oluşturdu; uygulama 0.1.1'e geçti.
+
+## Sprint 4: Sil, düzelt, kütüphane, raflar
+
+### S-18 Silme ve geri alma · 3 · [O] · bekliyor
+- [ ] Silmeden önce onay sorulur.
+- [ ] Sildikten sonra birkaç saniye "Geri al" görünür; Ctrl+Z de geri alır; kitap bütün alanlarıyla geri gelir.
+- [ ] Birden çok kopyası olan kitapta "bir kopyayı sil" ile "hepsini sil" ayrı.
+- [ ] Öteki kişinin kitabı için: "Bu Babam'ın listesi, yine de değiştirilsin mi?"
+
+### S-19 Düzenleme ve taşıma · 3 · [O] · bekliyor
+- [ ] Her alan değiştirilebilir.
+- [ ] "Kimin" değişirse kitap öteki dosyaya taşınır; kitap hiçbir anda iki dosyadan birden eksik kalmaz.
+- [ ] Öteki kişinin kitabı için onay sorulur; yazmadan hemen önce o dosya yeniden okunur.
+- [ ] Ctrl+Z son düzenlemeyi geri alır.
+
+### S-20 Kütüphane görünümü · 5 · [O] · bekliyor
+- [ ] Babam ve Benim sekmeleri; bütün kitaplar `DenseTable` içinde; 10.000 satırda akıcı.
+- [ ] Sütuna tıklayınca Türkçe sıraya göre sıralanır.
+- [ ] Sağ tık menüsü: Düzenle, Sil, Öteki kütüphaneye taşı, Raftaki diğer kitaplar, Kopyala.
+- [ ] Üstte son eşitleme zamanı; F5 iki dosyayı hemen yeniden okur.
+- [ ] F2 düzenler, Del siler (yalnızca tablo odaktayken).
+
+### S-21 Raflar görünümü · 3 · [O] · bekliyor
+- [ ] Raf raf gruplanmış liste; her rafta kaç kitap olduğu.
+- [ ] "Rafı yazılmamış" grubu ayrı görünür.
+- [ ] Rafa tıklayınca o raftaki kitaplar listelenir.
+
+### S-22 Raf doldurma · 5 · [O] · bekliyor (öneri: listede hiç raf bilgisi yok)
+- [ ] "Aktif raf" seçilir (örnek: B3); kitap aranıp Enter'a basılınca o rafa atanır, kutu temizlenir, sıradaki kitap yazılır.
+- [ ] Arama sonuçlarının tamamına tek adımda raf atanabilir; onay sorar.
+- [ ] Rafı yazılmamış kitap sayısı görünür ve azaldıkça güncellenir.
+- [ ] Her atama Ctrl+Z ile geri alınır.
+
+## Sprint 5: Dışarıdan gelen Excel ve ayarlar
+
+### S-23 Excel birleştirme · 8 · [F] · bekliyor
+- [ ] Ayarlar'da ve "Dosya" menüsünde "Excel birleştir…" (Ctrl+Shift+O); dosya seçilir, hangi listeye (Babam / Benim) birleştirileceği sorulur.
+- [ ] Sütunlar farklıysa ya da başlık yoksa eşleme ekranı çıkar.
+- [ ] İlk temizlikteki kurallar gelen dosyaya aynen uygulanır (ARCHITECTURE 10); eski 2 sütunlu dosya birleştirildiğinde sahte "yeni" ya da "değişen" çıkmaz.
+- [ ] Karşılaştırma Türkçe duyarlı ve hataya toleranslı; aynı kitap küçük yazım farkıyla iki kez sayılmaz.
+- [ ] Özet ekranı: yeni kitaplar (varsayılan: eklenir); değişenler eski ve yeni değer yan yana (varsayılan: yeni değer); gelen dosyada olmayanlar (varsayılan: silinmez, tek tek işaretlenirse silinir); belirsiz eşleşmeler ("Suç ve Ceza" ile "Suç ve Ceza 1. Cilt") kullanıcıya sorulur.
+- [ ] Gelen dosyadaki boş alan dolu alanı silmez (özellikle Raf).
+- [ ] Her satır işaretlenip kaldırılabilir; "Uygula" denmeden dosyaya hiçbir şey yazılmaz; uygulamadan önce yedek alınır.
+- [ ] Belirsiz eşleşmelerde verilen kararlar hatırlanır; sonraki birleştirmede yeniden sorulmaz.
+- [ ] Sonuç tek satır: "47 kitap eklendi, 3 kitabın rafı güncellendi, 0 kitap silindi."
+
+### S-24 Ayarlar ve yedekten geri yükleme · 5 · [O] · bekliyor
+- [ ] Kitin `AppearanceSection`, `InputSection`, `ShortcutListSection` bölümleri.
+- [ ] "Ben kimim", bağlı dosyalar (ya da klasör), "Başka dosya seç".
+- [ ] "Yedekten geri yükle": son 10 yedek tarih ve kitap sayısıyla listelenir; geri yüklemeden önce şimdiki dosyanın da yedeği alınır; onay sorulur.
+- [ ] Bekleyen yazma varsa burada görünür; "Şimdi dene" düğmesi vardır.
+
+### S-25 Tek Excel olarak dışa aktar · 2 · [O] · bekliyor
+- [ ] Düğme `Babam` ve `Benim` sayfalı tek dosya üretir; nereye kaydedileceğini kullanıcı seçer.
+- [ ] Uygulama bu dosyadan okumaz; dosya Excel, Office NX ve Google E-Tablolar'da açılır.
+
+### S-26 Kısayollar ve menü çubuğu · 3 · [O] · bekliyor
+- [ ] Ctrl+K ara, Ctrl+N kitap ekle, Ctrl+O dosya seç, Ctrl+Shift+O Excel birleştir, Ctrl+Z geri al, F5 yenile, Ctrl+, ayarlar, Ctrl+/ kısayol listesi.
+- [ ] Hepsi tek `ShortcutRegistry` içinde; menü çubuğu, ipuçları ve Ayarlar'daki liste oradan üretilir; çakışma testi geçer.
+- [ ] Tek tuşlu kısayollar (F2, Del) metin kutusuna yazmayı bozmaz.
+
+## Sprint 6: Cilalama ve 1.0.0
+
+### S-27 Tema son hâli · 3 · [F] · bekliyor
+- [ ] Başlıklar ve kitap adları serif (Literata ya da Source Serif 4; OFL lisans dosyası depoda); arayüz IBM Plex Sans; raf kodları mono.
+- [ ] Kitap, raf ve içe aktar simgeleri `DeskIcons.build` ile kitin çizgi stilinde.
+- [ ] Gerçek ekranlarda açık ve koyu temada son kontrast denetimi; bütün ekranların DeX genişliğinde ekran görüntüsü.
+
+### S-28 Türkçe ve İngilizce metinler · 2 · [O] · bekliyor
+- [ ] Bütün metinler `strings.xml` içinde; Türkçe ve İngilizce tam.
+- [ ] Mesajlar kısa ve sade; hata mesajları ne yapılacağını söyler.
+
+### S-29 Cilalama ve 1.0.0 · 5 · [O] · bekliyor
+- [ ] README (kurulum, Drive klasörü, babanın telefonu), CHANGELOG, sürüm 1.0.0.
+- [ ] 1.0.0 APK'sı önceki sürümlerin üstüne kurulur; ayarlar ve yedekler kalır.
+- [ ] Tablette ve babanın telefonunda baştan sona deneme listesi geçti.
+
+## Sonraki sürüm (şimdi yapılmayacak)
+
+- ISBN barkod okutma (çevrimdışı ZXing; ML Kit yok).
+- "Ödünç verdim" işareti.
+- İkiden fazla kütüphane.
