@@ -116,13 +116,13 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [x] `.xls` seçilirse "Excel'de .xlsx olarak kaydedip tekrar deneyin" der.
 - [x] Klavye ve fareyle tamamlanabilir; açık ve koyu ekran görüntüsü.
 
-### S-14 Ara ekranı ve sonuç görünümü · 5 · [O] · bekliyor
-- [ ] Yazdıkça sonuç gelir; üstte "Hepsi / Babam / Benim" süzgeci.
-- [ ] Kitap varsa kimde ve hangi rafta olduğu büyük ve net: "Babam · Raf B3"; raf yazısı en az 32 sp, raf kodu mono.
-- [ ] Raf boşsa "Raf yazılmamış" görünür (şu an bütün raflar boş).
-- [ ] İki kütüphanede de varsa ikisi de gösterilir; birden çok kopya ve imzalı kopya belirtilir.
-- [ ] Yoksa "Bu kitap iki kütüphanede de yok", en yakın 3 öneri ve "Ekle" düğmesi (form S-17'de bağlanır).
-- [ ] DeX genişliğinde ve telefon genişliğinde (dikey), açık ve koyu ekran görüntüsü.
+### S-14 Ara ekranı ve sonuç görünümü · 5 · [O] · bitti
+- [x] Yazdıkça sonuç gelir; üstte "Hepsi / Babam / Benim" süzgeci.
+- [x] Kitap varsa kimde ve hangi rafta olduğu büyük ve net: "Babam · Raf B3"; raf yazısı en az 32 sp (36 sp), raf kodu mono. Başlıklar şimdilik sistemin serif yazısıyla; Literata K-01 (kit 0.1.1) ile gelir.
+- [x] Raf boşsa "Raf yazılmamış" görünür (şu an bütün raflar boş).
+- [x] İki kütüphanede de varsa ikisi de gösterilir; birden çok kopya ve imzalı kopya belirtilir.
+- [x] Yoksa "Bu kitap iki kütüphanede de yok", en yakın 3 öneri ve "Ekle" düğmesi (form S-17'de bağlanır).
+- [x] DeX genişliğinde ve telefon genişliğinde (dikey), açık ve koyu ekran görüntüsü.
 
 ## Sprint 3: Güvenli yazma ve kitap ekleme
 
