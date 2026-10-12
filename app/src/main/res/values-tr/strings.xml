@@ -90,4 +90,26 @@
     <string name="settings_folder_none">Seçilmedi</string>
     <string name="settings_folder_pick">Klasör seç</string>
     <string name="settings_reopen_setup">Kurulumu yeniden aç</string>
+
+    <!-- arama (S-14) -->
+    <string name="search_hint">Kitap adı ya da yazar</string>
+    <string name="search_clear">Aramayı temizle</string>
+    <string name="search_filter_all">Hepsi</string>
+    <string name="search_found">%1$d kitap bulundu</string>
+    <string name="search_found_one">1 kitap bulundu</string>
+    <string name="search_shelf">Raf</string>
+    <string name="search_no_shelf">Raf yazılmamış</string>
+    <string name="search_copies">%1$d adet</string>
+    <string name="search_signed">İmzalı</string>
+    <string name="search_empty_title">Hangi kitabı arıyorsunuz?</string>
+    <string name="search_empty_text">Kitap adının ya da yazarın bir kısmını yazın. Sözcük sırası ve Türkçe harfler önemli değil.</string>
+    <string name="search_none_both">Bu kitap iki kütüphanede de yok</string>
+    <string name="search_none_dad">Babam\'ın listesinde yok</string>
+    <string name="search_none_me">Benim listemde yok</string>
+    <string name="search_suggestions">Bunlardan biri olabilir mi?</string>
+    <string name="search_add">Kitap ekle</string>
+    <string name="search_add_later">Kitap ekleme bir sonraki sürümde geliyor.</string>
+    <string name="search_loading">Listeler okunuyor…</string>
+    <string name="search_keys_move">sonuçlarda gez</string>
+    <string name="search_keys_clear">temizle</string>
 </resources>

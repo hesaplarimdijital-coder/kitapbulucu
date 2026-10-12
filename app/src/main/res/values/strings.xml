@@ -91,4 +91,26 @@
     <string name="settings_folder_none">Not chosen</string>
     <string name="settings_folder_pick">Choose folder</string>
     <string name="settings_reopen_setup">Open setup again</string>
+
+    <!-- search (S-14) -->
+    <string name="search_hint">Title or author</string>
+    <string name="search_clear">Clear the search</string>
+    <string name="search_filter_all">All</string>
+    <string name="search_found">%1$d books found</string>
+    <string name="search_found_one">1 book found</string>
+    <string name="search_shelf">Shelf</string>
+    <string name="search_no_shelf">Shelf not written</string>
+    <string name="search_copies">%1$d copies</string>
+    <string name="search_signed">Signed</string>
+    <string name="search_empty_title">Which book are you looking for?</string>
+    <string name="search_empty_text">Type part of the title or the author. Word order and Turkish letters do not matter.</string>
+    <string name="search_none_both">This book is in neither library</string>
+    <string name="search_none_dad">Not in Babam\'s list</string>
+    <string name="search_none_me">Not in my list</string>
+    <string name="search_suggestions">Did you mean one of these?</string>
+    <string name="search_add">Add book</string>
+    <string name="search_add_later">Adding books arrives in the next version.</string>
+    <string name="search_loading">Reading the lists…</string>
+    <string name="search_keys_move">move through results</string>
+    <string name="search_keys_clear">clear</string>
 </resources>

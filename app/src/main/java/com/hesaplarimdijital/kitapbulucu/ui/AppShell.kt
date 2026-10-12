@@ -22,6 +22,7 @@ import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.store.LoadFailure
 import com.hesaplarimdijital.kitapbulucu.store.LoadStatus
+import com.hesaplarimdijital.kitapbulucu.ui.search.SearchScreen
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
 import desktopkit.components.SegmentedChoice
@@ -91,6 +92,8 @@ fun AppShell(
     picker: FilePicker? = null,
     onMap: (Owner) -> Unit = {},
     onShortcut: (String) -> Unit = {},
+    /** For screenshots: what the search field starts with. */
+    initialSearch: String = "",
 ) {
     val spec = rememberAppSpec()
     val resources = LocalContext.current.resources
@@ -107,12 +110,16 @@ fun AppShell(
             if (store != null && picker != null) LibraryNotices(store, picker, onMap)
             Box(Modifier.weight(1f)) {
                 when (route) {
-                    Routes.SEARCH -> MessageScreen(
-                        title = stringResource(R.string.placeholder_search_title),
-                        icon = DeskIcons.Search,
-                        pageTitle = spec.item(route)?.label,
-                        description = stringResource(R.string.placeholder_search_text),
-                    )
+                    Routes.SEARCH -> if (store != null) {
+                        SearchScreen(store, initialQuery = initialSearch)
+                    } else {
+                        MessageScreen(
+                            title = stringResource(R.string.placeholder_search_title),
+                            icon = DeskIcons.Search,
+                            pageTitle = spec.item(route)?.label,
+                            description = stringResource(R.string.placeholder_search_text),
+                        )
+                    }
                     Routes.LIBRARY -> MessageScreen(
                         title = stringResource(R.string.placeholder_library_title),
                         icon = AppIcons.Book,

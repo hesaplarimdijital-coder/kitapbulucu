@@ -15,6 +15,8 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.hesaplarimdijital.kitapbulucu.model.Book
+import com.hesaplarimdijital.kitapbulucu.model.BookTable
 import com.hesaplarimdijital.kitapbulucu.model.Owner
 import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.FakeDocuments
@@ -28,6 +30,7 @@ import com.hesaplarimdijital.kitapbulucu.ui.setup.MappingScreen
 import com.hesaplarimdijital.kitapbulucu.ui.setup.SetupScreen
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppPalette
 import com.hesaplarimdijital.kitapbulucu.xlsx.TestWorkbooks
+import com.hesaplarimdijital.kitapbulucu.xlsx.XlsxWriter
 import desktopkit.settings.rememberDeskPreferences
 import desktopkit.shell.ShellNavigator
 import desktopkit.shell.WidthClass
@@ -58,12 +61,26 @@ class SetupScreenshotTest {
 
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
-    private fun sampleStore(): LibraryStore {
+    /** My list for the search screenshots: one book both libraries hold, two only I hold. */
+    private val myBooks: ByteArray
+        get() = XlsxWriter.write(
+            listOf(
+                BookTable(
+                    listOf(
+                        Book("Çatıdaki Rasathane", "Ayşe İnce", "1B"),
+                        Book("Çatıdaki Kuşların Son Şarkısı", "Ferit Ağaoğlu", "3C", signed = true),
+                        Book("Çatıdakiler", "Leyla Umut"),
+                    ),
+                ).toSheetSpec("Benim"),
+            ),
+        )
+
+    private fun sampleStore(myList: ByteArray = TestWorkbooks.fixture("ornek-eski-bicim.xlsx")): LibraryStore {
         val documents = FakeDocuments()
         val dad = Uri.parse("content://test/Babam.xlsx")
         val me = Uri.parse("content://test/Benim.xlsx")
         documents.bytes[dad] = TestWorkbooks.fixture("ornek-kutuphane.xlsx")
-        documents.bytes[me] = TestWorkbooks.fixture("ornek-eski-bicim.xlsx")
+        documents.bytes[me] = myList
         val links = FileLinks(context.getSharedPreferences("screenshot-links", Context.MODE_PRIVATE))
         links.set(Owner.DAD, dad, "Babam.xlsx")
         links.set(Owner.ME, me, "Benim.xlsx")
@@ -101,16 +118,18 @@ class SetupScreenshotTest {
         capture(name, theme, input) { MappingScreen(Owner.ME, store, onClose = {}) }
     }
 
-    private fun shell(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, route: String) {
-        val store = sampleStore()
+    private fun shell(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, route: String, query: String = "", store: LibraryStore = sampleStore()) {
         val settings = sampleSettings()
         capture(name, theme, input) {
             val prefs = rememberDeskPreferences(accents = AppPalette.accents)
             val navController = rememberNavController()
             LaunchedEffect(route) { if (route != Routes.SEARCH) ShellNavigator(navController).navigate(route) }
-            AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store))
+            AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store), initialSearch = query)
         }
     }
+
+    private fun search(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, query: String) =
+        shell(name, theme, input, widthClass, Routes.SEARCH, query, sampleStore(myBooks))
 
     @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
     fun setupDexLight() = setup("dex-light-setup", ThemeMode.Light, InputMode.Pointer)
@@ -135,4 +154,22 @@ class SetupScreenshotTest {
 
     @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
     fun noticeDexLight() = shell("dex-light-notice", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge, Routes.LIBRARY)
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun searchDexLight() = search("dex-light-search", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge, "çatıdaki")
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun searchDexDark() = search("dex-dark-search", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge, "çatıdaki")
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun searchPhoneLight() = search("phone-light-search", ThemeMode.Light, InputMode.Touch, WidthClass.Compact, "çatıdaki")
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun searchPhoneDark() = search("phone-dark-search", ThemeMode.Dark, InputMode.Touch, WidthClass.Compact, "çatıdaki")
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun searchNothingPhoneLight() = search("phone-light-search-none", ThemeMode.Light, InputMode.Touch, WidthClass.Compact, "kürk mantolu kaplan")
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun searchEmptyDexDark() = search("dex-dark-search-empty", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge, "")
 }
