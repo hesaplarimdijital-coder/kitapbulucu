@@ -13,22 +13,6 @@
     <string name="placeholder_shelves_title">Raflar burada listelenecek</string>
     <string name="placeholder_shelves_text">Her raf ve üzerindeki kitap sayısı. İleriki bir sürümde geliyor.</string>
 
-    <string name="nav_trial">Deneme</string>
-    <string name="trial_intro">Google Drive\'ın dosyalara erişime nasıl izin verdiğini ölçer. Gerçek listelere dokunmaz; yalnızca kendi küçük deneme dosyasını kullanır.</string>
-    <string name="trial_file">Deneme dosyası</string>
-    <string name="trial_folder">Klasör</string>
-    <string name="trial_none">Henüz seçilmedi</string>
-    <string name="trial_create">Dosya oluştur</string>
-    <string name="trial_open">Var olan dosyayı seç</string>
-    <string name="trial_read">Oku</string>
-    <string name="trial_write">Yaz</string>
-    <string name="trial_pick_folder">Klasör seç</string>
-    <string name="trial_list_folder">Klasördekileri listele</string>
-    <string name="trial_permissions">İzin durumu</string>
-    <string name="trial_log">Sonuçlar</string>
-    <string name="trial_copy">Sonuçları kopyala</string>
-    <string name="trial_clear">Temizle</string>
-    <string name="trial_log_empty">Henüz bir şey yok. "Dosya oluştur" ile başla.</string>
 
     <!-- kütüphane durumu (S-12) -->
     <string name="owner_dad">Babam</string>
@@ -60,4 +44,49 @@
     <string name="stray_files_text">Bu dosyalar yok sayılıyor: %1$s. \"~$\" ile başlayan dosya listenin Excel\'de açık olduğunu, çakışan kopya ise iki cihazın aynı anda yazdığını gösterir; Drive\'da kontrol edin.</string>
     <string name="action_understood">Anladım</string>
     <string name="shortcut_refresh">Listeleri yeniden oku</string>
+
+    <!-- kurulum (S-13) -->
+    <string name="setup_title">Kurulum</string>
+    <string name="setup_intro">İki kütüphanenin listesi Google Drive\'daki iki Excel dosyasında durur. Dosyaları bir kez gösterin; uygulama sonra hep onları okur.</string>
+    <string name="setup_who_title">Bu cihaz kimin?</string>
+    <string name="setup_who_text">Değişiklikler bu kişinin dosyasına yazılır; iki liste de okunur.</string>
+    <string name="setup_who_dad">Babam</string>
+    <string name="setup_who_me">Ben</string>
+    <string name="setup_own_list">Bu cihaz bu listeye yazar</string>
+    <string name="setup_other_list">Bu liste yalnızca okunur</string>
+    <string name="setup_pick">Dosya seç</string>
+    <string name="setup_create">Yeni dosya oluştur</string>
+    <string name="setup_change">Başka dosya seç</string>
+    <string name="setup_create_failed">Dosya oluşturulamadı. Başka bir yer seçip tekrar deneyin.</string>
+    <string name="setup_file_name">Dosya: %1$s</string>
+    <string name="setup_sheet">Sayfa</string>
+    <string name="setup_problems">%1$d satırda adet sayı değil; 1 sayıldı.</string>
+    <string name="setup_map_columns">Sütunları eşle</string>
+    <string name="setup_done">Bitir</string>
+    <string name="setup_need_who">Önce bu cihazın kimin olduğunu seçin.</string>
+    <string name="setup_need_own">Önce bu cihazın listesini seçin.</string>
+    <string name="setup_later">Öteki listeyi sonra Ayarlar\'dan da ekleyebilirsiniz.</string>
+
+    <!-- sütun eşleme (S-13) -->
+    <string name="mapping_title">Sütunları eşle</string>
+    <string name="mapping_intro">%1$s dosyasındaki sütun başlıkları tanınmadı. Her sütunda ne yazdığını seçin; bu eşleme saklanır ve bir daha sorulmaz.</string>
+    <string name="mapping_header_row">Başlık satırı</string>
+    <string name="mapping_no_header">Başlık yok, kitaplar 1. satırdan başlıyor</string>
+    <string name="mapping_row">%1$d. satır: %2$s</string>
+    <string name="mapping_column">%1$s sütunu</string>
+    <string name="mapping_column_named">%1$s sütunu · “%2$s”</string>
+    <string name="mapping_samples_empty">ilk satırlarda boş</string>
+    <string name="mapping_unused">Kullanılmasın (olduğu gibi kalsın)</string>
+    <string name="mapping_need_title">Kitap adının hangi sütunda olduğunu seçin.</string>
+    <string name="mapping_save">Kaydet</string>
+    <string name="mapping_cancel">Vazgeç</string>
+    <string name="mapping_waiting">Dosya okunuyor…</string>
+
+    <!-- ayarlar (S-13) -->
+    <string name="settings_library">Kitaplık</string>
+    <string name="settings_folder">Klasör (isteğe bağlı)</string>
+    <string name="settings_folder_text">Seçilirse çakışan kopyalar ve Excel\'de açık kalmış dosyalar fark edilir.</string>
+    <string name="settings_folder_none">Seçilmedi</string>
+    <string name="settings_folder_pick">Klasör seç</string>
+    <string name="settings_reopen_setup">Kurulumu yeniden aç</string>
 </resources>

@@ -3,6 +3,7 @@ package com.hesaplarimdijital.kitapbulucu.store
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
+import com.hesaplarimdijital.kitapbulucu.model.ColumnMapping
 import com.hesaplarimdijital.kitapbulucu.model.Owner
 
 /** The documents the app is linked to: one per owner, plus an optional folder, kept in preferences. */
@@ -20,7 +21,7 @@ class FileLinks(private val prefs: SharedPreferences) {
     }
 
     fun clear(owner: Owner) {
-        prefs.edit().remove(uriKey(owner)).remove(nameKey(owner)).remove(sheetKey(owner)).apply()
+        prefs.edit().remove(uriKey(owner)).remove(nameKey(owner)).remove(sheetKey(owner)).remove(mappingKey(owner)).apply()
     }
 
     /** The sheet to read when a workbook has several filled ones; null means the first filled sheet. */
@@ -28,6 +29,13 @@ class FileLinks(private val prefs: SharedPreferences) {
 
     fun setSheetName(owner: Owner, name: String?) {
         prefs.edit().apply { if (name == null) remove(sheetKey(owner)) else putString(sheetKey(owner), name) }.apply()
+    }
+
+    /** The user's column mapping for this owner's file, when its headers are not recognised. */
+    fun mapping(owner: Owner): ColumnMapping? = ColumnMapping.fromJson(prefs.getString(mappingKey(owner), null))
+
+    fun setMapping(owner: Owner, mapping: ColumnMapping?) {
+        prefs.edit().apply { if (mapping == null) remove(mappingKey(owner)) else putString(mappingKey(owner), mapping.toJson()) }.apply()
     }
 
     var treeUri: Uri?
@@ -46,6 +54,7 @@ class FileLinks(private val prefs: SharedPreferences) {
     private fun uriKey(owner: Owner) = "uri_${owner.name}"
     private fun nameKey(owner: Owner) = "name_${owner.name}"
     private fun sheetKey(owner: Owner) = "sheet_${owner.name}"
+    private fun mappingKey(owner: Owner) = "mapping_${owner.name}"
 
     companion object {
         const val FILE = "files"

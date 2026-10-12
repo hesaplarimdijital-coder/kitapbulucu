@@ -2,6 +2,7 @@ package com.hesaplarimdijital.kitapbulucu
 
 import android.app.Application
 import android.content.Context
+import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.FileLinks
 import com.hesaplarimdijital.kitapbulucu.store.LibraryCache
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
@@ -15,9 +16,12 @@ import java.io.File
 class App : Application() {
     lateinit var store: LibraryStore
         private set
+    lateinit var settings: AppSettings
+        private set
 
     override fun onCreate() {
         super.onCreate()
+        settings = AppSettings.of(this)
         store = LibraryStore(
             links = FileLinks.of(this),
             documents = SafDocuments(contentResolver),
@@ -29,5 +33,6 @@ class App : Application() {
 
     companion object {
         fun store(context: Context): LibraryStore = (context.applicationContext as App).store
+        fun settings(context: Context): AppSettings = (context.applicationContext as App).settings
     }
 }

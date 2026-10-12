@@ -1,6 +1,7 @@
 package com.hesaplarimdijital.kitapbulucu.store
 
 import android.content.ContentResolver
+import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
 import java.io.ByteArrayOutputStream
@@ -24,6 +25,12 @@ interface Documents {
 
     /** Display names of the documents in a tree the user granted; empty when the tree cannot be listed. */
     fun childNames(treeUri: Uri): List<String>
+
+    /** Replaces the whole document; throws [DocumentException]. Safe-write rules are the caller's (ARCHITECTURE 7). */
+    fun writeBytes(uri: Uri, bytes: ByteArray)
+
+    /** Keeps access to [uri] across restarts: read and write when the provider allows, else read only. */
+    fun keepPermission(uri: Uri): Boolean
 
     companion object {
         const val DEFAULT_MAX_BYTES = 128 * 1024 * 1024
@@ -73,6 +80,43 @@ class SafDocuments(private val resolver: ContentResolver) : Documents {
             throw DocumentException(DocumentFailure.NO_PERMISSION, "Permission to the document was lost", e)
         } catch (e: IOException) {
             throw DocumentException(DocumentFailure.IO, "Document could not be read", e)
+        }
+    }
+
+    override fun writeBytes(uri: Uri, bytes: ByteArray) {
+        try {
+            val stream = try {
+                resolver.openOutputStream(uri, "wt")
+            } catch (e: FileNotFoundException) {
+                resolver.openOutputStream(uri, "w") // some providers know no "t"
+            } ?: throw DocumentException(DocumentFailure.NOT_FOUND, "No output stream for $uri")
+            stream.use {
+                it.write(bytes)
+                it.flush()
+            }
+        } catch (e: DocumentException) {
+            throw e
+        } catch (e: FileNotFoundException) {
+            throw DocumentException(DocumentFailure.NOT_FOUND, "Document is gone", e)
+        } catch (e: SecurityException) {
+            throw DocumentException(DocumentFailure.NO_PERMISSION, "No permission to write", e)
+        } catch (e: IOException) {
+            throw DocumentException(DocumentFailure.IO, "Document could not be written", e)
+        }
+    }
+
+    override fun keepPermission(uri: Uri): Boolean {
+        val both = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        return try {
+            resolver.takePersistableUriPermission(uri, both)
+            true
+        } catch (e: SecurityException) {
+            try {
+                resolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                true
+            } catch (inner: SecurityException) {
+                false
+            }
         }
     }
 

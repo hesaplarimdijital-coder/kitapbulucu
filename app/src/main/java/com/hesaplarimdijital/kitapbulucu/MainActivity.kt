@@ -10,9 +10,17 @@ import android.view.Menu
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.navigation.compose.rememberNavController
+import com.hesaplarimdijital.kitapbulucu.model.Owner
 import com.hesaplarimdijital.kitapbulucu.ui.AppShell
+import com.hesaplarimdijital.kitapbulucu.ui.rememberFilePicker
+import com.hesaplarimdijital.kitapbulucu.ui.setup.MappingScreen
+import com.hesaplarimdijital.kitapbulucu.ui.setup.SetupScreen
 import com.hesaplarimdijital.kitapbulucu.ui.AppShortcuts
 import desktopkit.DesktopKitRoot
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppPalette
@@ -37,9 +45,18 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val navigator = remember(navController) { ShellNavigator(navController) }
             val store = App.store(this)
+            val settings = App.settings(this)
+            // the owner whose columns are being mapped; the mapping screen covers everything else
+            var mapping by rememberSaveable { mutableStateOf<Owner?>(null) }
             perform = { id -> AppShortcuts.perform(id, navigator, prefs, onRefresh = store::refresh) }
             DesktopKitRoot(prefs, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
-                AppShell(prefs, widthClass, navController, store = store, onShortcut = { perform(it) })
+                val picker = rememberFilePicker(store)
+                val mappingOwner = mapping
+                when {
+                    mappingOwner != null -> MappingScreen(mappingOwner, store, onClose = { mapping = null })
+                    !settings.setupDone -> SetupScreen(store, settings, picker, onMap = { mapping = it }, onDone = { settings.updateSetupDone(true) })
+                    else -> AppShell(prefs, widthClass, navController, store, settings, picker, onMap = { mapping = it }, onShortcut = { perform(it) })
+                }
             }
         }
     }

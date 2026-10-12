@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.hesaplarimdijital.kitapbulucu.model.Book
+import com.hesaplarimdijital.kitapbulucu.model.BookColumn
+import com.hesaplarimdijital.kitapbulucu.model.ColumnMapping
 import com.hesaplarimdijital.kitapbulucu.model.BookTable
 import com.hesaplarimdijital.kitapbulucu.model.Owner
 import com.hesaplarimdijital.kitapbulucu.xlsx.SheetSpec
@@ -31,23 +33,6 @@ class LibraryStoreTest {
 
     @get:Rule
     val folder = TemporaryFolder()
-
-    /** Documents in memory: a uri maps to bytes, or to a failure. */
-    private class FakeDocuments : Documents {
-        val bytes = HashMap<Uri, ByteArray>()
-        val failures = HashMap<Uri, DocumentFailure>()
-        val infos = HashMap<Uri, DocumentInfo>()
-        var children = listOf<String>()
-        var reads = 0
-
-        override fun info(uri: Uri): DocumentInfo? = infos[uri]
-        override fun readBytes(uri: Uri, maxBytes: Int): ByteArray {
-            reads++
-            failures[uri]?.let { throw DocumentException(it, "test failure") }
-            return bytes[uri] ?: throw DocumentException(DocumentFailure.NOT_FOUND, "no such document")
-        }
-        override fun childNames(treeUri: Uri): List<String> = children
-    }
 
     private val dadUri: Uri = Uri.parse("content://test/Babam.xlsx")
     private val meUri: Uri = Uri.parse("content://test/Benim.xlsx")
@@ -237,5 +222,48 @@ class LibraryStoreTest {
         assertTrue(LibraryStore.isStrayFile("Benim (Ali's conflicted copy 2026-10-12).xlsx"))
         assertFalse(LibraryStore.isStrayFile("Babam.xlsx"))
         assertFalse(LibraryStore.isStrayFile("Kopya Babam.xlsx"))
+    }
+
+    @Test
+    fun createsAnEmptyListWithHeaders() {
+        val fresh = Uri.parse("content://test/new/Benim.xlsx")
+        val store = store()
+        store.start()
+        var result: Boolean? = null
+        store.createEmpty(Owner.ME, fresh) { result = it }
+        assertEquals(true, result)
+        val written = XlsxReader.read(documents.bytes.getValue(fresh).inputStream()).sheets.single()
+        assertEquals("Benim", written.name)
+        assertEquals(BookTable.HEADERS, written.rows.single())
+        assertEquals(LoadStatus.READY, store.state(Owner.ME).status)
+        assertEquals(0, store.state(Owner.ME).bookCount)
+        assertEquals(fresh, links().link(Owner.ME)!!.uri)
+        assertTrue(fresh in documents.kept)
+
+        documents.writeFailure = DocumentFailure.NO_PERMISSION
+        val other = Uri.parse("content://test/new/Babam.xlsx")
+        store.createEmpty(Owner.DAD, other) { result = it }
+        assertEquals(false, result)
+        assertNull(links().link(Owner.DAD))
+    }
+
+    @Test
+    fun aMappingOpensAFileWithoutHeaders() {
+        links().set(Owner.DAD, dadUri, "Kütüphane.xlsx")
+        documents.bytes[dadUri] = TestWorkbooks.fixture("ornek-eski-bicim.xlsx")
+        val store = store()
+        store.start()
+        // the old layout's "KİTAP | YAZAR" row sits below five books, so it is not taken as the header
+        assertEquals(LoadFailure.NO_HEADER, store.state(Owner.DAD).failure)
+        val preview = store.previews.value.getValue(Owner.DAD)
+        assertEquals("Sayfa1", preview.selected)
+        store.setMapping(Owner.DAD, ColumnMapping(-1, mapOf(0 to BookColumn.TITLE, 1 to BookColumn.AUTHOR)))
+        val state = store.state(Owner.DAD)
+        assertEquals(LoadStatus.READY, state.status)
+        assertEquals("ISLIKLI KUŞLARIN SOKAĞI", state.table!!.books.first().title)
+        assertEquals("NEVİN ÇAĞLAR", state.table!!.books.first().author)
+        assertEquals(8, state.bookCount) // nine rows less the repeated header
+        assertTrue(state.table!!.books.none { it.title == "KİTAP" })
+        assertNotNull(store.mapping(Owner.DAD))
     }
 }

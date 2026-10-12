@@ -61,31 +61,49 @@ class BookTable(val books: List<Book>, val extraHeaders: List<String> = emptyLis
         val HEADERS: List<String> = BookColumn.entries.map { it.header }
         const val SIGNED_TEXT = "Evet"
         private const val EXTRA_WIDTH = 18.0
-        private const val HEADER_SEARCH_ROWS = 20
+        const val HEADER_SEARCH_ROWS = 20
+        private const val PREVIEW_SCAN_ROWS = 200
+        private const val MAX_TITLE_LINES = 3
         private val SIGNED_WORDS = setOf("evet", "e", "x", "var", "imzali", "imza", "1", "dogru", "true", "✓", "✔")
 
-        /** Null when no row within the first rows looks like a header (the title column at least). */
-        fun parse(sheet: Sheet): Parsed? {
-            val headerRow = sheet.rows.take(HEADER_SEARCH_ROWS).indexOfFirst { looksLikeHeader(it) }
-            if (headerRow < 0) return null
-            val header = sheet.rows[headerRow]
+        /**
+         * Books of [sheet]. The header row is found by its column names; when none is found and the
+         * user made a [mapping] for this sheet, the mapping says which column holds what. Null when
+         * neither works: the sheet needs a mapping.
+         */
+        fun parse(sheet: Sheet, mapping: ColumnMapping? = null): Parsed? {
+            val detected = detectHeaderRow(sheet)
+            val useMapping = mapping != null && mapping.columns.containsValue(BookColumn.TITLE) && mapping.fits(sheet, detected)
+            val headerRow: Int
             val standard = HashMap<BookColumn, Int>()
             val extraColumns = ArrayList<Int>()
-            header.forEachIndexed { index, text ->
-                val column = BookColumn.match(text)
-                if (column != null && column !in standard) {
-                    standard[column] = index
-                } else {
-                    extraColumns.add(index)
+            val header: List<String>
+            if (useMapping) {
+                headerRow = mapping!!.headerRow
+                header = if (headerRow >= 0) sheet.rows[headerRow] else emptyList()
+                for ((index, column) in mapping.columns) if (column !in standard) standard[column] = index
+                for (index in 0 until columnCount(sheet)) if (index !in standard.values) extraColumns.add(index)
+            } else {
+                if (detected < 0) return null
+                headerRow = detected
+                header = sheet.rows[headerRow]
+                header.forEachIndexed { index, text ->
+                    val column = BookColumn.match(text)
+                    if (column != null && column !in standard) {
+                        standard[column] = index
+                    } else {
+                        extraColumns.add(index)
+                    }
                 }
             }
             val body = sheet.rows.drop(headerRow + 1)
             // unknown columns are kept when they have a header or hold anything at all
-            val keptExtras = extraColumns.filter { index -> header[index].isNotBlank() || body.any { it.getOrNull(index)?.isNotBlank() == true } }
-            val extraHeaders = keptExtras.map { TurkishText.squeeze(header[it]) }
+            val keptExtras = extraColumns.filter { index -> header.getOrNull(index)?.isNotBlank() == true || body.any { it.getOrNull(index)?.isNotBlank() == true } }
+            val extraHeaders = keptExtras.map { TurkishText.squeeze(header.getOrNull(it).orEmpty()) }
             val problems = ArrayList<Problem>()
             val books = ArrayList<Book>()
             body.forEachIndexed { offset, row ->
+                if (looksLikeHeader(row)) return@forEachIndexed // a header repeated inside the list is not a book
                 fun cell(column: BookColumn): String = standard[column]?.let { row.getOrNull(it) }.orEmpty()
                 val excelRow = headerRow + offset + 2
                 val copiesText = cell(BookColumn.COPIES).trim()
@@ -107,6 +125,21 @@ class BookTable(val books: List<Book>, val extraHeaders: List<String> = emptyLis
             }
             return Parsed(BookTable(books, extraHeaders), headerRow, problems)
         }
+
+        /**
+         * The 0-based row that names the columns, or -1. A header with more than a few filled rows
+         * above it is not taken: those rows would be books lost above the header (the old hand-kept
+         * list repeats "KİTAP | YAZAR" in the middle), so such a sheet goes to the mapping screen.
+         */
+        fun detectHeaderRow(sheet: Sheet): Int {
+            val row = sheet.rows.take(HEADER_SEARCH_ROWS).indexOfFirst { looksLikeHeader(it) }
+            if (row < 0) return -1
+            val filledAbove = sheet.rows.take(row).count { cells -> cells.any { it.isNotBlank() } }
+            return if (filledAbove <= MAX_TITLE_LINES) row else -1
+        }
+
+        /** The widest of the first rows: how many columns a mapping screen shows. */
+        fun columnCount(sheet: Sheet): Int = sheet.rows.take(PREVIEW_SCAN_ROWS).maxOfOrNull { it.size } ?: 0
 
         fun isSigned(text: String): Boolean = BookColumn.fold(text) in SIGNED_WORDS
 

@@ -2,6 +2,7 @@ package com.hesaplarimdijital.kitapbulucu.store
 
 import com.hesaplarimdijital.kitapbulucu.model.BookTable
 import com.hesaplarimdijital.kitapbulucu.model.Owner
+import com.hesaplarimdijital.kitapbulucu.xlsx.Sheet
 
 enum class LoadStatus {
     /** No file chosen yet for this owner. */
@@ -45,6 +46,17 @@ data class LibraryState(
 
     companion object {
         fun notLinked(owner: Owner) = LibraryState(owner, LoadStatus.NOT_LINKED)
+    }
+}
+
+/** The first rows of each filled sheet of a file and the sheet being read. */
+class WorkbookPreview(val sheets: List<Sheet>, val selected: String) {
+    /** Sheet names to choose from; empty when there is only one. */
+    val filledSheetNames: List<String> get() = if (sheets.size > 1) sheets.map { it.name } else emptyList()
+    val selectedSheet: Sheet get() = sheets.firstOrNull { it.name == selected } ?: sheets.first()
+
+    companion object {
+        const val ROWS = 30
     }
 }
 

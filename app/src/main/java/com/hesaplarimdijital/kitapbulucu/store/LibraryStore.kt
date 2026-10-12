@@ -2,10 +2,13 @@ package com.hesaplarimdijital.kitapbulucu.store
 
 import android.net.Uri
 import com.hesaplarimdijital.kitapbulucu.model.BookTable
+import com.hesaplarimdijital.kitapbulucu.model.ColumnMapping
 import com.hesaplarimdijital.kitapbulucu.model.Owner
 import com.hesaplarimdijital.kitapbulucu.search.SearchIndex
 import com.hesaplarimdijital.kitapbulucu.xlsx.SpreadsheetException
+import com.hesaplarimdijital.kitapbulucu.xlsx.Sheet
 import com.hesaplarimdijital.kitapbulucu.xlsx.SpreadsheetReader
+import com.hesaplarimdijital.kitapbulucu.xlsx.XlsxWriter
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,6 +42,10 @@ class LibraryStore(
     private val _warning = MutableStateFlow<StrayFileWarning?>(null)
     val warning: StateFlow<StrayFileWarning?> = _warning.asStateFlow()
 
+    private val _previews = MutableStateFlow<Map<Owner, WorkbookPreview>>(emptyMap())
+    /** The first rows of every filled sheet of each file, for choosing a sheet and mapping columns. */
+    val previews: StateFlow<Map<Owner, WorkbookPreview>> = _previews.asStateFlow()
+
     /** Hash of the bytes behind each shown table. */
     private val hashes = HashMap<Owner, String>()
     private val indexed = HashMap<Owner, BookTable?>()
@@ -61,8 +68,11 @@ class LibraryStore(
     }
 
     fun relink(owner: Owner, uri: Uri, displayName: String?) {
+        documents.keepPermission(uri)
         links.set(owner, uri, displayName)
         links.setSheetName(owner, null)
+        links.setMapping(owner, null)
+        _previews.value = _previews.value - owner
         cache.clear(owner)
         hashes.remove(owner)
         update(LibraryState(owner, LoadStatus.LOADING, displayName = displayName))
@@ -71,6 +81,7 @@ class LibraryStore(
 
     fun unlink(owner: Owner) {
         links.clear(owner)
+        _previews.value = _previews.value - owner
         cache.clear(owner)
         hashes.remove(owner)
         update(LibraryState.notLinked(owner))
@@ -82,6 +93,45 @@ class LibraryStore(
         hashes.remove(owner) // forces a parse of the chosen sheet
         refresh()
     }
+
+    fun setMapping(owner: Owner, mapping: ColumnMapping?) {
+        links.setMapping(owner, mapping)
+        hashes.remove(owner)
+        refresh()
+    }
+
+    /** The folder next to the files, only used to notice lock files and conflicted copies. */
+    fun setTree(uri: Uri?) {
+        if (uri != null) documents.keepPermission(uri)
+        links.treeUri = uri
+        refresh()
+    }
+
+    /**
+     * Fills a document the user has just created with an empty list (headers only) and links it.
+     * [onResult] gets false when the document could not be written.
+     */
+    fun createEmpty(owner: Owner, uri: Uri, onResult: (Boolean) -> Unit = {}) {
+        scope.launch {
+            val bytes = XlsxWriter.write(listOf(BookTable(emptyList()).toSheetSpec(owner.label)))
+            val written = withContext(io) {
+                try {
+                    documents.writeBytes(uri, bytes)
+                    true
+                } catch (e: DocumentException) {
+                    false
+                }
+            }
+            if (written) relink(owner, uri, null)
+            onResult(written)
+        }
+    }
+
+    /** The user's column mapping for [owner]'s file, if one was made. */
+    fun mapping(owner: Owner): ColumnMapping? = links.mapping(owner)
+
+    /** The folder chosen next to the files, if any. */
+    val treeUri: Uri? get() = links.treeUri
 
     fun dismissWarning() {
         val names = _warning.value?.names ?: return
@@ -102,6 +152,7 @@ class LibraryStore(
             when (val parsed = withContext(io) { parse(owner, entry.bytes, entry.meta.displayName ?: link.displayName) }) {
                 is Parsed.Ok -> {
                     hashes[owner] = entry.meta.hash
+                    setPreview(owner, parsed.preview)
                     update(
                         LibraryState(
                             owner, LoadStatus.LOADING, parsed.table, fromCache = true, displayName = entry.meta.displayName ?: link.displayName,
@@ -155,13 +206,18 @@ class LibraryStore(
                 update(current.copy(status = LoadStatus.READY, fromCache = false, failure = null, readAt = now, updatedAt = updatedAt, displayName = outcome.info?.displayName ?: current.displayName))
             }
             is Fetched.Changed -> when (val parsed = outcome.parsed) {
-                is Parsed.Failed -> update(state(owner).copy(status = LoadStatus.FAILED, failure = parsed.failure))
+                is Parsed.Failed -> {
+                    setPreview(owner, parsed.preview)
+                    update(state(owner).copy(status = LoadStatus.FAILED, failure = parsed.failure, sheetNames = parsed.preview?.filledSheetNames.orEmpty(), fromCache = state(owner).table != null))
+                }
                 is Parsed.Ok -> {
+                    setPreview(owner, parsed.preview)
                     val current = state(owner)
                     val changedAt = if (knownHash != null) now else null // the first read is not a change
                     val updatedAt = latest(latest(current.updatedAt, outcome.info?.lastModified), changedAt)
                     val displayName = outcome.info?.displayName ?: current.displayName ?: link.displayName
                     hashes[owner] = outcome.hash
+                    if (displayName != link.displayName && displayName != null) links.set(owner, link.uri, displayName)
                     withContext(io) { cache.save(owner, outcome.bytes, LibraryCache.Meta(outcome.hash, now, changedAt, outcome.info?.lastModified, displayName)) }
                     update(
                         LibraryState(
@@ -181,8 +237,8 @@ class LibraryStore(
     }
 
     private sealed class Parsed {
-        class Ok(val table: BookTable, val problems: List<BookTable.Problem>, val sheetNames: List<String>) : Parsed()
-        class Failed(val failure: LoadFailure) : Parsed()
+        class Ok(val table: BookTable, val problems: List<BookTable.Problem>, val sheetNames: List<String>, val preview: WorkbookPreview) : Parsed()
+        class Failed(val failure: LoadFailure, val preview: WorkbookPreview? = null) : Parsed()
     }
 
     /** On the IO thread: the bytes, their hash, and the parsed table when the bytes are new. */
@@ -222,8 +278,12 @@ class LibraryStore(
         val wanted = links.sheetName(owner)
         val sheet = filled.firstOrNull { it.name == wanted } ?: filled.firstOrNull() ?: workbook.sheets.firstOrNull()
             ?: return Parsed.Failed(LoadFailure.NO_HEADER)
-        val parsed = BookTable.parse(sheet) ?: return Parsed.Failed(LoadFailure.NO_HEADER)
-        return Parsed.Ok(parsed.table, parsed.problems, if (filled.size > 1) filled.map { it.name } else emptyList())
+        val preview = WorkbookPreview(
+            sheets = (filled.ifEmpty { listOf(sheet) }).map { Sheet(it.name, it.rows.take(WorkbookPreview.ROWS)) },
+            selected = sheet.name,
+        )
+        val parsed = BookTable.parse(sheet, links.mapping(owner)) ?: return Parsed.Failed(LoadFailure.NO_HEADER, preview)
+        return Parsed.Ok(parsed.table, parsed.problems, preview.filledSheetNames, preview)
     }
 
     // ------------------------------------------------------------------ index and stray files
@@ -242,6 +302,10 @@ class LibraryStore(
         val names = withContext(io) { documents.childNames(tree) }.filter(::isStrayFile)
         val fresh = names.filter { it !in links.warnedFileNames }
         if (fresh.isNotEmpty()) _warning.value = StrayFileWarning(fresh)
+    }
+
+    private fun setPreview(owner: Owner, preview: WorkbookPreview?) {
+        _previews.value = if (preview == null) _previews.value - owner else _previews.value + (owner to preview)
     }
 
     private fun update(state: LibraryState) {
