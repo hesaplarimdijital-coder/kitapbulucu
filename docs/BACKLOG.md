@@ -116,7 +116,7 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [x] `.xls` seçilirse "Excel'de .xlsx olarak kaydedip tekrar deneyin" der.
 - [x] Klavye ve fareyle tamamlanabilir; açık ve koyu ekran görüntüsü.
 
-### S-14 Ara ekranı ve sonuç görünümü · 5 · [O] · bitti
+### S-14 Ara ekranı ve sonuç görünümü · 5 · [O] · bitti (kullanıcı geri bildirimi → S-30)
 - [x] Yazdıkça sonuç gelir; üstte "Hepsi / Babam / Benim" süzgeci.
 - [x] Kitap varsa kimde ve hangi rafta olduğu büyük ve net: "Babam · Raf B3"; raf yazısı en az 32 sp (36 sp), raf kodu mono. Başlıklar şimdilik sistemin serif yazısıyla; Literata K-01 (kit 0.1.1) ile gelir.
 - [x] Raf boşsa "Raf yazılmamış" görünür (şu an bütün raflar boş).
@@ -231,6 +231,19 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [ ] README (kurulum, Drive klasörü, babanın telefonu), CHANGELOG, sürüm 1.0.0.
 - [ ] 1.0.0 APK'sı önceki sürümlerin üstüne kurulur; ayarlar ve yedekler kalır.
 - [ ] Tablette ve babanın telefonunda baştan sona deneme listesi geçti.
+
+## Sıraya konmayı bekleyenler
+
+Bir sonraki sprint planlanırken sıraya konur.
+
+### S-30 Ara ekranı: daha sade ve kullanışlı sonuçlar · 3 · [O] · bekliyor
+Kaynak: kullanıcının 12.10.2026'da telefondan gönderdiği "dostoyevski" araması (`docs/design/geri-bildirim-2026-10-12-ara.jpg`). Bu hikâyeye kadar ekranda değişiklik yapılmaz.
+- [ ] Yazılar küçülür: kartta "Babam · Raf …" satırı ve "Raf yazılmamış" gereğinden büyük (şu an 36 sp; "Raf yazılmamış" iki satıra taşıyor). Raf kodu yine öne çıkar ama ölçü küçülür. CLAUDE.md'deki "raf yazısı en az 32 sp" kuralı kullanıcıyla yeni ölçü kararlaştırılınca güncellenir.
+- [ ] Listede bir sonuca basınca bilgi en üstteki karta taşınmaz: basılan satır olduğu yerde açılır, ayrıntı (kimde, hangi raf, adet, imza, not) orada görünür. Üstteki büyük kartın kalıp kalmayacağına tasarımda karar verilir.
+- [ ] Satırda kütüphane adı ("Babam") ve raf ("Raf yazılmamış" / "Raf C2") yan yana değil üst üste durur; kitap adı ve yazara yer kalır, "DOSTO…" gibi kesilmez.
+- [ ] Arama sonuçlarında "2 adet" gösterilmez; adet yalnızca Kütüphane ekranında (S-20) ve açılan ayrıntıda görünür. ("İmzalı" işaretinin kalıp kalmayacağı kullanıcıya sorulur.)
+- [ ] Klavyeyle: ↑↓ satır seçer, Enter seçili satırı açar ve kapatır.
+- [ ] Telefon (dikey) ve DeX, açık ve koyu ekran görüntüsü; kullanıcı telefonda yeniden baktı.
 
 ## Sonraki sürüm (şimdi yapılmayacak)
 

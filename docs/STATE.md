@@ -16,7 +16,8 @@ Son güncelleme: 12.10.2026, Sprint 2 bitti.
 1. GitHub'a iki gizli değer: `KB_KEYSTORE_BASE64` ve `KB_KEYSTORE_PASSWORD` (12.10.2026'da dosya ve parola verildi). Eklenene kadar APK'lar her seferinde başka anahtarla imzalanır; yeni APK eskisinin üstüne kurulamaz (önce kaldır).
 2. S-06 kalanları: seçilen Drive klasörü boş muydu; yeniden başlatma sonrası izin; dosyanın öteki cihazda görünmesi ve değişikliğin ulaşma süresi; tablet denemesi (kullanıcı "yarın söyleyeceğim" dedi).
 3. Sprint 2 tablet kontrol listesi (aşağıda devam mesajında) ve `ornek/Ortak.xlsx` dosyasının Excel, Office NX, Google E-Tablolar'da açılması.
-4. Kit 0.1.1 onayı: Sprint 3'te (K-01) sorulacak; serif yazı yuvası ve Literata.
+4. Ara ekranı geri bildirimi (12.10.2026, telefon): yazılar çok büyük, basılan sonuç yerinde açılmalı, "Babam" ve raf üst üste, "2 adet" aramada gereksiz. Backlog'a S-30 olarak alındı; kullanıcı "şimdilik değişiklik yapma" dedi. Sprint 3 planlanırken sıraya konacak; raf yazısı ölçüsü (CLAUDE.md'deki 32 sp kuralı) o zaman yeniden kararlaştırılacak.
+5. Kit 0.1.1 onayı: Sprint 3'te (K-01) sorulacak; serif yazı yuvası ve Literata.
 
 ## Veri hakkında bilinenler
 
@@ -61,4 +62,4 @@ Ekran görüntülerine bakmak iki gerçek hatayı yakaladı (eşleme ekranının
 
 ## Devam mesajı
 
-`CLAUDE.md, docs/STATE.md ve docs/BACKLOG.md dosyalarını oku; önce S-06 kalanlarını ve Sprint 2 tablet kontrol listesinin sonuçlarını sor, sonra Sprint 3'ü planla ve onayımı al.`
+`CLAUDE.md, docs/STATE.md ve docs/BACKLOG.md dosyalarını oku; önce S-06 kalanlarını ve Sprint 2 tablet kontrol listesinin sonuçlarını sor, sonra S-30'u da düşünerek Sprint 3'ü planla ve onayımı al.`
