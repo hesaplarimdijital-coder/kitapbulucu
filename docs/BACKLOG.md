@@ -57,8 +57,8 @@ Bir sprint bitince hikâyeleri `docs/DONE.md` dosyasına taşınır; burada spri
 Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosyasıyla yapılır. Geçici "Deneme" ekranı (`trial/`), kurulum ekranı gelince kaldırılır.
 - [x] Deneme ekranı: dosya oluştur ya da seç, oku, içine saat yazıp geri yaz, kalıcı izni göster, klasör seç ve listele, sonuçları kopyala.
 - [x] Kullanıcıya adım adım deneme listesi verildi (tablet ve babanın telefonu). APK: `ci/apk` dalında `kitapbulucu.apk`.
-- [ ] Ölçüldü: Drive'da okuma ve geri yazma; tablet yeniden başladıktan sonra izin; paylaşılan dosyanın babanın telefonunda görünmesi (gerekirse Drive'a kısayol); değişikliğin öteki cihaza ulaşma süresi; klasör seçimi; son değişme zamanının doğruluğu.
-- [ ] Çalışmayan yol için alternatif seçildi; sonuçlar `STATE.md` ve ARCHITECTURE 8'e yazıldı.
+- [ ] Ölçüldü: Drive'da okuma ve geri yazma (✓ telefonda: okuma ~150 ms, yazma 71 ms); klasör seçimi (✓ izin alındı, listede 0 öğe – boş muydu?); son değişme zamanının doğruluğu (✗ yazmadan sonra eski kaldı → içerik özetiyle karşılaştırılacak). Bekleyen: yeniden başlatma sonrası izin; paylaşılan dosyanın babanın telefonunda görünmesi; değişikliğin öteki cihaza ulaşma süresi; tablet sonuçları.
+- [ ] Çalışmayan yol için alternatif seçildi; sonuçlar `STATE.md` ve ARCHITECTURE 8'e yazıldı (ilk ölçüm işlendi, kalanlar yarın).
 
 ### S-07 Excel okuyucu · 5 · [F] · bitti
 - [x] `.xlsx`: paylaşılan metin, satır içi metin, sayı, boş hücre, zengin metin; seyrek satır ve sütunlar doğru yerde.

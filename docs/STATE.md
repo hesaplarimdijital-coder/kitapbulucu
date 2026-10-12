@@ -14,7 +14,7 @@ Son güncelleme: 12.10.2026, Sprint 1 bitti (S-06 kullanıcı denemesini bekliyo
 ## Kullanıcıdan beklenenler
 
 1. GitHub'a iki gizli değer: `KB_KEYSTORE_BASE64` ve `KB_KEYSTORE_PASSWORD` (12.10.2026'da dosya ve parola verildi). Eklenene kadar APK'lar her seferinde başka anahtarla imzalanır; yeni APK eskisinin üstüne kurulamaz (önce kaldır).
-2. S-06 deneme ekranı sonuçları (tablet + babanın telefonu): Drive'da dosya oluştur / seç / oku / yaz / klasör seç; "Sonuçları kopyala" çıktısı. Sonuç ARCHITECTURE 8'e işlenecek.
+2. S-06 deneme sonuçları: telefonda (SM-S921B) oku/yaz/klasör seç yapıldı ve ARCHITECTURE 8'e işlendi. Kalan: seçilen klasör boş muydu; yeniden başlatma sonrası izin; dosyanın öteki cihazda görünmesi ve değişikliğin ulaşma süresi; tablet denemesi. Kullanıcı yarın söyleyecek.
 3. `ornek/Ortak.xlsx` dosyasının tablette Excel, Office NX ve Google E-Tablolar'da açılıp açılmadığı (S-08'in son kriteri).
 4. Sprint 0 tablet kontrol listesi henüz denenmedi (kullanıcı söyledi); Sprint 1 listesiyle birlikte sorulacak.
 5. Kit 0.1.1 onayı: Sprint 3'te (K-01) sorulacak.

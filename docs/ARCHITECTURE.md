@@ -113,6 +113,11 @@ Ayarlar `SharedPreferences` içinde: kim olduğum, dosya URI'leri, sütun eşlem
 - `~$` ile başlayan ve "çakışan kopya" dosyalarını görmek yalnızca klasör izni varsa mümkündür.
 - Spike'ta ölçülecekler: Drive'da okuma, geri yazma, yeniden başlatma sonrası kalıcı izin; babanın telefonunda paylaşılan dosyanın görünmesi; değişikliğin öteki cihaza ulaşma süresi; `COLUMN_LAST_MODIFIED` değerinin güvenilirliği.
 - INTERNET izni yok. CI, APK izinlerinde INTERNET görürse kırılır.
+- İlk ölçüm (12.10.2026, Samsung SM-S921B, Android 16, Google Drive sağlayıcısı `com.google.android.apps.docs.storage`):
+  - Drive'daki dosyayı okuma 100–160 ms, `wt` kipiyle geri yazma 71 ms; yazılan içerik hemen geri okundu. Kalıcı okuma+yazma izni alındı.
+  - `COLUMN_LAST_MODIFIED` güvenilmez: yazmadan sonra geri okumada dosya değişme zamanı eski kaldı (15:23:36, yazma 15:24:04). Karar: değişiklik tespiti zaman damgasıyla değil içerik özetiyle (hash) yapılır; ARCHITECTURE 7 zaten böyle.
+  - Drive klasör seçmeye izin verdi (`ACTION_OPEN_DOCUMENT_TREE`, kalıcı izin alındı) ama seçilen klasörde 0 öğe listelendi; klasörün gerçekten boş olup olmadığı açık. Birincil yol iki dosyayı tek tek seçmek olarak kalır; klasör yolu yalnızca `~$` ve "çakışan kopya" dosyalarını görmek için isteğe bağlı.
+  - Henüz ölçülmedi: yeniden başlatma sonrası izin, paylaşılan dosyanın öteki cihazda görünmesi ve değişikliğin oraya ulaşma süresi, tablet (Tab S11 Ultra) sonuçları.
 
 ## 9. Arama (`text`, `search`)
 
