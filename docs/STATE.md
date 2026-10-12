@@ -1,15 +1,15 @@
 # Durum
 
-Son güncelleme: 12.10.2026, Sprint 1 bitti (S-06 kullanıcı denemesini bekliyor).
+Son güncelleme: 12.10.2026, Sprint 2 sürüyor: S-10, S-11, S-12 bitti; sıradaki S-13 ve S-14 (Opus).
 
 ## Şu an
 
 - Uygulama: Kitap Bulucu, paket `com.hesaplarimdijital.kitapbulucu`. Depo: `hesaplarimdijital-coder/kitapbulucu` (herkese açık).
 - Sprint 0 bitti (S-01 … S-05). Sprint 1 bitti: S-07 okuyucu, S-08 yazıcı, S-09 arama 1 kodda ve testte; S-06 deneme ekranı APK'da, kullanıcı sonuçları bekleniyor.
 - APK: `ci/apk` dalında `kitapbulucu.apk` (https://github.com/hesaplarimdijital-coder/kitapbulucu/raw/ci/apk/kitapbulucu.apk); aynı dalda `ornek/Babam.xlsx`, `ornek/Benim.xlsx`, `ornek/Ortak.xlsx` (yazıcının ürettiği örnekler). Ekran görüntüleri `ci/screenshots` dalında.
-- Kod haritası: `xlsx/` (XlsxReader, XlsxWriter, CsvReader, DateFormats, SpreadsheetReader), `model/` (Book, Owner, BookColumn, BookTable), `text/` (TurkishText, Fold), `search/` (SearchIndex), `trial/` (S-06 deneme ekranı; S-08'den sonra `MiniXlsx` gereksiz, S-12'de kaldırılacak), `ui/` (kabuk, yer tutucu ekranlar).
+- Kod haritası: `xlsx/` (XlsxReader, XlsxWriter, CsvReader, DateFormats, SpreadsheetReader), `model/` (Book, Owner, BookColumn, BookTable), `text/` (TurkishText, Fold), `search/` (SearchIndex, EditDistance), `store/` (FileLinks, Documents/SafDocuments, LibraryCache, LibraryStore, LibraryState, RelativeTime), `ui/` (AppShell, AppShortcuts, LibraryTexts, theme/AppPalette), `App.kt` (uygulama sınıfı, depoyu kurar), `trial/` (S-06 deneme ekranı; S-13'te kaldırılacak).
 - Seçilen tasarım: Taslak A "Fiş". Henüz kitin varsayılan renkleri kullanılıyor; Taslak A renkleri S-11'de.
-- Sıradaki: Sprint 2 (S-10 arama 2, S-11 tema temeli, S-12 yeniden okuma, S-13 kurulum, S-14 ara ekranı). S-10, S-11, S-12 [F] → Fable; S-13, S-14 [O] → Opus.
+- Sprint 2 onaylandı ve sürüyor: S-10 arama 2, S-11 tema, S-12 yeniden okuma bitti (CI yeşil, ekran görüntüleri sıcak temayla yenilendi). Sıradaki: S-13 kurulum ekranı ve S-14 ara ekranı, ikisi de [O] → Opus. S-13 deneme ekranını (`trial/`) ve `MiniXlsx`'i kaldırır; `LibraryStore.warning` için pencereyi ve okunamayan dosya için "Başka dosya seç" düğmesini bağlar.
 
 ## Kullanıcıdan beklenenler
 
