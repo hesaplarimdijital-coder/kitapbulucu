@@ -13,4 +13,21 @@
     <string name="placeholder_library_text">The Babam and Benim lists in two tabs. Coming in a later version.</string>
     <string name="placeholder_shelves_title">Shelves will be listed here</string>
     <string name="placeholder_shelves_text">Every shelf with the number of books on it. Coming in a later version.</string>
+
+    <string name="nav_trial">Trial</string>
+    <string name="trial_intro">Measures how Google Drive lets the app reach files. It never touches the real lists; it only uses its own small test workbook.</string>
+    <string name="trial_file">Test workbook</string>
+    <string name="trial_folder">Folder</string>
+    <string name="trial_none">Not chosen yet</string>
+    <string name="trial_create">Create file</string>
+    <string name="trial_open">Choose existing file</string>
+    <string name="trial_read">Read</string>
+    <string name="trial_write">Write</string>
+    <string name="trial_pick_folder">Choose folder</string>
+    <string name="trial_list_folder">List folder</string>
+    <string name="trial_permissions">Permission status</string>
+    <string name="trial_log">Results</string>
+    <string name="trial_copy">Copy results</string>
+    <string name="trial_clear">Clear</string>
+    <string name="trial_log_empty">Nothing yet. Start with "Create file".</string>
 </resources>

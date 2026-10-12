@@ -12,4 +12,21 @@
     <string name="placeholder_library_text">Babam ve Benim listeleri iki sekmede. İleriki bir sürümde geliyor.</string>
     <string name="placeholder_shelves_title">Raflar burada listelenecek</string>
     <string name="placeholder_shelves_text">Her raf ve üzerindeki kitap sayısı. İleriki bir sürümde geliyor.</string>
+
+    <string name="nav_trial">Deneme</string>
+    <string name="trial_intro">Google Drive\'ın dosyalara erişime nasıl izin verdiğini ölçer. Gerçek listelere dokunmaz; yalnızca kendi küçük deneme dosyasını kullanır.</string>
+    <string name="trial_file">Deneme dosyası</string>
+    <string name="trial_folder">Klasör</string>
+    <string name="trial_none">Henüz seçilmedi</string>
+    <string name="trial_create">Dosya oluştur</string>
+    <string name="trial_open">Var olan dosyayı seç</string>
+    <string name="trial_read">Oku</string>
+    <string name="trial_write">Yaz</string>
+    <string name="trial_pick_folder">Klasör seç</string>
+    <string name="trial_list_folder">Klasördekileri listele</string>
+    <string name="trial_permissions">İzin durumu</string>
+    <string name="trial_log">Sonuçlar</string>
+    <string name="trial_copy">Sonuçları kopyala</string>
+    <string name="trial_clear">Temizle</string>
+    <string name="trial_log_empty">Henüz bir şey yok. "Dosya oluştur" ile başla.</string>
 </resources>

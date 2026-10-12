@@ -80,6 +80,12 @@ class ShellScreenshotTest {
     @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
     fun dexSettingsLight() = capture("dex-light-settings", WidthClass.ExtraLarge, ThemeMode.Light, InputMode.Pointer, Routes.SETTINGS)
 
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun dexTrialLight() = capture("dex-light-trial", WidthClass.ExtraLarge, ThemeMode.Light, InputMode.Pointer, Routes.TRIAL)
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun phoneTrialDark() = capture("phone-dark-trial", WidthClass.Compact, ThemeMode.Dark, InputMode.Touch, Routes.TRIAL)
+
     companion object {
         private val dir = File(System.getProperty("kitapbulucu.screenshotDir") ?: "build/outputs/screenshots")
 

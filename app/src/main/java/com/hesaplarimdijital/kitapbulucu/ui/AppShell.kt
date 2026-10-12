@@ -10,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.hesaplarimdijital.kitapbulucu.R
+import com.hesaplarimdijital.kitapbulucu.trial.TrialScreen
 import desktopkit.components.DeskIcons
 import desktopkit.input.CommonShortcuts
 import desktopkit.screens.MessageScreen
@@ -30,6 +31,9 @@ object Routes {
     const val LIBRARY = "library"
     const val SHELVES = "shelves"
     const val SETTINGS = "settings"
+
+    /** Temporary: the Sprint 1 Drive trial. Removed once the setup screen exists. */
+    const val TRIAL = "trial"
 }
 
 @Composable
@@ -40,7 +44,8 @@ fun rememberAppSpec(): ShellSpec {
     val library = stringResource(R.string.nav_library)
     val shelves = stringResource(R.string.nav_shelves)
     val settings = stringResource(R.string.nav_settings)
-    return remember(appName, section, search, library, shelves, settings) {
+    val trial = stringResource(R.string.nav_trial)
+    return remember(appName, section, search, library, shelves, settings, trial) {
         ShellSpec(
             appTitle = appName,
             sections = listOf(
@@ -50,11 +55,12 @@ fun rememberAppSpec(): ShellSpec {
                         NavItem(Routes.SEARCH, search, DeskIcons.Search),
                         NavItem(Routes.LIBRARY, library, AppIcons.Book),
                         NavItem(Routes.SHELVES, shelves, AppIcons.Shelf),
+                        NavItem(Routes.TRIAL, trial, DeskIcons.TvLab),
                     ),
                 ),
             ),
             footer = NavItem(Routes.SETTINGS, settings, DeskIcons.Settings),
-            bottomBar = listOf(Routes.SEARCH, Routes.LIBRARY, Routes.SHELVES, Routes.SETTINGS),
+            bottomBar = listOf(Routes.SEARCH, Routes.LIBRARY, Routes.TRIAL, Routes.SETTINGS),
         )
     }
 }
@@ -100,6 +106,7 @@ fun AppShell(
                 pageTitle = spec.item(route)?.label,
                 description = stringResource(R.string.placeholder_shelves_text),
             )
+            Routes.TRIAL -> TrialScreen(spec.item(route)?.label.orEmpty())
             Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty())
         }
     }
