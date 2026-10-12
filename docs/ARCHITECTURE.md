@@ -121,6 +121,9 @@ Ayarlar `SharedPreferences` içinde: kim olduğum, dosya URI'leri, sütun eşlem
   - Drive klasör seçmeye izin verdi (`ACTION_OPEN_DOCUMENT_TREE`, kalıcı izin alındı) ama seçilen klasörde 0 öğe listelendi; klasörün gerçekten boş olup olmadığı açık. Birincil yol iki dosyayı tek tek seçmek olarak kalır; klasör yolu yalnızca `~$` ve "çakışan kopya" dosyalarını görmek için isteğe bağlı.
   - Henüz ölçülmedi: yeniden başlatma sonrası izin, paylaşılan dosyanın öteki cihazda görünmesi ve değişikliğin oraya ulaşma süresi, tablet (Tab S11 Ultra) sonuçları.
 
+- Uygulandı (S-13): ilk açılışta `SetupScreen` (bu cihaz kimin → `AppSettings.me`; iki dosya kartı: seç / yeni oluştur / sayfa seç / sütunları eşle); "Bitir" bu cihazın listesi okununca açılır, öteki liste Ayarlar'dan sonra eklenebilir. Dosya seçici `OpenDocument` (xlsx, xls, csv ve `*/*`), yeni dosya `CreateDocument` + başlıklı boş çalışma kitabı. Kalıcı izin `Documents.keepPermission` (okuma+yazma, olmazsa okuma). Klasör yalnızca Ayarlar'da, isteğe bağlı.
+- Sütun eşleme: `model.ColumnMapping` (başlık satırı ya da -1, sütun → alan, başlık metinleri). Önce başlıklar adlarından tanınır; tanınmazsa ve eşleme sayfaya uyuyorsa eşleme kullanılır. Başlıksız eşleme dosyada tanınan başlık belirince, başlıklı eşleme başlık satırı değişince devre dışı kalır. Üstünde 3'ten fazla dolu satır olan "başlık" kabul edilmez (eski listede "KİTAP | YAZAR" ortada tekrar ediyor); listenin içinde tekrar eden başlık satırı kitap sayılmaz.
+
 ## 9. Arama (`text`, `search`)
 
 Katlama iki düzeylidir:

@@ -107,14 +107,14 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [x] Klasör izni varsa `~$` ile başlayan ve "çakışan kopya" dosyaları yok sayılır; görülürse bir kez uyarılır. (Uyarı `LibraryStore.warning` olarak hazır; pencere S-13'te bağlanır.)
 - [x] Dosya okunamazsa (silinmiş, izin gitmiş) anlaşılır mesaj ve "Başka dosya seç" yolu. (Mesajlar `LibraryTexts`; düğme S-13 kurulum ekranında.)
 
-### S-13 Kurulum ekranı · 5 · [O] · bekliyor
-- [ ] İlk açılışta "Ben kimim? Babam / Ben" seçilir; Ayarlar'dan değiştirilebilir.
-- [ ] İki dosya seçilir (spike sonucuna göre klasör de); kalıcı izin alınır; yeniden başlatmada sorulmaz.
-- [ ] Dosyalardan biri yoksa "Oluştur" boş, başlıklı dosya oluşturur.
-- [ ] Sütun başlıkları farklıysa ("Ad", "Eser", "Konum") ya da başlık yoksa bir kerelik eşleme ekranı çıkar; ilk satırlar önizlenir; eşleme saklanır.
-- [ ] Birden çok dolu sayfa varsa sayfa seçtirir.
-- [ ] `.xls` seçilirse "Excel'de .xlsx olarak kaydedip tekrar deneyin" der.
-- [ ] Klavye ve fareyle tamamlanabilir; açık ve koyu ekran görüntüsü.
+### S-13 Kurulum ekranı · 5 · [O] · bitti (tablet denemesi bekleniyor)
+- [x] İlk açılışta "Ben kimim? Babam / Ben" seçilir; Ayarlar'dan değiştirilebilir.
+- [x] İki dosya seçilir (klasör isteğe bağlı, Ayarlar'da); kalıcı izin alınır; yeniden başlatmada sorulmaz. (Yeniden başlatma tablette denenecek.)
+- [x] Dosyalardan biri yoksa "Oluştur" boş, başlıklı dosya oluşturur.
+- [x] Sütun başlıkları farklıysa ("Ad", "Eser", "Konum") ya da başlık yoksa bir kerelik eşleme ekranı çıkar; ilk satırlar önizlenir; eşleme saklanır.
+- [x] Birden çok dolu sayfa varsa sayfa seçtirir.
+- [x] `.xls` seçilirse "Excel'de .xlsx olarak kaydedip tekrar deneyin" der.
+- [x] Klavye ve fareyle tamamlanabilir; açık ve koyu ekran görüntüsü.
 
 ### S-14 Ara ekranı ve sonuç görünümü · 5 · [O] · bekliyor
 - [ ] Yazdıkça sonuç gelir; üstte "Hepsi / Babam / Benim" süzgeci.
