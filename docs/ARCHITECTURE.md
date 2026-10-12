@@ -131,6 +131,8 @@ Hız: sözcük dağarcığı sıralı dizi (önek için ikili arama), sözcük �
 
 "Yok" durumu: en yakın 3 öneri ve aranan adla dolu "Ekle" düğmesi.
 
+Uygulandı (S-09): `text.Fold` (`turkish` = düzey 1, `ascii` = düzey 2, `words`), `search.SearchIndex.build(Map<Owner, List<Book>>)` ve `search(query, owner?, limit)`. Sözcük dağarcığı sıralı dizi; her sözcüğün düzey bayrağı (1/2) ve `(kitapNo shl 1) or alan` biçiminde listesi var. Sorgu sözcüğü için adaylar `IntArray` (kitap başına en iyi eşleşme; `tür*4 + (düzey-1)*2 + alan`), kesişim dizileri tarayarak. Katman içi sıra: ad önce, düzey 1 önce, tam sözcük önek'ten önce, kısa ad, sonra `Collator(tr)` anahtarı (dizin kurulurken hesaplanır). Sorgudaki kesme işaretli sözcük yalnızca bitişik biçimiyle aranır. Yakın eşleşme (`MatchKind.NEAR`, katman 5) ve öneri S-10'da.
+
 ## 10. İçe aktarma ve birleştirme (`importing`)
 
 İlk temizlikte uygulanan kurallar gelen her dosyaya aynen uygulanır (babanın dosyası 2 sütunlu, başlıksız ve büyük harfli gelmeye devam edebilir):

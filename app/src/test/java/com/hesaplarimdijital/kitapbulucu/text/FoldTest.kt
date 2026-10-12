@@ -9,7 +9,7 @@ class FoldTest {
 
     @Test
     fun levelOneKeepsTurkishLettersButNotDotsAndHats() {
-        assertEquals("hala islik iğde çağrı", Fold.turkish("Hâlâ Islık İğde Çağrı"))
+        assertEquals("hala islik iğde çağri", Fold.turkish("Hâlâ Islık İğde Çağrı"))
         assertEquals("istanbul'un kedileri", Fold.turkish("İSTANBUL'UN KEDİLERİ"))
         assertEquals("cafe noel", Fold.turkish("Café Noël"))
         assertEquals("kürk mantolu", Fold.turkish("KÜRK MANTOLU"))
