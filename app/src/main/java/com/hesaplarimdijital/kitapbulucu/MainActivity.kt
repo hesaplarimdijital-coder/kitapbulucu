@@ -36,11 +36,18 @@ class MainActivity : ComponentActivity() {
             val prefs = rememberDeskPreferences(accents = AppPalette.accents)
             val navController = rememberNavController()
             val navigator = remember(navController) { ShellNavigator(navController) }
-            perform = { id -> AppShortcuts.perform(id, navigator, prefs) }
+            val store = App.store(this)
+            perform = { id -> AppShortcuts.perform(id, navigator, prefs, onRefresh = store::refresh) }
             DesktopKitRoot(prefs, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
-                AppShell(prefs, widthClass, navController, onShortcut = { perform(it) })
+                AppShell(prefs, widthClass, navController, store = store, onShortcut = { perform(it) })
             }
         }
+    }
+
+    /** Every return to the foreground reads both files again (ARCHITECTURE 7). */
+    override fun onStart() {
+        super.onStart()
+        App.store(this).refresh()
     }
 
     /** Ctrl/Alt/Meta chords and F keys only: plain keys must keep typing into text fields. */

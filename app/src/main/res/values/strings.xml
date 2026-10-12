@@ -30,4 +30,35 @@
     <string name="trial_copy">Copy results</string>
     <string name="trial_clear">Clear</string>
     <string name="trial_log_empty">Nothing yet. Start with "Create file".</string>
+
+    <!-- library status (S-12) -->
+    <string name="owner_dad">Babam</string>
+    <string name="owner_me">Benim</string>
+    <string name="list_of_dad">Babam\'s list</string>
+    <string name="list_of_me">My list</string>
+    <string name="updated_just_now">%1$s updated just now</string>
+    <string name="updated_minutes_ago">%1$s updated %2$d min ago</string>
+    <string name="updated_hours_ago">%1$s updated %2$d h ago</string>
+    <string name="updated_yesterday">%1$s updated yesterday</string>
+    <string name="updated_days_ago">%1$s updated %2$d days ago</string>
+    <string name="updated_on_date">%1$s updated on %2$s</string>
+    <string name="read_never">%1$s has not been read yet</string>
+    <string name="status_not_linked">No file chosen</string>
+    <string name="status_loading">Reading…</string>
+    <string name="status_from_cache">Showing the last copy; reading the file…</string>
+    <string name="status_books">%1$d books</string>
+    <string name="failure_not_found">The file could not be found; it may have been deleted or moved.</string>
+    <string name="failure_no_permission">Access to the file has been lost.</string>
+    <string name="failure_io">The file could not be read.</string>
+    <string name="failure_too_large">The file is too large.</string>
+    <string name="failure_old_xls">This is an old Excel file (.xls). Save it as .xlsx in Excel and try again.</string>
+    <string name="failure_not_a_spreadsheet">This is not an Excel file.</string>
+    <string name="failure_damaged">The file is damaged or incomplete.</string>
+    <string name="failure_no_header">The column headers (Kitap Adı, Yazar…) were not found in the file.</string>
+    <string name="action_choose_other_file">Choose another file</string>
+    <string name="action_retry">Try again</string>
+    <string name="stray_files_title">Stray files next to the lists</string>
+    <string name="stray_files_text">These files are ignored: %1$s. A \"~$\" file means the list is open in Excel; a conflicted copy means two devices wrote at once — check it in Drive.</string>
+    <string name="action_understood">Understood</string>
+    <string name="shortcut_refresh">Reread the lists</string>
 </resources>

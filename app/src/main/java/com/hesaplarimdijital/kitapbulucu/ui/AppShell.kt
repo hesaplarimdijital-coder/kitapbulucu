@@ -3,6 +3,8 @@ package com.hesaplarimdijital.kitapbulucu.ui
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -10,6 +12,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.hesaplarimdijital.kitapbulucu.R
+import com.hesaplarimdijital.kitapbulucu.model.Owner
+import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.trial.TrialScreen
 import desktopkit.components.DeskIcons
 import desktopkit.input.CommonShortcuts
@@ -74,6 +78,7 @@ fun AppShell(
     prefs: DeskPreferences,
     widthClass: WidthClass,
     navController: NavHostController = rememberNavController(),
+    store: LibraryStore? = null,
     onShortcut: (String) -> Unit = {},
 ) {
     val spec = rememberAppSpec()
@@ -98,7 +103,7 @@ fun AppShell(
                 title = stringResource(R.string.placeholder_library_title),
                 icon = AppIcons.Book,
                 pageTitle = spec.item(route)?.label,
-                description = stringResource(R.string.placeholder_library_text),
+                description = if (store == null) stringResource(R.string.placeholder_library_text) else libraryStatusText(store),
             )
             Routes.SHELVES -> MessageScreen(
                 title = stringResource(R.string.placeholder_shelves_title),
@@ -109,6 +114,18 @@ fun AppShell(
             Routes.TRIAL -> TrialScreen(spec.item(route)?.label.orEmpty())
             Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty())
         }
+    }
+}
+
+/** Until the library screen exists: one line per list, "Babam'ın listesi 3 dk önce güncellendi · 6775 kitap". */
+@Composable
+private fun libraryStatusText(store: LibraryStore): String {
+    val states by store.states.collectAsState()
+    val resources = LocalContext.current.resources
+    val now = System.currentTimeMillis()
+    return Owner.entries.joinToString("\n") { owner ->
+        val state = states.getValue(owner)
+        LibraryTexts.updated(resources, owner, state, now) + " · " + LibraryTexts.status(resources, state)
     }
 }
 
