@@ -60,14 +60,14 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [ ] Ölçüldü: Drive'da okuma ve geri yazma; tablet yeniden başladıktan sonra izin; paylaşılan dosyanın babanın telefonunda görünmesi (gerekirse Drive'a kısayol); değişikliğin öteki cihaza ulaşma süresi; klasör seçimi; son değişme zamanının doğruluğu.
 - [ ] Çalışmayan yol için alternatif seçildi; sonuçlar `STATE.md` ve ARCHITECTURE 8'e yazıldı.
 
-### S-07 Excel okuyucu · 5 · [F] · bekliyor
-- [ ] `.xlsx`: paylaşılan metin, satır içi metin, sayı, boş hücre, zengin metin; seyrek satır ve sütunlar doğru yerde.
-- [ ] Tam sayılar `.0` olmadan, uzun sayılar (ISBN) olduğu gibi okunur.
-- [ ] Tarih biçimli hücre metne çevrilir (`NİSAN 1953`, `15 MART 1998`).
-- [ ] Birden çok dolu sayfa varsa sayfa listesi döner.
-- [ ] `.csv`: `;` ve `,`; UTF-8 (BOM'lu, BOM'suz) ve Windows-1254.
-- [ ] `.xls` ve bozuk dosya anlaşılır hata verir; uygulama çökmez.
-- [ ] Test dosyaları uydurma kitaplarla: openpyxl ve LibreOffice çıktısı, elle yazılmış uç durumlar. 10.000 satır 1 saniyenin altında okunur.
+### S-07 Excel okuyucu · 5 · [F] · bitti
+- [x] `.xlsx`: paylaşılan metin, satır içi metin, sayı, boş hücre, zengin metin; seyrek satır ve sütunlar doğru yerde.
+- [x] Tam sayılar `.0` olmadan, uzun sayılar (ISBN) olduğu gibi okunur.
+- [x] Tarih biçimli hücre metne çevrilir (`NİSAN 1953`, `15 MART 1998`).
+- [x] Birden çok dolu sayfa varsa sayfa listesi döner.
+- [x] `.csv`: `;` ve `,`; UTF-8 (BOM'lu, BOM'suz) ve Windows-1254.
+- [x] `.xls` ve bozuk dosya anlaşılır hata verir; uygulama çökmez.
+- [x] Test dosyaları uydurma kitaplarla: openpyxl ve LibreOffice çıktısı, elle yazılmış uç durumlar. 10.000 satır 1 saniyenin altında okunur.
 
 ### S-08 Excel yazıcı · 3 · [F] · bekliyor
 - [ ] Tek sayfalı kişi dosyası ve iki sayfalı (`Babam`, `Benim`) ortak dosya üretir.

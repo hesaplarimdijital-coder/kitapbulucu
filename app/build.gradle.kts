@@ -61,6 +61,9 @@ android {
                 it.systemProperty("kitapbulucu.screenshotDir", screenshots.get().asFile.path)
                 // declared so a test result restored from the build cache brings the screenshots along
                 it.outputs.dir(screenshots).withPropertyName("screenshots")
+                val samples = layout.buildDirectory.dir("outputs/samples")
+                it.systemProperty("kitapbulucu.sampleDir", samples.get().asFile.path)
+                it.outputs.dir(samples).withPropertyName("samples")
                 it.testLogging {
                     events("failed")
                     exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
