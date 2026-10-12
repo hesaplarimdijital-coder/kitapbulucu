@@ -182,7 +182,7 @@ class XlsxReaderTest {
         val workbook = XlsxReader.read(bytes.inputStream())
         val millis = (System.nanoTime() - start) / 1_000_000
         assertEquals(10_000, workbook.sheets.single().rows.size)
-        assertEquals(listOf("Kitap adı 10000: Çatıdaki Rasathane", "Yazar Şükrü 10000", "R0", "2", "", "Yayınevi 10000", "2000", "9789750010000", "Not 10000"), workbook.sheets.single().rows[9_999])
+        assertEquals(listOf("Kitap adı 10000: Çatıdaki Rasathane", "Yazar Şükrü 10000", "R0", "2", "", "Yayınevi 10000", "2010", "9789750010000", "Not 10000"), workbook.sheets.single().rows[9_999])
         assertTrue("10,000 rows took $millis ms", millis < 1_000)
     }
 
