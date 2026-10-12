@@ -144,7 +144,7 @@ class SearchIndexTest {
         assertEquals(emptyList<String>(), titles("fenarcilarr"))           // three is too many
         assertEquals(emptyList<String>(), titles("kat"))                   // three letters allow none
         assertEquals(listOf("Kürk Mantolu Kedi"), titles("kürk mantl"))    // the word being typed may have a typo in its prefix
-        assertEquals(3, index.search("kürk mant").single().layer)         // but a clean prefix is a plain match, not a typo
+        assertEquals(2, index.search("kürk mant").single().layer)         // but a clean prefix is a plain match (the title starts with it), not a typo
     }
 
     @Test
