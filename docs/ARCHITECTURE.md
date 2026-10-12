@@ -144,6 +144,7 @@ Başlıksız dosyada eşleme ekranı ilk satırları gösterip "1. sütun Kitap 
 - Kit: `desktop-kit` 0.1.0. Kabuk `DesktopShell` + `ShellSpec`; ekranlar: Ara, Kütüphane, Raflar, Ayarlar.
 - Kabuğun üst çubuğundaki arama kutusu bir düğmedir, metin kutusu değildir. Gerçek arama kutusu Ara ekranının içindedir; Ctrl+K oraya götürüp odaklar.
 - Kabuğun alt çubuk yuvası durum satırı olarak kullanılır: eşitleme zamanı, bekleyen yazma, "Geri al".
+- Telefon: yalnızca dikey. En dar kenarı 600 dp'den küçük cihazda etkinlik dikeye kilitlenir (`requestedOrientation`); tablet ve DeX serbest kalır. Dar pencerede kit üst çubuk + alt gezinme çubuğu gösterir (Ara, Kütüphane, Raflar, Ayarlar). Taslak B seçilirse iki bölme yalnızca geniş pencerede kullanılır; dar pencerede liste ve dokununca açılan alt sayfa (Material 3 `ModalBottomSheet`, kitle birlikte gelir).
 - Tablolar `DenseTable`; hücreler yalnızca metin. Sıralamayı uygulama yapar (`Collator`, Türkçe).
 - Kısayollar tek `ShortcutRegistry` içinde. Etkinlik düzeyinde yalnızca Ctrl/Alt/Meta'lı ve F tuşları (`matchNative`); F2, Del gibi tek tuşlar ekranın içinde yakalanır.
 - Tema: kitin renkleri `colors = { it.copy(...) }` ile ısıtılır, vurgular `Accent.custom`. Uygulamada kitin `PaletteContrastTest` benzeri bir test bütün tema × vurgu çiftlerini 4.5:1 için denetler.

@@ -37,10 +37,12 @@ Bir sprint bitince hikâyeleri `docs/DONE.md` dosyasına taşınır; burada spri
 ### S-04 Ana ekran için 2 tasarım taslağı · 3 · [F] · onay bekliyor
 - [x] İki farklı taslak (`docs/design/`): A "Fiş" ve B "İki bölme"; her biri açık ("Kâğıt") ve koyu ("Gece okuması") temada, DeX genişliğinde.
 - [x] Taslaklardaki her metin/arka plan çifti en az 4.5:1 (`docs/design/PALETTE.md`, 8 vurgu × 2 tema × 2 taslak); raf yazısı en az 32 sp.
+- [x] Telefon (yalnızca dikey) taslakları: `taslak-a-telefon.png`, `taslak-b-telefon.png`.
 - [ ] Kullanıcı birini seçti.
 
 ### S-05 Depo iskeleti, CI, örnek test Excel'i · 3 · [O] · bekliyor
 - [ ] `app` modülü, kit bağımlılığı; boş kabuk açılıyor (Ara, Kütüphane, Raflar, Ayarlar).
+- [ ] Telefonda (en dar kenar 600 dp'den küçük) ekran dikeye kilitli; tablette ve DeX'te serbest.
 - [ ] `.gitignore` içinde `*.xlsx` (yalnızca test dosyaları klasörü hariç); uydurma kitaplı örnek test Excel'i var.
 - [ ] CI: derleme, birim testleri, ekran görüntüleri `ci/screenshots` dalında, APK indirilebilir.
 - [ ] CI, APK'da INTERNET izni görürse kırılır.
@@ -118,7 +120,7 @@ Gerçek listelere dokunmadan, ayrı bir `Deneme.xlsx` ile yapılır.
 - [ ] Raf boşsa "Raf yazılmamış" görünür (şu an bütün raflar boş).
 - [ ] İki kütüphanede de varsa ikisi de gösterilir; birden çok kopya ve imzalı kopya belirtilir.
 - [ ] Yoksa "Bu kitap iki kütüphanede de yok", en yakın 3 öneri ve "Ekle" düğmesi (form S-17'de bağlanır).
-- [ ] DeX genişliğinde açık ve koyu ekran görüntüsü.
+- [ ] DeX genişliğinde ve telefon genişliğinde (dikey), açık ve koyu ekran görüntüsü.
 
 ## Sprint 3: Güvenli yazma ve kitap ekleme
 

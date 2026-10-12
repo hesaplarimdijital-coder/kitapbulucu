@@ -27,6 +27,7 @@
 - Dışarıdan gelen Excel dosyanın yerine konmaz, birleştirilir; ilk temizlikteki kurallar aynen uygulanır (ARCHITECTURE 10).
 - Arama Türkçe duyarlı (I/ı/İ/i, şapka), hataya toleranslı, sözcük sırası önemsiz; 10.000 kitapta tuş başına 50 ms altı.
 - Tema kit üzerinden: `Accent.custom`, `colors = { it.copy(...) }`, `DeskFonts`. Her metin/arka plan çifti en az 4.5:1 ve testle denetlenir. Sonuç ekranındaki raf yazısı en az 32 sp.
+- Telefonda (dar ekran) yalnızca dikey kullanım; tablet ve DeX'te serbest.
 - Kitap listesi depoya girmez (depo herkese açık): `.gitignore` içinde `*.xlsx`; testlerde yalnızca uydurma kitaplar.
 
 ## CI ve GitHub

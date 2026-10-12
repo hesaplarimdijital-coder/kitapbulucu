@@ -30,6 +30,7 @@ Son güncelleme: 12.10.2026, Sprint 0 sürüyor.
 - Büyük harfler, yazar adı yazımları ve yazar sütunundaki yayınevi adları olduğu gibi kalır.
 - Güvenli yazmada "geçici dosya + yerine koy" yerine "üret, doğrula, yedekle, yaz, geri oku" uygulanır (ARCHITECTURE 7). Kullanıcıya söylendi.
 - Sprint planı 6 kısa sprint olarak önerildi; her sprint başında onay alınır.
+- Telefonda yalnızca dikey kullanım olacak (kullanıcı söyledi); telefon taslakları `docs/design/` içinde.
 
 ## Riskler
 
