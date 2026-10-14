@@ -253,21 +253,22 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [ ] Tablolar, menüler ve düğmeler taşmaz; DeX açık ve koyu ekran görüntüleri.
 - [ ] Kontrast testi geçer.
 
-### S-33 Raf oluşturma · 5 · [F] · bekliyor
-- [ ] Raflar ekranında "Yeni raf" ile raf kodu (örnek: B3) ve isteğe bağlı açıklama girilir; kitabı olmayan raf da listede görünür.
-- [ ] Raf listesi kişinin Excel dosyasında saklanır (karar bekleniyor), öteki cihaza Drive ile ulaşır.
-- [ ] Raf adı değiştirilebilir (içindeki kitapların Raf alanı da değişir); boş raf silinebilir.
-- [ ] Testler: kaydet → oku, eski dosyada raf listesi yokken kitaplardaki raflar listeye alınır.
+### S-33 Raf oluşturma · 5 · [F] · bitti
+- [x] Raflar ekranında "Yeni raf" ile raf kodu (örnek: B3) ve isteğe bağlı açıklama girilir; kitabı olmayan raf da listede görünür.
+- [x] Raf listesi yalnızca cihazda, kişi başına saklanır (kullanıcı kararı 15.10.2026; Drive'a gitmez). Kitabın rafı Excel'deki `Raf` sütununda kalır.
+- [x] Raf adı değiştirilebilir (içindeki kitapların Raf alanı da değişir, tek adımda geri alınır); boş raf silinebilir.
+- [x] Testler: kaydet → oku, ad değiştirme, yalnızca boş raf silinir; raf listesi yokken kitaplardaki raflar listede görünür, doğal sıra.
 
-### S-34 Rafa kitap ekleme (Raflar ekranından) · 3 · [O] · bekliyor
-- [ ] Açık rafta "Kitap ekle": arama kutusu; sonuca basınca ya da Enter'da kitap o rafa konur, kutu temizlenir. Birden çok sonuç tek adımda konabilir.
-- [ ] Başka rafta duran kitap için "B2'den B3'e taşınsın mı?" sorulur.
-- [ ] Rafı yazılmamış kitap sayısı görünür; her atama Ctrl+Z ile geri alınır. Eski "Raf doldur" bu akışın içine katılır.
+### S-34 Rafa kitap ekleme (Raflar ekranından) · 3 · [O] · bitti
+- [x] Açık rafta "Kitap ekle": arama kutusu; sonuca basınca ya da Enter'da kitap o rafa konur, kutu temizlenir. Birden çok sonuç tek adımda konabilir (önce sorulur).
+- [x] Başka rafta duran kitap için "B2 rafından B3 rafına taşınsın mı?" sorulur.
+- [x] Rafı yazılmamış kitap sayısı görünür; her atama Ctrl+Z ile geri alınır. Eski "Raf doldur" bu akışın içine katıldı.
 
-### S-35 Kütüphaneden rafa koyma · 3 · [O] · bekliyor
-- [ ] Kütüphane tablosunda bir ya da birden çok satır seçilir (Ctrl/Shift ile ya da dokunmatikte uzun basıp işaretleyerek); "Rafa koy…" raf listesinden seçtirir, "Yeni raf" da sunar.
-- [ ] Sağ tık menüsünde ve düzenleme formunda raf, raf listesinden seçilir (elle yazmak da serbest).
-- [ ] Ctrl+Z geri alır; DeX ve telefon ekran görüntüsü.
+### S-35 Kütüphaneden rafa koyma · 3 · [O] · bitti (çoklu seçim kitle gelecek)
+- [x] Kütüphane tablosunda seçilen satır için "Rafa koy…" raf listesinden seçtirir (süzme, ↑↓, Enter), "Yeni raf" da sunar.
+- [ ] Birden çok satır seçimi (Ctrl/Shift ile ya da dokunmatikte uzun basıp işaretleyerek): kit 0.1.2 ile bağlanacak; "Rafa koy…" (`BookActions.placeOnShelf`) şimdiden birden çok kitabı alıyor.
+- [x] Sağ tık menüsünde ("Rafa koy…") ve düzenleme formunda raf, raf listesinden seçilir (elle yazmak da serbest).
+- [x] Ctrl+Z geri alır; DeX ve telefon ekran görüntüsü.
 
 ## Sıraya konmayı bekleyenler
 
