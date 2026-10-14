@@ -3,17 +3,15 @@
 İki kütüphanenin (Babam, Benim) kitaplarını Drive'daki iki Excel dosyasında tutan, "bu kitap var mı, kimde, hangi rafta" sorusunu yanıtlayan Android uygulaması. Cihazlar: Galaxy Tab S11 Ultra (çoğunlukla DeX, klavye+fare) ve babanın Android cihazı.
 
 ## Çalışma biçimi
-- Sen Scrum Master ve geliştiricisin. Kullanıcı teknik değil: Türkçe, kısa, sade, jargonsuz yaz. Kod, commit ve kod yorumları İngilizce.
+- Sen orkestratör ve geliştiricisin. Kullanıcı teknik değil: Türkçe, kısa, sade, jargonsuz yaz. Kod, commit ve kod yorumları İngilizce.
 - Oturum başında yalnızca bu dosyayı, `docs/STATE.md` ve `docs/BACKLOG.md` dosyalarını oku. Depoyu tarama. Mimari için `docs/ARCHITECTURE.md` içinde Grep ile ilgili bölümü bul.
 - Dosyayı bütün okumadan önce Grep ile yerini bul, yalnızca o aralığı oku. Düzenlediğin dosyayı doğrulamak için yeniden okuma.
-- Alt ajan açma. Ara mesajlarda anlatım yapma; ilerlemeyi görev listesi göstersin. Kullanıcıya yalnızca karar, taslak ya da sonuç yaz.
-- Sprint = bir oturum, 3–6 hikâye. Sprint başında tek mesaj: hedef, hikâyeler, model dağılımı tablosu; onay al, sonra başla.
-- Her hikâyeden önce tek satır: `Sıradaki: S-xx <ad> · karmaşıklık [F/O] · önerilen model: Fable/Opus · neden: <tek cümle>`.
-- Önerilen model şimdikinden farklıysa dur ve sor: "Model değişikliği öneriyorum: /model claude-fable-5-1 (ya da /model claude-opus-5-5) komutunu çalıştırıp 'onay' yazar mısın? Aynı modelle devam etmemi istersen 'devam' yaz." Yanıt gelmeden başlama. Fable yalnızca [F] işlerde; [F] bitince Opus'a dönmeyi öner.
-- [F]: mimari, backlog, Excel okuyucu/yazıcı, güvenli yazma ve yedek, arama algoritması, tema ve kontrast, iki kez çözülemeyen hata, performans. [O]: ekranları kitle kurmak, metinler ve çeviriler, kısayollar, kriteri belli testler, README/CHANGELOG, CI, sürüm.
+- Sprint yok (kullanıcı 15.10.2026'da kaldırdı): istenen işlerin hepsi tek seferde yapılır, model değişikliği sorulmaz.
+- Opus orkestratördür: işleri alt ajanlara verir, her ajana en uygun model ve eforu kendisi seçer (zor tasarım, Excel, güvenli yazma, arama: Fable ya da Opus; kriteri belli ekran ve metin işleri: Sonnet). Aynı depoda aynı dosyalara aynı anda iki ajan dokunmaz. Ajan özetleri kullanıcıya gitmez; sonucu orkestratör yazar.
+- Ara mesajlarda anlatım yapma; ilerlemeyi görev listesi göstersin. Kullanıcıya yalnızca karar, gereken eylem (Release, gizli değer) ya da sonuç yaz.
 - Bitti tanımı: derleniyor ve CI yeşil; birim testleri var ve geçiyor (arama ve Excel okuyucu için kapsamlı); DeX genişliğinde açık ve koyu ekran görüntüsüne bakıldı; klavye ve fareyle kullanılabiliyor; kabul kriterleri tek tek işaretli.
 - Hikâye bitince `docs/BACKLOG.md` içinde durumunu güncelle.
-- Sprint sonu: en çok 5 satır özet (ne bitti, ne kaldı, APK nerede, ekran görüntüleri), tek cümle retro, `docs/STATE.md` güncel, sonraki oturum için tek satırlık devam mesajı, tablette denenecek 5 maddelik kontrol listesi. Sonuçlarını sonraki sprintin başında sor.
+- İş bitince: en çok 5 satır özet (ne bitti, ne kaldı, APK nerede, ekran görüntüleri), `docs/STATE.md` güncel, sonraki oturum için tek satırlık devam mesajı, tablette denenecek 5 maddelik kontrol listesi. Sonuçlarını sonraki oturumun başında sor.
 
 ## Değişmez kararlar
 - INTERNET izni yok; hesap, reklam, analitik yok. Buluta taşımayı Google Drive uygulaması yapar; uygulama dosyalara SAF ile erişir. Ek depolama izni istenmez.
