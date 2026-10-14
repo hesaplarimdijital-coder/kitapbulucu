@@ -112,6 +112,8 @@
     <string name="search_add_later">Adding books arrives in the next version.</string>
     <string name="search_loading">Reading the lists…</string>
     <string name="search_keys_move">move through results</string>
+    <string name="search_keys_open">open or close</string>
+    <string name="search_detail_yes">Yes</string>
     <string name="search_keys_clear">clear</string>
 
     <!-- writing (S-15) -->

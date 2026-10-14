@@ -118,18 +118,18 @@ class SetupScreenshotTest {
         capture(name, theme, input) { MappingScreen(Owner.ME, store, onClose = {}) }
     }
 
-    private fun shell(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, route: String, query: String = "", store: LibraryStore = sampleStore()) {
+    private fun shell(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, route: String, query: String = "", store: LibraryStore = sampleStore(), open: Boolean = false) {
         val settings = sampleSettings()
         capture(name, theme, input) {
             val prefs = rememberDeskPreferences(accents = AppPalette.accents)
             val navController = rememberNavController()
             LaunchedEffect(route) { if (route != Routes.SEARCH) ShellNavigator(navController).navigate(route) }
-            AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store), initialSearch = query)
+            AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store), initialSearch = query, initialSearchOpen = open)
         }
     }
 
-    private fun search(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, query: String) =
-        shell(name, theme, input, widthClass, Routes.SEARCH, query, sampleStore(myBooks))
+    private fun search(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, query: String, open: Boolean = false) =
+        shell(name, theme, input, widthClass, Routes.SEARCH, query, sampleStore(myBooks), open)
 
     @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
     fun setupDexLight() = setup("dex-light-setup", ThemeMode.Light, InputMode.Pointer)
@@ -172,4 +172,10 @@ class SetupScreenshotTest {
 
     @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
     fun searchEmptyDexDark() = search("dex-dark-search-empty", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge, "")
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun searchOpenedPhoneLight() = search("phone-light-search-open", ThemeMode.Light, InputMode.Touch, WidthClass.Compact, "çatıdaki", open = true)
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun searchOpenedDexDark() = search("dex-dark-search-open", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge, "çatıdaki", open = true)
 }

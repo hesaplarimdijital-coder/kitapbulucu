@@ -111,6 +111,8 @@
     <string name="search_add_later">Kitap ekleme bir sonraki sürümde geliyor.</string>
     <string name="search_loading">Listeler okunuyor…</string>
     <string name="search_keys_move">sonuçlarda gez</string>
+    <string name="search_keys_open">ayrıntıyı aç ya da kapat</string>
+    <string name="search_detail_yes">Evet</string>
     <string name="search_keys_clear">temizle</string>
 
     <!-- yazma (S-15) -->

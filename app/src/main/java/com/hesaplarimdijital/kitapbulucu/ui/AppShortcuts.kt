@@ -25,9 +25,12 @@ object AppShortcuts {
     )
 
     /** Runs the action of shortcut [id]; false when the id is unknown. */
-    fun perform(id: String, navigator: ShellNavigator, prefs: DeskPreferences, onRefresh: () -> Unit = {}): Boolean {
+    fun perform(id: String, navigator: ShellNavigator, prefs: DeskPreferences, onRefresh: () -> Unit = {}, onSearch: () -> Unit = {}): Boolean {
         when (id) {
-            CommonShortcuts.SEARCH -> navigator.navigate(Routes.SEARCH)
+            CommonShortcuts.SEARCH -> {
+                navigator.navigate(Routes.SEARCH)
+                onSearch()
+            }
             CommonShortcuts.SETTINGS, CommonShortcuts.SHORTCUT_LIST -> navigator.navigate(Routes.SETTINGS)
             CommonShortcuts.TOGGLE_SIDEBAR -> prefs.updateSidebarCollapsed(!prefs.sidebarCollapsed)
             REFRESH -> onRefresh()

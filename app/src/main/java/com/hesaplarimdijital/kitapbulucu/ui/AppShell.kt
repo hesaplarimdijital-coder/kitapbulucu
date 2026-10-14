@@ -96,6 +96,10 @@ fun AppShell(
     onShortcut: (String) -> Unit = {},
     /** For screenshots: what the search field starts with. */
     initialSearch: String = "",
+    /** Changes on every Ctrl+K: the search field takes the cursor again. */
+    searchFocus: Int = 0,
+    /** For screenshots: the first result starts opened. */
+    initialSearchOpen: Boolean = false,
 ) {
     val spec = rememberAppSpec()
     val resources = LocalContext.current.resources
@@ -113,7 +117,7 @@ fun AppShell(
             Box(Modifier.weight(1f)) {
                 when (route) {
                     Routes.SEARCH -> if (store != null) {
-                        SearchScreen(store, initialQuery = initialSearch)
+                        SearchScreen(store, initialQuery = initialSearch, focusKey = searchFocus, openFirst = initialSearchOpen)
                     } else {
                         MessageScreen(
                             title = stringResource(R.string.placeholder_search_title),

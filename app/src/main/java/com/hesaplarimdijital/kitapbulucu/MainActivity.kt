@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -48,14 +49,16 @@ class MainActivity : ComponentActivity() {
             val settings = App.settings(this)
             // the owner whose columns are being mapped; the mapping screen covers everything else
             var mapping by rememberSaveable { mutableStateOf<Owner?>(null) }
-            perform = { id -> AppShortcuts.perform(id, navigator, prefs, onRefresh = store::refresh) }
+            // every Ctrl+K puts the cursor in the search field again, even when the search screen is already open
+            var searchFocus by remember { mutableIntStateOf(0) }
+            perform = { id -> AppShortcuts.perform(id, navigator, prefs, onRefresh = store::refresh, onSearch = { searchFocus++ }) }
             DesktopKitRoot(prefs, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
                 val picker = rememberFilePicker(store)
                 val mappingOwner = mapping
                 when {
                     mappingOwner != null -> MappingScreen(mappingOwner, store, onClose = { mapping = null })
                     !settings.setupDone -> SetupScreen(store, settings, picker, onMap = { mapping = it }, onDone = { settings.updateSetupDone(true) })
-                    else -> AppShell(prefs, widthClass, navController, store, settings, picker, onMap = { mapping = it }, onShortcut = { perform(it) })
+                    else -> AppShell(prefs, widthClass, navController, store, settings, picker, onMap = { mapping = it }, onShortcut = { perform(it) }, searchFocus = searchFocus)
                 }
             }
         }
