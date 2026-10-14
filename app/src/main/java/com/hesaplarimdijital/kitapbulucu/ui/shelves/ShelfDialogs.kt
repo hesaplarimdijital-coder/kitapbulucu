@@ -1,5 +1,6 @@
 package com.hesaplarimdijital.kitapbulucu.ui.shelves
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -17,9 +18,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -161,7 +163,7 @@ fun ShelfPickerDialog(
     var filter by remember { mutableStateOf("") }
     var active by remember { mutableIntStateOf(0) }
     val focus = remember { FocusRequester() }
-    val listState = rememberLazyListState()
+    val scroll = rememberScrollState()
     val shown = remember(shelves, filter) { filterShelves(shelves, filter) }
     val currentKey = current?.let(Shelves::key)?.takeIf { it.isNotEmpty() }
     val pick = { shelf: String ->
@@ -194,8 +196,9 @@ fun ShelfPickerDialog(
         when {
             shelves.isEmpty() -> Text(stringResource(R.string.picker_none), style = DeskTheme.type.body, color = colors.textSecondary)
             shown.isEmpty() -> Text(stringResource(R.string.picker_no_match, Shelves.clean(filter)), style = DeskTheme.type.body, color = colors.textSecondary)
-            else -> LazyColumn(Modifier.fillMaxWidth().heightIn(max = 300.dp), state = listState) {
-                itemsIndexed(shown, key = { _, group -> "shelf:" + group.shelf }) { index, group ->
+            // a plain scrolling column: a list has tens of shelves, not thousands
+            else -> Column(Modifier.fillMaxWidth().heightIn(max = 300.dp).verticalScroll(scroll)) {
+                shown.forEachIndexed { index, group ->
                     PickerRow(group, highlighted = index == active, isCurrent = Shelves.key(group.shelf) == currentKey) { pick(group.shelf) }
                 }
             }
@@ -204,12 +207,6 @@ fun ShelfPickerDialog(
             DeskButton(stringResource(R.string.shelves_new), { onNew(filter) }, icon = DeskIcons.Plus)
             DeskButton(stringResource(R.string.action_cancel), onDismiss)
         }
-    }
-    LaunchedEffect(active, shown) {
-        val visible = listState.layoutInfo.visibleItemsInfo
-        val first = visible.firstOrNull()?.index ?: return@LaunchedEffect
-        val last = visible.last().index
-        if (active < first || active >= last) runCatching { listState.scrollToItem((active - 1).coerceAtLeast(0)) }
     }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 }
@@ -222,6 +219,7 @@ internal fun filterShelves(shelves: List<ShelfGroup>, filter: String): List<Shel
     return shelves.filter { Shelves.key(it.shelf).contains(key) || TurkishText.upper(it.note).contains(words) }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PickerRow(group: ShelfGroup, highlighted: Boolean, isCurrent: Boolean, onClick: () -> Unit) {
     val colors = DeskTheme.colors
@@ -229,11 +227,15 @@ private fun PickerRow(group: ShelfGroup, highlighted: Boolean, isCurrent: Boolea
     val interaction = remember { MutableInteractionSource() }
     val state = interaction.collectState()
     val shape = RoundedCornerShape(dimens.radiusControl)
+    val relocation = remember { BringIntoViewRequester() }
+    // the row chosen with ↑↓ scrolls into view
+    LaunchedEffect(highlighted) { if (highlighted) runCatching { relocation.bringIntoView() } }
     val main = if (highlighted) colors.onSelection else colors.accentText
     val second = if (highlighted) colors.onSelection else colors.textSecondary
     Row(
         Modifier
             .fillMaxWidth()
+            .bringIntoViewRequester(relocation)
             .defaultMinSize(minHeight = dimens.minTarget.coerceAtLeast(40.dp))
             .focusRing(state, shape)
             .background(stateBackground(state, selected = highlighted), shape)
