@@ -69,6 +69,7 @@ import com.hesaplarimdijital.kitapbulucu.search.SearchHit
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.text.TurkishText
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
+import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIconButton
 import desktopkit.components.DeskIcons
@@ -80,8 +81,8 @@ import desktopkit.shell.KeyCap
 import desktopkit.theme.DeskTheme
 import desktopkit.theme.InputMode
 
-/** Serif for book titles (Draft A); the kit's own serif slot arrives with K-01. */
-private val Serif = FontFamily.Serif
+/** Literata for book titles (Draft A). */
+private val Serif = AppFonts.Literata
 
 /** The shelf code in a result: bold, accent, large enough to read at a glance (S-30: 20 sp). */
 private val ShelfSize = 20.sp
