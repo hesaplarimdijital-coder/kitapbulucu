@@ -1,24 +1,24 @@
 # Durum
 
-Son güncelleme: 14.10.2026, Sprint 3 sürüyor: S-15 bitti; sıradaki S-30+S-16, K-01, S-17 (Opus).
+Son güncelleme: 14.10.2026, Sprint 3 bitti (K-01'in son adımı kullanıcının Release'ini bekliyor).
 
 ## Şu an
 
-- Uygulama: Kitap Bulucu, paket `com.hesaplarimdijital.kitapbulucu`. Depo: `hesaplarimdijital-coder/kitapbulucu` (herkese açık).
-- Sprint 0, 1, 2 bitti. Uygulama artık salt okunur kullanılabilir: ilk açılışta kurulum (bu cihaz kimin, iki dosya seç ya da oluştur, gerekirse sayfa seç ve sütun eşle), sonra Ara ekranı (yazdıkça sonuç, Hepsi/Babam/Benim, "Babam · Raf C2" kartı, bulunamazsa 3 öneri). Açılışta önbellekten anında liste, öne gelişte ve F5'te yeniden okuma.
-- APK: `ci/apk` dalında `kitapbulucu.apk` (https://github.com/hesaplarimdijital-coder/kitapbulucu/raw/ci/apk/kitapbulucu.apk); aynı dalda `ornek/` altında yazıcının örnek dosyaları. Ekran görüntüleri `ci/screenshots` dalında; başvuru görüntüleri `app/src/test/screenshots/` (19 ekran).
-- Kod haritası: `xlsx/` (okuyucu, yazıcı, csv, tarih), `model/` (Book, Owner, BookColumn, BookTable, ColumnMapping), `text/` (TurkishText, Fold), `search/` (SearchIndex, EditDistance, BookGroups), `store/` (AppSettings, FileLinks, Documents/SafDocuments, LibraryCache, LibraryStore, LibraryState, RelativeTime), `ui/` (AppShell, AppShortcuts, Controls, FilePicker, LibraryTexts, setup/, search/, theme/AppPalette), `App.kt`. Deneme ekranı (`trial/`) kaldırıldı.
-- Tasarım: Taslak A "Fiş" renkleri uygulandı (Kâğıt / Gece okuması / OLED, 8 vurgu). Başlıklar şimdilik sistemin serif yazısıyla; Literata için kit 0.1.1 (K-01) gerekiyor.
-- Sprint 3 onaylı ve sürüyor (sıra: S-15 ✓ → S-30+S-16 birleşik → K-01 → S-17). S-15 bitti: `store.Change`, `ChangeApplier`, `PendingChanges`, `Backups`, `LibraryStore.submit`; yazma hattı testli, CI yeşil. Kalanların hepsi [O] → Opus. S-30 kararları (kullanıcı yanıtlamadı, öneri geçerli): raf satırı 36 → 20 sp, kitap adı 17 sp, "İmzalı" etiketi aramada kalır; CLAUDE.md'deki 32 sp kuralı S-30 bitince güncellenecek.
-- Henüz kitap ekleyen ekran yok (S-17); `submit` yalnızca testlerden çağrılıyor.
+- Uygulama: Kitap Bulucu, paket `com.hesaplarimdijital.kitapbulucu`. Depo: `hesaplarimdijital-coder/kitapbulucu` (herkese açık). Kit deposu `hesaplarimdijital-coder/desktop-kit` bu oturuma eklendi (push yetkisi var; etiket gönderilemez).
+- Sprint 0–3 bitti. Uygulama: kurulum, arama (satır yerinde açılır, klavye), kitap ekleme (Ctrl+N, Enter kaydeder, aynı kitap ve öteki liste için onay), güvenli yazma (yeniden oku, uygula, doğrula, yedek son 10, yaz, geri oku; başarısızsa bekler ve F5/öne gelişte yeniden dener).
+- APK: `ci/apk` dalında `kitapbulucu.apk`; `ornek/` altında örnek dosyalar. Ekran görüntüleri `ci/screenshots`; başvuru görüntüleri `app/src/test/screenshots/` (23 ekran).
+- Kod haritası: `xlsx/`, `model/` (Book, Owner, BookColumn, BookTable, ColumnMapping), `text/`, `search/` (SearchIndex, EditDistance, BookGroups), `store/` (AppSettings, FileLinks, Documents, LibraryCache, LibraryStore, LibraryState, Change, ChangeApplier, PendingChanges, Backups, RelativeTime), `ui/` (AppShell, AppShortcuts, Controls, FilePicker, LibraryTexts, setup/, search/, add/, theme/AppPalette, theme/AppFonts), `App.kt`.
+- Yazı: kitap adları Literata (OFL, `res/font`, `licenses/Literata-OFL.txt`, üretici `tools/fonts/make_literata.py`). Ara ekranında raf kodu 20 sp (CLAUDE.md güncellendi).
+- K-01: kit 0.1.1 kit deposunda (`DeskFonts.heading`, `TableColumn.textStyle`), kit CI yeşil. Kullanıcı GitHub'da `desktop-kit` için 0.1.1 Release'ini oluşturunca: `gradle/libs.versions.toml` → 0.1.1, `DesktopKitRoot(fonts = DeskFonts.Plex.copy(heading = AppFonts.Literata))`, ekran görüntülerine bak.
+- Sıradaki: Sprint 4 (S-18 silme, S-19 düzenleme, S-20 kütüphane, S-21 raflar, S-22 raf doldurma), hepsi [O] → Opus. K-01'in son adımı Sprint 4'ün başında.
 
 ## Kullanıcıdan beklenenler
 
 1. GitHub'a iki gizli değer: `KB_KEYSTORE_BASE64` ve `KB_KEYSTORE_PASSWORD` (12.10.2026'da dosya ve parola verildi). Eklenene kadar APK'lar her seferinde başka anahtarla imzalanır; yeni APK eskisinin üstüne kurulamaz (önce kaldır).
 2. S-06 kalanları: seçilen Drive klasörü boş muydu; yeniden başlatma sonrası izin; dosyanın öteki cihazda görünmesi ve değişikliğin ulaşma süresi; tablet denemesi (kullanıcı "yarın söyleyeceğim" dedi).
 3. Sprint 2 tablet kontrol listesi (aşağıda devam mesajında) ve `ornek/Ortak.xlsx` dosyasının Excel, Office NX, Google E-Tablolar'da açılması.
-4. Ara ekranı geri bildirimi (12.10.2026, telefon): yazılar çok büyük, basılan sonuç yerinde açılmalı, "Babam" ve raf üst üste, "2 adet" aramada gereksiz. Backlog'a S-30 olarak alındı; kullanıcı "şimdilik değişiklik yapma" dedi. Sprint 3 planlanırken sıraya konacak; raf yazısı ölçüsü (CLAUDE.md'deki 32 sp kuralı) o zaman yeniden kararlaştırılacak.
-5. Kit 0.1.1 onayı: Sprint 3'te (K-01) sorulacak; serif yazı yuvası ve Literata.
+4. S-30 yapıldı (raf 20 sp, satır yerinde açılır, Babam/raf alt alta, adet yalnızca ayrıntıda, "İmzalı" küçük etiket); kullanıcının telefonda yeniden bakması bekleniyor.
+5. GitHub'da `desktop-kit` deposunda 0.1.1 Release'i (etiket `0.1.1`, `main` üzerindeki son commit).
 
 ## Veri hakkında bilinenler
 
@@ -59,8 +59,12 @@ Her yapımda CI'ı beklemek yerine birkaç hikâyeyi birlikte göndermek zaman k
 
 ## Sprint 2 retro
 
-Ekran görüntülerine bakmak iki gerçek hatayı yakaladı (eşleme ekranının yanlış başlık satırı tahmini, yinelenen bölüm adı); her ekran hikâyesinde görüntüye bakmadan "bitti" demeyelim.
+Ekran görüntülerine bakmak iki gerçek hatayı yakaladı; her ekran hikâyesinde görüntüye bakmadan "bitti" demeyelim.
+
+## Sprint 3 retro
+
+Fable işini (S-15) öne alıp Opus işlerini arkaya toplamak model değişikliğini ikiye indirdi; kit deposuna erişim baştan oturuma eklenseydi K-01 beklemeden biterdi.
 
 ## Devam mesajı
 
-`CLAUDE.md, docs/STATE.md ve docs/BACKLOG.md dosyalarını oku; önce S-06 kalanlarını ve Sprint 2 tablet kontrol listesinin sonuçlarını sor, sonra S-30'u da düşünerek Sprint 3'ü planla ve onayımı al.`
+`CLAUDE.md, docs/STATE.md ve docs/BACKLOG.md dosyalarını oku; önce kit 0.1.1 Release'ini ve tablet deneme sonuçlarını sor, K-01'in son adımını bitir, sonra Sprint 4'ü planla ve onayımı al.`

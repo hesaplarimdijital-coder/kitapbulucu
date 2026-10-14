@@ -142,19 +142,20 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [x] Ok tuşları sonuçlarda gezer, Enter kitabın detayını yerinde açar, Esc önce açık satırı kapatır sonra aramayı temizler. (S-30 ile birlikte yapıldı.)
 - [x] Dokunmatikte de rahat: hedefler parmak için yeterli.
 
-### S-17 Kitap ekleme · 5 · [O] · bekliyor
-- [ ] Alanlar: Kitap adı, Yazar, Kimin (varsayılan: kullanıcının kendisi), Raf; isteğe bağlı Adet (varsayılan 1), İmzalı, Yayınevi, Yıl, ISBN, Not.
-- [ ] Kayıt doğru dosyaya eklenir.
-- [ ] Aynı ad ve yazar o kütüphanede varsa uyarır: "Bu kitap zaten Babam'ın kütüphanesinde, Raf A2". "Bir kopya daha" adedi artırır, "Vazgeç" eklemez.
-- [ ] Ctrl+N formu açar; Tab alanlar arasında gezer; Enter kaydeder; form açık kalır, imleç kitap adına döner.
-- [ ] Ara ekranındaki "Ekle" formu aranan adla açar.
-- [ ] Öteki kişinin listesine eklerken onay sorar.
+### S-17 Kitap ekleme · 5 · [O] · bitti (tablette deneme bekleniyor)
+- [x] Alanlar: Kitap adı, Yazar, Kimin (varsayılan: kullanıcının kendisi), Raf; "Diğer bilgiler" altında Adet (varsayılan 1), İmzalı, Yayınevi, Yıl, ISBN, Not.
+- [x] Kayıt doğru dosyaya güvenli yazmayla (S-15) eklenir. (Gerçek Drive dosyasında tablette denenecek; önce Benim.xlsx ile.)
+- [x] Aynı ad ve yazar o kütüphanede varsa uyarır: "Bu kitap zaten Babam'ın kütüphanesinde, Raf A2". "Bir kopya daha" adedi artırır, "Vazgeç" eklemez.
+- [x] Ctrl+N formu açar; Tab alanlar arasında gezer; Enter kaydeder; form açık kalır, imleç kitap adına döner.
+- [x] Ara ekranındaki "Ekle" formu aranan adla açar.
+- [x] Öteki kişinin listesine eklerken onay sorar.
 
-### K-01 Kit 0.1.1: başlık yazı tipi ve tablo sütun stili · 3 · [O] · bekliyor (kit deposunda)
-- [ ] `DeskFonts` başlıklar için ayrı bir aile alır (varsayılanı `sans`); `display`, `headline`, `title` onu kullanır.
-- [ ] `TableColumn` hücre yazı stilini seçebilir (kitap adı serif olabilsin).
-- [ ] Kitin testleri ve ekran görüntüleri güncel; CHANGELOG yazıldı.
+### K-01 Kit 0.1.1: başlık yazı tipi ve tablo sütun stili · 3 · [O] · kit tarafı bitti, kullanıcının Release'i bekleniyor
+- [x] `DeskFonts` başlıklar için ayrı bir aile alır (varsayılanı `sans`); `display`, `headline`, `title` onu kullanır.
+- [x] `TableColumn` hücre yazı stilini seçebilir (kitap adı serif olabilsin).
+- [x] Kitin testleri ve ekran görüntüleri güncel; CHANGELOG yazıldı.
 - [ ] Kullanıcı GitHub'da 0.1.1 Release'ini oluşturdu; uygulama 0.1.1'e geçti.
+- [x] Literata (OFL) uygulamaya eklendi; kitap adları şimdiden Literata ile.
 
 ## Sprint 4: Sil, düzelt, kütüphane, raflar
 
