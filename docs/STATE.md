@@ -1,6 +1,6 @@
 # Durum
 
-Son güncelleme: 12.10.2026, Sprint 2 bitti.
+Son güncelleme: 14.10.2026, Sprint 3 sürüyor: S-15 bitti; sıradaki S-30+S-16, K-01, S-17 (Opus).
 
 ## Şu an
 
@@ -9,7 +9,8 @@ Son güncelleme: 12.10.2026, Sprint 2 bitti.
 - APK: `ci/apk` dalında `kitapbulucu.apk` (https://github.com/hesaplarimdijital-coder/kitapbulucu/raw/ci/apk/kitapbulucu.apk); aynı dalda `ornek/` altında yazıcının örnek dosyaları. Ekran görüntüleri `ci/screenshots` dalında; başvuru görüntüleri `app/src/test/screenshots/` (19 ekran).
 - Kod haritası: `xlsx/` (okuyucu, yazıcı, csv, tarih), `model/` (Book, Owner, BookColumn, BookTable, ColumnMapping), `text/` (TurkishText, Fold), `search/` (SearchIndex, EditDistance, BookGroups), `store/` (AppSettings, FileLinks, Documents/SafDocuments, LibraryCache, LibraryStore, LibraryState, RelativeTime), `ui/` (AppShell, AppShortcuts, Controls, FilePicker, LibraryTexts, setup/, search/, theme/AppPalette), `App.kt`. Deneme ekranı (`trial/`) kaldırıldı.
 - Tasarım: Taslak A "Fiş" renkleri uygulandı (Kâğıt / Gece okuması / OLED, 8 vurgu). Başlıklar şimdilik sistemin serif yazısıyla; Literata için kit 0.1.1 (K-01) gerekiyor.
-- Sıradaki: Sprint 3 (S-15 güvenli yazma [F], S-16 klavye [O], S-17 kitap ekleme [O], K-01 kit 0.1.1 [O]). Başlarken Fable önerilir (S-15).
+- Sprint 3 onaylı ve sürüyor (sıra: S-15 ✓ → S-30+S-16 birleşik → K-01 → S-17). S-15 bitti: `store.Change`, `ChangeApplier`, `PendingChanges`, `Backups`, `LibraryStore.submit`; yazma hattı testli, CI yeşil. Kalanların hepsi [O] → Opus. S-30 kararları (kullanıcı yanıtlamadı, öneri geçerli): raf satırı 36 → 20 sp, kitap adı 17 sp, "İmzalı" etiketi aramada kalır; CLAUDE.md'deki 32 sp kuralı S-30 bitince güncellenecek.
+- Henüz kitap ekleyen ekran yok (S-17); `submit` yalnızca testlerden çağrılıyor.
 
 ## Kullanıcıdan beklenenler
 
@@ -50,7 +51,7 @@ Son güncelleme: 12.10.2026, Sprint 2 bitti.
 - Raf bilgisi hiç yok; uygulamanın asıl faydası raflar girilince ortaya çıkar (S-22).
 - Baba eski 2 sütunlu dosyasını kullanmayı sürdürürse birleştirme her seferinde aynı kuralları uygulamalı (ARCHITECTURE 10). Öneri: baba temiz `Babam.xlsx` ile devam etsin.
 - Arama hızı CI'da 10.000 uydurma kitapla ölçülüyor (tuş başına 50 ms altı); gerçek tablette henüz denenmedi.
-- Henüz hiçbir şey dosyaya yazılmıyor (yalnızca "Yeni dosya oluştur"); güvenli yazma S-15'te.
+- Güvenli yazma yalnızca testlerde ve uydurma dosyalarla denendi; Drive'daki gerçek dosyada ilk yazma S-17 ile gelecek, önce `Benim.xlsx` ile denenmeli.
 
 ## Sprint 1 retro
 

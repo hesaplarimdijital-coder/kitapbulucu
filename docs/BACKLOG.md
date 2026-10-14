@@ -126,15 +126,15 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 
 ## Sprint 3: Güvenli yazma ve kitap ekleme
 
-### S-15 Güvenli yazma, yedek, bekleyen değişiklikler · 8 · [F] · bekliyor
-- [ ] Değişiklikler işlem olarak tutulur (ekle, düzenle, sil); taşıma önce hedefe ekler, sonra kaynaktan siler.
-- [ ] Her yazmadan önce dosya yeniden okunur; dışarıda yapılan değişiklik kaybolmaz (testte araya girilerek dosya değiştirilir).
-- [ ] Çakışma kuralları ARCHITECTURE 7'deki gibi çalışır ve testlidir.
-- [ ] Yazmadan önce yedek alınır; dosya başına son 10 yedek kalır.
-- [ ] İçerik önce uygulama klasöründe üretilip geri okunarak doğrulanır; yazdıktan sonra belge geri okunup karşılaştırılır.
-- [ ] Yazma başarısız olursa hata açıkça görünür; değişiklik bekleyenlerde kalır; uygulama kapanıp açılsa da öne gelişte ve F5'te yeniden denenir.
-- [ ] İlk yazmadan önce bir kez "Excel'deki renk ve biçimler korunmaz" bilgisi gösterilir.
-- [ ] Dosyada başka dolu sayfa varsa yazmadan önce uyarır.
+### S-15 Güvenli yazma, yedek, bekleyen değişiklikler · 8 · [F] · bitti
+- [x] Değişiklikler işlem olarak tutulur (ekle, düzenle, sil); taşıma önce hedefe ekler, sonra kaynaktan siler. (Taşımayı ekran iki işlem olarak gönderir; S-19/S-20'de bağlanır.)
+- [x] Her yazmadan önce dosya yeniden okunur; dışarıda yapılan değişiklik kaybolmaz (testte araya girilerek dosya değiştirilir).
+- [x] Çakışma kuralları ARCHITECTURE 7'deki gibi çalışır ve testlidir.
+- [x] Yazmadan önce yedek alınır; dosya başına son 10 yedek kalır.
+- [x] İçerik önce üretilip (bellekte) kendi okuyucumuzla geri okunarak doğrulanır; yazdıktan sonra belge geri okunup karşılaştırılır.
+- [x] Yazma başarısız olursa hata açıkça görünür; değişiklik bekleyenlerde kalır; uygulama kapanıp açılsa da öne gelişte ve F5'te yeniden denenir.
+- [x] İlk yazmadan önce bir kez "Excel'deki renk ve biçimler korunmaz" bilgisi gösterilir.
+- [x] Dosyada başka dolu sayfa varsa uyarır; sayfalar düz metin olarak aynen taşınır (veri kaybı yok), ilk yazışta bir kez bildirilir.
 
 ### S-16 Ara ekranında klavye · 3 · [O] · bekliyor
 - [ ] Uygulama açılınca imleç arama kutusunda; herhangi bir harfe basınca aramaya yazılır.
