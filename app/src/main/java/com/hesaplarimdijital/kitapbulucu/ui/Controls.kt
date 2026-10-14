@@ -199,3 +199,51 @@ fun FormField(
         )
     }
 }
+
+/** One button of a [ConfirmDialog]. */
+class DialogAction(val label: String, val primary: Boolean = false, val onClick: () -> Unit)
+
+/**
+ * A small dialog in the kit's look: title, sentence, buttons. Esc and a tap outside cancel;
+ * the first primary button takes the keyboard focus, so Enter confirms.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+fun ConfirmDialog(title: String, text: String, actions: List<DialogAction>, onDismiss: () -> Unit) {
+    val colors = DeskTheme.colors
+    val dimens = DeskTheme.dimens
+    val shape = RoundedCornerShape(dimens.radiusCard)
+    val first = remember { androidx.compose.ui.focus.FocusRequester() }
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Column(
+            Modifier
+                .widthIn(max = 480.dp)
+                .fillMaxWidth()
+                .background(colors.surfaceRaised, shape)
+                .border(1.dp, colors.borderStrong, shape)
+                .padding(dimens.gapL),
+            verticalArrangement = Arrangement.spacedBy(dimens.gapM),
+        ) {
+            Text(title, style = DeskTheme.type.headline, color = colors.text)
+            Text(text, style = DeskTheme.type.body, color = colors.textSecondary)
+            androidx.compose.foundation.layout.FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(dimens.gapS),
+                verticalArrangement = Arrangement.spacedBy(dimens.gapS),
+            ) {
+                val firstPrimary = actions.indexOfFirst { it.primary }
+                actions.forEachIndexed { index, action ->
+                    desktopkit.components.DeskButton(
+                        action.label,
+                        {
+                            onDismiss()
+                            action.onClick()
+                        },
+                        modifier = if (index == firstPrimary) Modifier.focusRequester(first) else Modifier,
+                        primary = action.primary,
+                    )
+                }
+            }
+        }
+    }
+    androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+}

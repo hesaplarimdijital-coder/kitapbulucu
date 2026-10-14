@@ -56,25 +56,46 @@ import desktopkit.theme.InputMode
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AddBookScreen(store: LibraryStore, settings: AppSettings?, initialTitle: String = "", focusKey: Int = 0) {
+fun AddBookScreen(
+    store: LibraryStore,
+    settings: AppSettings?,
+    initialTitle: String = "",
+    focusKey: Int = 0,
+    /** When set, the form edits this book instead of adding one; [actions] saves it. */
+    editing: EditTarget? = null,
+    actions: com.hesaplarimdijital.kitapbulucu.ui.BookActions? = null,
+    onEdited: () -> Unit = {},
+) {
     val states by store.states.collectAsState()
     val resources = LocalContext.current.resources
     val colors = DeskTheme.colors
     val type = DeskTheme.type
     val dimens = DeskTheme.dimens
     val me = settings?.me
-    var fields by remember(initialTitle) { mutableStateOf(AddBookFields(title = initialTitle, owner = me ?: Owner.DAD)) }
+    var fields by remember(initialTitle, editing) { mutableStateOf(if (editing != null) AddBookFields.of(editing.owner, editing.book) else AddBookFields(title = initialTitle, owner = me ?: Owner.DAD)) }
     var check by remember { mutableStateOf<AddBookForm.Check?>(null) }
     var done by rememberSaveable { mutableStateOf<String?>(null) }
-    var showMore by rememberSaveable { mutableStateOf(false) }
+    var showMore by rememberSaveable(editing != null) { mutableStateOf(editing != null) }
     val titleFocus = remember { FocusRequester() }
     LaunchedEffect(focusKey, initialTitle) { runCatching { titleFocus.requestFocus() } }
 
     fun submit(confirmedOther: Boolean = false, confirmedDuplicate: Boolean = false) {
+        if (editing != null) {
+            val result = AddBookForm.edited(fields, editing.book)
+            check = result
+            if (result is AddBookForm.Check.Ready && actions != null) {
+                actions.saveEdit(editing.owner, editing.book, fields.owner, result.book) {
+                    done = resources.getString(R.string.edit_done, result.book.title)
+                    check = null
+                    onEdited()
+                }
+            }
+            return
+        }
         val result = AddBookForm.check(fields, me, states.getValue(fields.owner).table, confirmedOther, confirmedDuplicate)
         check = result
         if (result is AddBookForm.Check.Ready) {
-            store.submit(Change.Add(fields.owner, result.book))
+            store.submit(Change.Add(fields.owner, result.book), resources.getString(R.string.undo_added, result.book.title))
             done = resources.getString(R.string.add_done, result.book.title, toList(resources, fields.owner))
             fields = fields.next()
             check = null
@@ -83,7 +104,7 @@ fun AddBookScreen(store: LibraryStore, settings: AppSettings?, initialTitle: Str
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        PageHeader(stringResource(R.string.add_title))
+        PageHeader(stringResource(if (editing != null) R.string.edit_title else R.string.add_title))
         Column(
             Modifier.padding(horizontal = dimens.pagePadding).widthIn(max = 760.dp).fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(dimens.gapM),
@@ -169,12 +190,16 @@ fun AddBookScreen(store: LibraryStore, settings: AppSettings?, initialTitle: Str
 
             FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.gapS), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
                 DeskButton(stringResource(R.string.add_save), { submit() }, icon = DeskIcons.Check, primary = true)
-                DeskButton(stringResource(R.string.add_clear), {
-                    fields = AddBookFields(owner = fields.owner)
-                    check = null
-                    done = null
-                    runCatching { titleFocus.requestFocus() }
-                })
+                if (editing != null) {
+                    DeskButton(stringResource(R.string.action_cancel), onEdited)
+                } else {
+                    DeskButton(stringResource(R.string.add_clear), {
+                        fields = AddBookFields(owner = fields.owner)
+                        check = null
+                        done = null
+                        runCatching { titleFocus.requestFocus() }
+                    })
+                }
             }
             if (DeskTheme.inputMode == InputMode.Pointer) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -189,6 +214,9 @@ fun AddBookScreen(store: LibraryStore, settings: AppSettings?, initialTitle: Str
         }
     }
 }
+
+/** The book the form edits and the list it is in now. */
+class EditTarget(val owner: Owner, val book: com.hesaplarimdijital.kitapbulucu.model.Book)
 
 private fun inList(resources: android.content.res.Resources, owner: Owner): String =
     resources.getString(if (owner == Owner.DAD) R.string.list_in_dad else R.string.list_in_me)

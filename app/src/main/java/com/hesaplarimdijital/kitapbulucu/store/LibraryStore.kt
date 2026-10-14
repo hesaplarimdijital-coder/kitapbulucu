@@ -67,6 +67,15 @@ class LibraryStore(
     private val baseTables = HashMap<Owner, BookTable?>()
     private val indexed = HashMap<Owner, BookTable?>()
     private val otherSheetsWarned = HashSet<Owner>()
+    private val undoStack = ArrayDeque<UndoStep>()
+
+    private class UndoStep(val label: String, val inverses: List<Change>)
+
+    /** The step just made, for the "Geri al" bar; null once undone or dismissed. */
+    data class LastStep(val label: String, val at: Long)
+
+    private val _lastStep = MutableStateFlow<LastStep?>(null)
+    val lastStep: StateFlow<LastStep?> = _lastStep.asStateFlow()
     private var refreshing = false
     private var refreshAgain = false
 
@@ -92,22 +101,84 @@ class LibraryStore(
      * next refresh when that fails. Text fields are tidied the way a read would tidy them, so
      * the write can be checked against what the file reads back as.
      */
-    fun submit(change: Change) {
-        val tidy = when (change) {
-            is Change.Add -> change.copy(book = tidy(change.book), at = clock())
-            is Change.Edit -> change.copy(before = change.before, after = tidy(change.after), at = clock())
-            is Change.Remove -> change.copy(at = clock())
+    fun submit(change: Change, label: String? = null) = submitAll(listOf(change), label)
+
+    /**
+     * Records changes made together (a move is an Add and a Remove, a shelf given to many books
+     * is many Edits) as one step: shown at once, written right after, undone together. A Remove
+     * in the group waits for the group's Add to the other file, so a moved book is never missing
+     * from both. [label] is what the undo bar says; null keeps the step out of the undo history.
+     */
+    fun submitAll(changes: List<Change>, label: String? = null) {
+        if (changes.isEmpty()) return
+        val now = clock()
+        var tidy = changes.map { change ->
+            when (change) {
+                is Change.Add -> change.copy(book = tidy(change.book), at = now)
+                is Change.Edit -> change.copy(after = tidy(change.after), at = now)
+                is Change.Remove -> change.copy(at = now)
+            }
         }
-        pending.add(tidy)
+        tidy = tidy.map { change ->
+            if (change is Change.Remove && change.waitFor == null) {
+                val add = tidy.firstOrNull { it is Change.Add && it.owner != change.owner }
+                if (add != null) change.copy(waitFor = add.id) else change
+            } else {
+                change
+            }
+        }
+        if (label != null) {
+            val inverses = inverses(tidy)
+            undoStack.addLast(UndoStep(label, inverses))
+            while (undoStack.size > UNDO_LIMIT) undoStack.removeFirst()
+            _lastStep.value = LastStep(label, now)
+        }
+        tidy.forEach(pending::add)
         if (!links.formatNoticeShown) {
             links.formatNoticeShown = true
             notice(StoreNotice.FirstWrite)
         }
-        refreshShown(change.owner)
+        tidy.map { it.owner }.distinct().forEach(::refreshShown)
         scope.launch {
             rebuildIndex()
             refreshNow()
         }
+    }
+
+    /** Takes back the last step (Ctrl+Z, "Geri al"); false when there is nothing to undo. */
+    fun undo(): Boolean {
+        val step = undoStack.removeLastOrNull() ?: return false
+        _lastStep.value = null
+        submitAll(step.inverses, label = null)
+        return true
+    }
+
+    val canUndo: Boolean get() = undoStack.isNotEmpty()
+
+    /** Forgets the "Geri al" bar (the step can still be undone with Ctrl+Z). */
+    fun dismissLastStep() {
+        _lastStep.value = null
+    }
+
+    /** What undoes [changes], computed against what the screens show right now. */
+    private fun inverses(changes: List<Change>): List<Change> {
+        val tables = HashMap<Owner, BookTable?>()
+        val result = ArrayList<Change>()
+        for (change in changes) {
+            val table = tables.getOrPut(change.owner) { state(change.owner).table }
+            val inverse = when (change) {
+                is Change.Add -> {
+                    val existing = table?.books?.firstOrNull { ChangeApplier.identity(it) == ChangeApplier.identity(change.book) }
+                    if (existing != null) Change.Edit(change.owner, existing.copy(copies = existing.copies + change.book.copies), existing)
+                    else Change.Remove(change.owner, change.book)
+                }
+                is Change.Edit -> Change.Edit(change.owner, change.after, change.before)
+                is Change.Remove -> Change.Add(change.owner, change.before)
+            }
+            result.add(inverse)
+            tables[change.owner] = table?.let { ChangeApplier.apply(it, listOf(change)).table }
+        }
+        return result.reversed()
     }
 
     /** Changes still waiting to be written to [owner]'s file. */
@@ -234,11 +305,15 @@ class LibraryStore(
         try {
             do {
                 refreshAgain = false
+                val pendingBefore = pending.all().size
                 for (owner in Owner.entries) {
-                    if (pending.forOwner(owner).isNotEmpty() && links.link(owner) != null) write(owner) else read(owner)
+                    if (readyChanges(owner).isNotEmpty() && links.link(owner) != null) write(owner) else read(owner)
                 }
                 scanStrayFiles()
                 rebuildIndex()
+                // a Remove held back for its Add can go once that Add is written
+                val released = pending.all().size < pendingBefore && Owner.entries.any { readyChanges(it).isNotEmpty() && links.link(it) != null }
+                if (released) refreshAgain = true
             } while (refreshAgain)
         } finally {
             refreshing = false
@@ -369,9 +444,16 @@ class LibraryStore(
      * the new workbook and check it reads back as intended, keep a backup of the old bytes,
      * write, read the document back and compare. Only then are the changes dropped.
      */
+    /** [owner]'s pending changes up to the first one still waiting for another file. */
+    private fun readyChanges(owner: Owner): List<Change> {
+        val all = pending.all()
+        val ids = all.mapTo(HashSet()) { it.id }
+        return all.filter { it.owner == owner }.takeWhile { !(it is Change.Remove && it.waitFor != null && it.waitFor in ids) }
+    }
+
     private suspend fun write(owner: Owner) {
         val link = links.link(owner) ?: return
-        val changes = pending.forOwner(owner)
+        val changes = readyChanges(owner)
         if (changes.isEmpty()) return
         val before = state(owner)
         update(before.copy(status = LoadStatus.LOADING, displayName = before.displayName ?: link.displayName, pendingChanges = changes.size))
@@ -525,6 +607,8 @@ class LibraryStore(
     }
 
     companion object {
+        const val UNDO_LIMIT = 50
+
         /** Excel's lock file, Drive's and Dropbox's conflicted copies. */
         fun isStrayFile(name: String): Boolean {
             val lower = name.lowercase()

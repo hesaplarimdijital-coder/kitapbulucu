@@ -118,13 +118,13 @@ class SetupScreenshotTest {
         capture(name, theme, input) { MappingScreen(Owner.ME, store, onClose = {}) }
     }
 
-    private fun shell(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, route: String, query: String = "", store: LibraryStore = sampleStore(), open: Boolean = false) {
+    private fun shell(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, route: String, query: String = "", store: LibraryStore = sampleStore(), open: Boolean = false, addFocus: Int = 0) {
         val settings = sampleSettings()
         capture(name, theme, input) {
             val prefs = rememberDeskPreferences(accents = AppPalette.accents)
             val navController = rememberNavController()
             LaunchedEffect(route) { if (route != Routes.SEARCH) ShellNavigator(navController).navigate(route) }
-            AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store), initialSearch = query, initialSearchOpen = open)
+            AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store), initialSearch = query, initialSearchOpen = open, addFocus = addFocus)
         }
     }
 
@@ -180,8 +180,23 @@ class SetupScreenshotTest {
     fun searchOpenedDexDark() = search("dex-dark-search-open", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge, "çatıdaki", open = true)
 
     @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
-    fun addDexLight() = shell("dex-light-add", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge, Routes.ADD, store = sampleStore(myBooks))
+    fun addDexLight() = shell("dex-light-add", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge, Routes.SEARCH, store = sampleStore(myBooks), addFocus = 1)
 
     @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
-    fun addPhoneDark() = shell("phone-dark-add", ThemeMode.Dark, InputMode.Touch, WidthClass.Compact, Routes.ADD, store = sampleStore(myBooks))
+    fun addPhoneDark() = shell("phone-dark-add", ThemeMode.Dark, InputMode.Touch, WidthClass.Compact, Routes.SEARCH, store = sampleStore(myBooks), addFocus = 1)
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun libraryDexLight() = shell("dex-light-library", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge, Routes.LIBRARY, store = sampleStore(myBooks))
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun libraryDexDark() = shell("dex-dark-library", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge, Routes.LIBRARY, store = sampleStore(myBooks))
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun libraryPhoneLight() = shell("phone-light-library", ThemeMode.Light, InputMode.Touch, WidthClass.Compact, Routes.LIBRARY, store = sampleStore(myBooks))
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun shelvesDexLight() = shell("dex-light-shelves", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge, Routes.SHELVES, store = sampleStore(myBooks))
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun shelvesPhoneDark() = shell("phone-dark-shelves", ThemeMode.Dark, InputMode.Touch, WidthClass.Compact, Routes.SHELVES, store = sampleStore(myBooks))
 }

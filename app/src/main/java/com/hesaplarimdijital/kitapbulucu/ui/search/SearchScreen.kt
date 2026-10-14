@@ -94,7 +94,14 @@ private val ShelfSize = 20.sp
  * keys move the selection, Enter opens and closes it, Esc closes it or clears the search.
  */
 @Composable
-fun SearchScreen(store: LibraryStore, initialQuery: String = "", focusKey: Int = 0, openFirst: Boolean = false, onAdd: ((String) -> Unit)? = null) {
+fun SearchScreen(
+    store: LibraryStore,
+    initialQuery: String = "",
+    focusKey: Int = 0,
+    openFirst: Boolean = false,
+    actions: com.hesaplarimdijital.kitapbulucu.ui.BookActions? = null,
+    onAdd: ((String) -> Unit)? = null,
+) {
     val index by store.index.collectAsState()
     val states by store.states.collectAsState()
     var query by rememberSaveable { mutableStateOf(initialQuery) }
@@ -200,6 +207,7 @@ fun SearchScreen(store: LibraryStore, initialQuery: String = "", focusKey: Int =
                     }
                     itemsIndexed(shown, key = { position, group -> "$position:" + BookGroups.key(group.title, group.author) }) { position, group ->
                         ResultRow(
+                            actions = actions,
                             group = group,
                             selected = position == selected,
                             opened = position == opened,
@@ -276,7 +284,7 @@ private fun fieldStyle(touch: Boolean): TextStyle = DeskTheme.type.body.copy(fon
  * under the library's name. Opens in place to show the details.
  */
 @Composable
-private fun ResultRow(group: BookGroup, selected: Boolean, opened: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun ResultRow(actions: com.hesaplarimdijital.kitapbulucu.ui.BookActions?, group: BookGroup, selected: Boolean, opened: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
     val touch = DeskTheme.inputMode == InputMode.Touch
@@ -323,7 +331,7 @@ private fun ResultRow(group: BookGroup, selected: Boolean, opened: Boolean, modi
                 for (hit in group.holdings) HoldingSummary(hit)
             }
         }
-        if (opened) Details(group, Modifier.padding(start = dimens.gapM, end = dimens.gapM, bottom = dimens.gapM))
+        if (opened) Details(group, actions, Modifier.padding(start = dimens.gapM, end = dimens.gapM, bottom = dimens.gapM))
         Box(Modifier.fillMaxWidth().height(1.dp).background(if (opened) colors.surface else colors.border))
     }
 }
@@ -357,7 +365,7 @@ private fun HoldingSummary(hit: SearchHit) {
 
 /** Everything the row leaves out, one holding after another. */
 @Composable
-private fun Details(group: BookGroup, modifier: Modifier) {
+private fun Details(group: BookGroup, actions: com.hesaplarimdijital.kitapbulucu.ui.BookActions?, modifier: Modifier) {
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
     val resources = LocalContext.current.resources
@@ -390,6 +398,14 @@ private fun Details(group: BookGroup, modifier: Modifier) {
                             },
                             color = if (label == BookColumn.SHELF.header && book.shelf.isNotBlank()) colors.accentText else colors.text,
                         )
+                    }
+                }
+                if (actions != null) {
+                    Spacer(Modifier.height(dimens.gapS))
+                    Row(horizontalArrangement = Arrangement.spacedBy(dimens.gapS)) {
+                        DeskButton(stringResource(R.string.action_edit), { actions.edit(hit.owner, book) }, modifier = Modifier.focusProperties { canFocus = false })
+                        DeskButton(stringResource(R.string.action_move), { actions.move(hit.owner, book) }, modifier = Modifier.focusProperties { canFocus = false })
+                        DeskButton(stringResource(R.string.action_delete), { actions.delete(hit.owner, book) }, modifier = Modifier.focusProperties { canFocus = false })
                     }
                 }
             }

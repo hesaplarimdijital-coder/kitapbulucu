@@ -18,7 +18,11 @@ sealed interface Change {
 
     data class Add(override val owner: Owner, val book: Book, override val id: String = newId(), override val at: Long = 0L) : Change
     data class Edit(override val owner: Owner, val before: Book, val after: Book, override val id: String = newId(), override val at: Long = 0L) : Change
-    data class Remove(override val owner: Owner, val before: Book, override val id: String = newId(), override val at: Long = 0L) : Change
+    /**
+     * [waitFor] is the id of an Add to the other file that must be written first: a moved book
+     * leaves its old file only once it is safely in the new one.
+     */
+    data class Remove(override val owner: Owner, val before: Book, override val id: String = newId(), override val at: Long = 0L, val waitFor: String? = null) : Change
 
     companion object {
         fun newId(): String = UUID.randomUUID().toString()
@@ -32,7 +36,7 @@ object ChangeJson {
         when (change) {
             is Change.Add -> json.put("type", "add").put("book", book(change.book))
             is Change.Edit -> json.put("type", "edit").put("before", book(change.before)).put("after", book(change.after))
-            is Change.Remove -> json.put("type", "remove").put("before", book(change.before))
+            is Change.Remove -> json.put("type", "remove").put("before", book(change.before)).apply { change.waitFor?.let { put("waitFor", it) } }
         }
         return json
     }
@@ -45,7 +49,7 @@ object ChangeJson {
         return when (json.optString("type")) {
             "add" -> Change.Add(owner, book(json.optJSONObject("book") ?: return null), id, at)
             "edit" -> Change.Edit(owner, book(json.optJSONObject("before") ?: return null), book(json.optJSONObject("after") ?: return null), id, at)
-            "remove" -> Change.Remove(owner, book(json.optJSONObject("before") ?: return null), id, at)
+            "remove" -> Change.Remove(owner, book(json.optJSONObject("before") ?: return null), id, at, json.optString("waitFor").ifEmpty { null })
             else -> null
         }
     }

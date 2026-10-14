@@ -171,4 +171,58 @@
     <string name="add_done">“%1$s” %2$s eklendi.</string>
     <string name="add_keys_save">kaydet</string>
     <string name="add_keys_next">sonraki alan</string>
+
+    <!-- silme, düzenleme, taşıma, geri alma (S-18, S-19) -->
+    <string name="action_edit">Düzenle</string>
+    <string name="action_delete">Sil</string>
+    <string name="action_move">Öteki listeye taşı</string>
+    <string name="action_shelf_books">Raftaki diğer kitaplar</string>
+    <string name="action_copy">Kopyala</string>
+    <string name="action_undo">Geri al</string>
+    <string name="action_cancel">Vazgeç</string>
+    <string name="delete_title">“%1$s” silinsin mi?</string>
+    <string name="delete_text">Kitap %1$s silinir. Yedek alınır; Geri al ile geri gelir.</string>
+    <string name="delete_one_copy">Bir kopyayı sil (%1$d kalır)</string>
+    <string name="delete_all">%1$d kopyanın hepsini sil</string>
+    <string name="delete_confirm">Sil</string>
+    <string name="other_list_warning">Bu öteki kişinin listesi (%1$s). Yine de değiştirilsin mi?</string>
+    <string name="move_title">“%1$s” taşınsın mı?</string>
+    <string name="move_text">Kitap %1$s geçer, %2$s çıkar. Önce yeni dosyaya yazılır; iki dosyadan birden hiçbir anda eksik kalmaz.</string>
+    <string name="move_confirm">Taşı</string>
+    <string name="from_dad">Babam\'ın listesinden</string>
+    <string name="from_me">Benim listemden</string>
+    <string name="undo_deleted">“%1$s” silindi</string>
+    <string name="undo_one_copy">“%1$s” kitabının bir kopyası silindi</string>
+    <string name="undo_edited">“%1$s” değiştirildi</string>
+    <string name="undo_moved">“%1$s” taşındı</string>
+    <string name="undo_added">“%1$s” eklendi</string>
+    <string name="undo_shelf">%1$d kitap %2$s rafına kondu</string>
+    <string name="menu_file">Dosya</string>
+    <string name="menu_edit">Düzen</string>
+    <string name="shortcut_undo">Geri al</string>
+    <string name="edit_title">Kitabı düzenle</string>
+    <string name="edit_done">“%1$s” kaydedildi.</string>
+    <string name="copied">Kopyalandı</string>
+
+    <!-- kütüphane (S-20) -->
+    <string name="library_add">Kitap ekle</string>
+    <string name="library_empty">Bu liste boş.</string>
+    <string name="library_not_linked">Bu liste için dosya seçilmedi. Ayarlar\'dan seçin.</string>
+    <string name="library_hint">Düzenlemek, silmek ve taşımak için satıra sağ tıklayın (ya da basılı tutun). F2 düzenler, Del seçili satırı siler.</string>
+
+    <!-- raflar (S-21, S-22) -->
+    <string name="shelves_unshelved">Rafı yazılmamış</string>
+    <string name="shelves_count">%1$d kitap</string>
+    <string name="shelves_back">Bütün raflar</string>
+    <string name="shelves_none">Henüz raf yok. Aşağıdan raf doldurun.</string>
+    <string name="fill_title">Raf doldur</string>
+    <string name="fill_text">Rafı yazın, sonra o raftaki her kitabı arayıp Enter\'a basın: ilk sonuç o rafa konur, arama sıradaki kitap için temizlenir.</string>
+    <string name="fill_shelf">Aktif raf</string>
+    <string name="fill_search">Bu raftaki kitap</string>
+    <string name="fill_list">Liste</string>
+    <string name="fill_left">Bu listede rafı yazılmamış %1$d kitap var</string>
+    <string name="fill_assign_all">%1$d sonucun hepsini %2$s rafına koy</string>
+    <string name="fill_assign_all_title">%1$d kitap %2$s rafına konsun mu?</string>
+    <string name="fill_need_shelf">Önce aktif rafı yazın.</string>
+    <string name="fill_done">“%1$s” → %2$s</string>
 </resources>

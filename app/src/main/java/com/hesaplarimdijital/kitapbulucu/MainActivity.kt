@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
             // every Ctrl+K puts the cursor in the search field again, even when the search screen is already open
             var searchFocus by remember { mutableIntStateOf(0) }
             var addFocus by remember { mutableIntStateOf(0) }
-            perform = { id -> AppShortcuts.perform(id, navigator, prefs, onRefresh = store::refresh, onSearch = { searchFocus++ }, onAdd = { addFocus++ }) }
+            perform = { id -> AppShortcuts.perform(id, navigator, prefs, onRefresh = store::refresh, onSearch = { searchFocus++ }, onAdd = { addFocus++ }, onUndo = { store.undo() }) }
             DesktopKitRoot(prefs, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
                 val picker = rememberFilePicker(store)
                 val mappingOwner = mapping

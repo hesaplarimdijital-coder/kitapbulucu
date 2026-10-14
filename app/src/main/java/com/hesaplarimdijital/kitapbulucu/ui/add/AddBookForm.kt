@@ -19,6 +19,13 @@ data class AddBookFields(
     val isbn: String = "",
     val note: String = "",
 ) {
+    companion object {
+        fun of(owner: Owner, book: Book) = AddBookFields(
+            title = book.title, author = book.author, owner = owner, shelf = book.shelf, copies = book.copies.toString(),
+            signed = book.signed, publisher = book.publisher, year = book.year, isbn = book.isbn, note = book.note,
+        )
+    }
+
     /** After a save the form stays open for the next book: same library and shelf, the rest empty. */
     fun next(): AddBookFields = AddBookFields(owner = owner, shelf = shelf)
 }
@@ -33,6 +40,21 @@ object AddBookForm {
         /** Writing to the other person's list: ask first. */
         data class OtherList(val book: Book) : Check()
         data class Ready(val book: Book) : Check()
+    }
+
+    /** The edited book: [before] keeps its unknown columns; only the form's fields change. */
+    fun edited(fields: AddBookFields, before: Book): Check {
+        if (fields.title.isBlank()) return Check.NeedTitle
+        val copies = fields.copies.trim().ifEmpty { "1" }.toIntOrNull()
+        if (copies == null || copies < 1) return Check.BadCopies
+        return Check.Ready(
+            LibraryStore.tidy(
+                before.copy(
+                    title = fields.title, author = fields.author, shelf = fields.shelf, copies = copies, signed = fields.signed,
+                    publisher = fields.publisher, year = fields.year, isbn = fields.isbn, note = fields.note,
+                ),
+            ),
+        )
     }
 
     /**

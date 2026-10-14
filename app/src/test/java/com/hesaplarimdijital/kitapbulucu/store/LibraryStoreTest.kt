@@ -454,4 +454,78 @@ class LibraryStoreTest {
         assertEquals(1, store.state(Owner.DAD).bookCount)
         assertEquals(2, store.backups(Owner.DAD).size)
     }
+
+    // ------------------------------------------------------------------ undo and moves (S-18, S-19)
+
+    @Test
+    fun undoTakesBackAnAddAMergeAnEditAndADelete() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        val store = store()
+        store.start()
+        store.submit(Change.Add(Owner.DAD, karTanesi), "eklendi")
+        assertEquals(dadBooks.toList() + karTanesi, fileBooks())
+        assertEquals("eklendi", store.lastStep.value!!.label)
+        assertTrue(store.undo())
+        assertEquals(dadBooks.toList(), fileBooks())
+        assertNull(store.lastStep.value)
+
+        store.submit(Change.Add(Owner.DAD, dadBooks[0].copy(copies = 1)), "bir kopya daha")
+        assertEquals(3, fileBooks()[0].copies)
+        store.undo()
+        assertEquals(dadBooks.toList(), fileBooks())
+
+        store.submit(Change.Edit(Owner.DAD, dadBooks[1], dadBooks[1].copy(shelf = "Z1")), "değişti")
+        store.submit(Change.Remove(Owner.DAD, dadBooks[0]), "silindi")
+        assertEquals(listOf(dadBooks[1].copy(shelf = "Z1")), fileBooks())
+        store.undo()
+        assertEquals(setOf(dadBooks[0], dadBooks[1].copy(shelf = "Z1")), fileBooks().toSet())
+        store.undo()
+        assertEquals(setOf(dadBooks[0], dadBooks[1]), fileBooks().toSet())
+        assertFalse(store.undo())
+    }
+
+    @Test
+    fun aMoveWritesTheNewFileFirst() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        links().set(Owner.ME, meUri, "Benim.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        documents.bytes[meUri] = workbook(sheet = "Benim")
+        val store = store()
+        store.start()
+        // the new file cannot be written: the book must stay in the old one
+        documents.failures[meUri] = DocumentFailure.IO
+        val add = Change.Add(Owner.ME, dadBooks[0])
+        store.submitAll(listOf(add, Change.Remove(Owner.DAD, dadBooks[0])), "taşındı")
+        assertEquals(dadBooks.toList(), fileBooks(dadUri))
+        assertEquals(listOf(dadBooks[1]), store.state(Owner.DAD).table!!.books) // shown as moved
+        assertEquals(1, store.pendingChanges(Owner.DAD).size)
+
+        documents.failures.remove(meUri)
+        store.refresh()
+        assertEquals(listOf(dadBooks[0]), fileBooks(meUri))
+        assertEquals(listOf(dadBooks[1]), fileBooks(dadUri))
+        assertEquals(0, store.pendingChanges(Owner.DAD).size + store.pendingChanges(Owner.ME).size)
+
+        store.undo()
+        assertEquals(setOf(dadBooks[0], dadBooks[1]), fileBooks(dadUri).toSet())
+        assertEquals(emptyList<Book>(), fileBooks(meUri))
+    }
+
+    @Test
+    fun aMoveSurvivesARestartInTheRightOrder() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        links().set(Owner.ME, meUri, "Benim.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        documents.bytes[meUri] = workbook(sheet = "Benim")
+        documents.failures[meUri] = DocumentFailure.IO
+        store().apply {
+            start()
+            submitAll(listOf(Change.Add(Owner.ME, dadBooks[1]), Change.Remove(Owner.DAD, dadBooks[1])), "taşındı")
+        }
+        documents.failures.remove(meUri)
+        store().start()
+        assertEquals(listOf(dadBooks[1]), fileBooks(meUri))
+        assertEquals(listOf(dadBooks[0]), fileBooks(dadUri))
+    }
 }

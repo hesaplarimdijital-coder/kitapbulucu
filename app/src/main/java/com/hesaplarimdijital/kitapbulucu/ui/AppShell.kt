@@ -28,6 +28,19 @@ import com.hesaplarimdijital.kitapbulucu.store.LoadStatus
 import com.hesaplarimdijital.kitapbulucu.store.StoreNotice
 import com.hesaplarimdijital.kitapbulucu.store.WriteFailure
 import com.hesaplarimdijital.kitapbulucu.ui.add.AddBookScreen
+import com.hesaplarimdijital.kitapbulucu.ui.add.EditTarget
+import com.hesaplarimdijital.kitapbulucu.ui.library.LibraryScreen
+import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelfTarget
+import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelvesScreen
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import com.hesaplarimdijital.kitapbulucu.ui.search.SearchScreen
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
@@ -54,7 +67,12 @@ object Routes {
     const val LIBRARY = "library"
     const val SHELVES = "shelves"
     const val SETTINGS = "settings"
-    const val ADD = "add"
+}
+
+/** The form shown over the current screen: a new book (with a title to start from) or an edit. */
+sealed class FormRequest {
+    data class Add(val title: String = "") : FormRequest()
+    data class Edit(val owner: Owner, val book: com.hesaplarimdijital.kitapbulucu.model.Book) : FormRequest()
 }
 
 @Composable
@@ -65,8 +83,7 @@ fun rememberAppSpec(): ShellSpec {
     val library = stringResource(R.string.nav_library)
     val shelves = stringResource(R.string.nav_shelves)
     val settings = stringResource(R.string.nav_settings)
-    val add = stringResource(R.string.nav_add)
-    return remember(appName, section, search, library, shelves, settings, add) {
+    return remember(appName, section, search, library, shelves, settings) {
         ShellSpec(
             appTitle = appName,
             sections = listOf(
@@ -76,7 +93,6 @@ fun rememberAppSpec(): ShellSpec {
                         NavItem(Routes.SEARCH, search, DeskIcons.Search),
                         NavItem(Routes.LIBRARY, library, AppIcons.Book),
                         NavItem(Routes.SHELVES, shelves, AppIcons.Shelf),
-                        NavItem(Routes.ADD, add, DeskIcons.Plus),
                     ),
                 ),
             ),
@@ -112,8 +128,12 @@ fun AppShell(
 ) {
     val spec = rememberAppSpec()
     val resources = LocalContext.current.resources
-    // the title the add form starts with, when it was opened from a search that found nothing
-    var addTitle by rememberSaveable { mutableStateOf("") }
+    // add or edit form over the current screen; it closes when another screen is chosen
+    var form by remember { mutableStateOf<FormRequest?>(null) }
+    var shelfTarget by remember { mutableStateOf<ShelfTarget?>(null) }
+    val actions = store?.let { rememberBookActions(it, settings) { owner, book -> form = FormRequest.Edit(owner, book) } }
+    LaunchedEffect(addFocus) { if (addFocus > 0) form = FormRequest.Add() }
+    BackHandler(enabled = form != null) { form = null }
     DesktopShell(
         spec = spec,
         widthClass = widthClass,
@@ -123,9 +143,23 @@ fun AppShell(
         menus = AppShortcuts.registry.menus(resources, perform = onShortcut),
         onSearch = { onShortcut(CommonShortcuts.SEARCH) },
     ) { route, navigator ->
+        DisposableEffect(route) { onDispose { form = null } }
         Column(Modifier.fillMaxSize()) {
             if (store != null && picker != null) LibraryNotices(store, picker, onMap)
             Box(Modifier.weight(1f)) {
+                val currentForm = form
+                if (store != null && currentForm != null) {
+                    AddBookScreen(
+                        store,
+                        settings,
+                        initialTitle = (currentForm as? FormRequest.Add)?.title.orEmpty(),
+                        focusKey = addFocus,
+                        editing = (currentForm as? FormRequest.Edit)?.let { EditTarget(it.owner, it.book) },
+                        actions = actions,
+                        onEdited = { form = null },
+                    )
+                    return@Box
+                }
                 when (route) {
                     Routes.SEARCH -> if (store != null) {
                         SearchScreen(
@@ -133,10 +167,8 @@ fun AppShell(
                             initialQuery = initialSearch,
                             focusKey = searchFocus,
                             openFirst = initialSearchOpen,
-                            onAdd = { title ->
-                                addTitle = title
-                                navigator.navigate(Routes.ADD)
-                            },
+                            actions = actions,
+                            onAdd = { title -> form = FormRequest.Add(title) },
                         )
                     } else {
                         MessageScreen(
@@ -146,27 +178,68 @@ fun AppShell(
                             description = stringResource(R.string.placeholder_search_text),
                         )
                     }
-                    Routes.LIBRARY -> MessageScreen(
-                        title = stringResource(R.string.placeholder_library_title),
-                        icon = AppIcons.Book,
-                        pageTitle = spec.item(route)?.label,
-                        description = if (store == null) stringResource(R.string.placeholder_library_text) else libraryStatusText(store),
-                    )
-                    Routes.SHELVES -> MessageScreen(
-                        title = stringResource(R.string.placeholder_shelves_title),
-                        icon = AppIcons.Shelf,
-                        pageTitle = spec.item(route)?.label,
-                        description = stringResource(R.string.placeholder_shelves_text),
-                    )
-                    Routes.ADD -> if (store != null) {
-                        AddBookScreen(store, settings, initialTitle = addTitle, focusKey = addFocus)
+                    Routes.LIBRARY -> if (store != null && actions != null) {
+                        LibraryScreen(
+                            store, settings, actions, spec.item(route)?.label.orEmpty(),
+                            onAdd = { form = FormRequest.Add() },
+                            onShelf = { owner, shelf ->
+                                shelfTarget = ShelfTarget(owner, shelf)
+                                navigator.navigate(Routes.SHELVES)
+                            },
+                        )
+                    } else {
+                        MessageScreen(
+                            title = stringResource(R.string.placeholder_library_title),
+                            icon = AppIcons.Book,
+                            pageTitle = spec.item(route)?.label,
+                            description = stringResource(R.string.placeholder_library_text),
+                        )
+                    }
+                    Routes.SHELVES -> if (store != null && actions != null) {
+                        ShelvesScreen(store, settings, actions, spec.item(route)?.label.orEmpty(), shelfTarget)
+                    } else {
+                        MessageScreen(
+                            title = stringResource(R.string.placeholder_shelves_title),
+                            icon = AppIcons.Shelf,
+                            pageTitle = spec.item(route)?.label,
+                            description = stringResource(R.string.placeholder_shelves_text),
+                        )
                     }
                     Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty(), store, settings, picker)
                 }
             }
+            if (store != null) UndoBar(store)
         }
     }
+    actions?.Dialogs()
 }
+
+/** "“X” silindi · Geri al" for a few seconds after every change; Ctrl+Z works longer. */
+@Composable
+private fun UndoBar(store: LibraryStore) {
+    val step by store.lastStep.collectAsState()
+    val current = step ?: return
+    val colors = DeskTheme.colors
+    val dimens = DeskTheme.dimens
+    LaunchedEffect(current) {
+        kotlinx.coroutines.delay(UNDO_BAR_MILLIS)
+        store.dismissLastStep()
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimens.pagePadding, vertical = dimens.gapS)
+            .background(colors.surfaceRaised, androidx.compose.foundation.shape.RoundedCornerShape(dimens.radiusControl))
+            .border(1.dp, colors.borderStrong, androidx.compose.foundation.shape.RoundedCornerShape(dimens.radiusControl))
+            .padding(horizontal = dimens.gapM, vertical = dimens.gapS),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(current.label, style = DeskTheme.type.body, color = colors.text, modifier = Modifier.weight(1f), maxLines = 2)
+        DeskButton(stringResource(R.string.action_undo), { store.undo() }, icon = DeskIcons.Previous)
+    }
+}
+
+private const val UNDO_BAR_MILLIS = 8_000L
 
 /** A list that could not be read and stray files next to the lists, above every screen. */
 @Composable
@@ -238,18 +311,6 @@ private fun LibraryNotices(store: LibraryStore, picker: FilePicker, onMap: (Owne
                 DeskButton(stringResource(R.string.action_understood), store::dismissWarning)
             }
         }
-    }
-}
-
-/** Until the library screen exists: one line per list, "Babam'ın listesi 3 dk önce güncellendi · 6775 kitap". */
-@Composable
-private fun libraryStatusText(store: LibraryStore): String {
-    val states by store.states.collectAsState()
-    val resources = LocalContext.current.resources
-    val now = System.currentTimeMillis()
-    return Owner.entries.joinToString("\n") { owner ->
-        val state = states.getValue(owner)
-        LibraryTexts.updated(resources, owner, state, now) + " · " + LibraryTexts.status(resources, state)
     }
 }
 
