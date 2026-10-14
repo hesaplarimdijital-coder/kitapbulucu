@@ -255,6 +255,66 @@ class LibraryStore(
         }
     }
 
+    // ------------------------------------------------------------------ backups, export, import
+
+    /**
+     * Puts a backup back (S-24): the file as it is now is backed up first, then the backup's
+     * bytes are written and read back. Changes still pending for that list are dropped, since
+     * they were made on top of what is being replaced. [onResult] gets false on any failure.
+     */
+    fun restore(owner: Owner, backup: java.io.File, onResult: (Boolean) -> Unit = {}) {
+        val link = links.link(owner) ?: return onResult(false)
+        scope.launch {
+            val ok = withContext(io) {
+                try {
+                    val bytes = backup.readBytes()
+                    val current = try {
+                        documents.readBytes(link.uri)
+                    } catch (e: DocumentException) {
+                        null
+                    }
+                    if (current != null) backups.save(owner, current, clock())
+                    documents.writeBytes(link.uri, bytes)
+                    LibraryCache.hashOf(documents.readBytes(link.uri)) == LibraryCache.hashOf(bytes)
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            if (ok) {
+                pending.clear(owner)
+                hashes.remove(owner)
+                refreshNow()
+            }
+            onResult(ok)
+        }
+    }
+
+    /** Both lists in one workbook with Babam and Benim sheets (S-25); the app never reads it back. */
+    fun exportTo(uri: Uri, onResult: (Boolean) -> Unit = {}) {
+        val sheets = Owner.entries.map { owner -> (state(owner).table ?: BookTable(emptyList())).toSheetSpec(owner.label) }
+        scope.launch {
+            val ok = withContext(io) {
+                try {
+                    documents.writeBytes(uri, XlsxWriter.write(sheets))
+                    true
+                } catch (e: DocumentException) {
+                    false
+                }
+            }
+            onResult(ok)
+        }
+    }
+
+    /** Reads a document the user picked for merging; throws [DocumentException]. */
+    suspend fun readDocument(uri: Uri): ByteArray = withContext(io) { documents.readBytes(uri) }
+
+    /** Remembered answers to "is this the same book?" from earlier merges. */
+    var mergeDecisions: Map<String, Boolean>
+        get() = links.mergeDecisions
+        set(value) {
+            links.mergeDecisions = value
+        }
+
     /** The user's column mapping for [owner]'s file, if one was made. */
     fun mapping(owner: Owner): ColumnMapping? = links.mapping(owner)
 

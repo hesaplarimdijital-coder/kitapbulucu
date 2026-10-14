@@ -75,18 +75,15 @@ fun LibraryScreen(
     val now = System.currentTimeMillis()
 
     Column(Modifier.fillMaxSize()) {
-        PageHeader(
-            title,
-            subtitle = LibraryTexts.updated(resources, owner, state, now) + " · " + LibraryTexts.status(resources, state),
-        ) {
-            DeskButton(stringResource(R.string.library_add), onAdd, icon = DeskIcons.Plus, primary = true)
-        }
-        Row(Modifier.padding(horizontal = dimens.pagePadding).padding(bottom = dimens.gapS), verticalAlignment = Alignment.CenterVertically) {
+        PageHeader(title, subtitle = LibraryTexts.updated(resources, owner, state, now) + " · " + LibraryTexts.status(resources, state))
+        Row(Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding).padding(bottom = dimens.gapS), verticalAlignment = Alignment.CenterVertically) {
             SegmentedChoice(
                 options = Owner.entries.map { it to LibraryTexts.ownerLabel(resources, it) },
                 selected = owner,
                 onSelect = { owner = it },
             )
+            androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+            DeskButton(stringResource(R.string.library_add), onAdd, icon = DeskIcons.Plus, primary = true)
         }
         val books = state.table?.books
         when {

@@ -51,6 +51,18 @@ class FileLinks(private val prefs: SharedPreferences) {
             prefs.edit().putBoolean(KEY_FORMAT_NOTICE, value).apply()
         }
 
+    /** Answers given to "is this the same book?" while merging Excel files (S-23), by pair key. */
+    var mergeDecisions: Map<String, Boolean>
+        get() = try {
+            val json = org.json.JSONObject(prefs.getString(KEY_DECISIONS, null) ?: "{}")
+            json.keys().asSequence().associateWith { json.getBoolean(it) }
+        } catch (e: Exception) {
+            emptyMap()
+        }
+        set(value) {
+            prefs.edit().putString(KEY_DECISIONS, org.json.JSONObject(value as Map<*, *>).toString()).apply()
+        }
+
     /** Names of stray files (lock files, conflicted copies) the user has already been told about. */
     var warnedFileNames: Set<String>
         get() = prefs.getStringSet(KEY_WARNED, null)?.toSet().orEmpty()
@@ -68,6 +80,7 @@ class FileLinks(private val prefs: SharedPreferences) {
         private const val KEY_TREE = "tree_uri"
         private const val KEY_WARNED = "warned_names"
         private const val KEY_FORMAT_NOTICE = "format_notice_shown"
+        private const val KEY_DECISIONS = "merge_decisions"
 
         fun of(context: Context): FileLinks = FileLinks(context.getSharedPreferences(FILE, Context.MODE_PRIVATE))
     }
