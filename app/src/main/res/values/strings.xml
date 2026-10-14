@@ -31,14 +31,14 @@
     <string name="status_loading">Reading…</string>
     <string name="status_from_cache">Showing the last copy; reading the file…</string>
     <string name="status_books">%1$d books</string>
-    <string name="failure_not_found">The file could not be found; it may have been deleted or moved.</string>
-    <string name="failure_no_permission">Access to the file has been lost.</string>
-    <string name="failure_io">The file could not be read.</string>
-    <string name="failure_too_large">The file is too large.</string>
+    <string name="failure_not_found">The file was not found; it may have been deleted or moved. Choose it again.</string>
+    <string name="failure_no_permission">The permission to open the file is gone. Choose the file again.</string>
+    <string name="failure_io">The file could not be read. Check that it opens in the Drive app and try again.</string>
+    <string name="failure_too_large">The file is too large. Delete unneeded sheets in Excel and try again.</string>
     <string name="failure_old_xls">This is an old Excel file (.xls). Save it as .xlsx in Excel and try again.</string>
-    <string name="failure_not_a_spreadsheet">This is not an Excel file.</string>
-    <string name="failure_damaged">The file is damaged or incomplete.</string>
-    <string name="failure_no_header">The column headers (Kitap Adı, Yazar…) were not found in the file.</string>
+    <string name="failure_not_a_spreadsheet">This is not an Excel file. Choose an .xlsx or .csv file.</string>
+    <string name="failure_damaged">The file is damaged or incomplete. Open and save it again in Excel, or restore a backup in Settings.</string>
+    <string name="failure_no_header">No column headers (Kitap Adı, Yazar…) were found. Choose once what each column holds.</string>
     <string name="action_choose_other_file">Choose another file</string>
     <string name="action_retry">Try again</string>
     <string name="stray_files_title">Stray files next to the lists</string>
@@ -100,7 +100,6 @@
     <string name="search_found_one">1 book found</string>
     <string name="search_shelf">Shelf</string>
     <string name="search_no_shelf">Shelf not written</string>
-    <string name="search_copies">%1$d copies</string>
     <string name="search_signed">Signed</string>
     <string name="search_empty_title">Which book are you looking for?</string>
     <string name="search_empty_text">Type part of the title or the author. Word order and Turkish letters do not matter.</string>
@@ -118,15 +117,14 @@
 
     <!-- writing (S-15) -->
     <string name="write_failed_title">%1$s: %2$d changes could not be written</string>
-    <string name="write_failure_cannot_read">The file could not be read before writing.</string>
+    <string name="write_failure_cannot_read">The file could not be read before writing. Check it in the Drive app.</string>
     <string name="write_failure_not_xlsx">This file is not .xlsx; the app does not write .csv or .xls files. Save it as .xlsx in Excel and choose that file.</string>
     <string name="write_failure_verify">The new content could not be verified; the file was left untouched.</string>
     <string name="write_failure_backup">The backup could not be saved; the file was left untouched.</string>
-    <string name="write_failure_no_permission">No permission to write to the file.</string>
-    <string name="write_failure_cannot_write">The file could not be written.</string>
+    <string name="write_failure_no_permission">There is no permission to write the file. Choose the file again.</string>
+    <string name="write_failure_cannot_write">The file could not be written. Check that Drive has free space.</string>
     <string name="write_failure_read_back">The file did not read back as written. Check it in Drive; the changes are still waiting.</string>
     <string name="write_retry_note">Nothing is lost: the app tries again when it comes to the front and on F5.</string>
-    <string name="pending_changes">%1$d changes waiting to be written</string>
     <string name="notice_first_write_title">The file will be rewritten</string>
     <string name="notice_first_write_text">On every change the app writes the Excel file afresh. Colours, fonts and formulas set by hand in Excel are not kept; the books and every column are.</string>
     <string name="notice_other_sheets_title">%1$s has other sheets</string>
@@ -138,7 +136,6 @@
     <string name="landed_already_gone">“%1$s” had already been removed.</string>
 
     <!-- adding books (S-17) -->
-    <string name="nav_add">Add</string>
     <string name="shortcut_add">Add book</string>
     <string name="add_title">Add book</string>
     <string name="add_field_title">Title</string>
@@ -203,7 +200,6 @@
     <string name="shortcut_undo">Undo</string>
     <string name="edit_title">Edit book</string>
     <string name="edit_done">“%1$s” saved.</string>
-    <string name="copied">Copied</string>
 
     <!-- library (S-20) -->
     <string name="library_add">Add book</string>
@@ -220,7 +216,6 @@
     <string name="fill_text">Type the shelf, then search for each book on it and press Enter: the first result goes on that shelf and the search clears for the next book.</string>
     <string name="fill_shelf">Active shelf</string>
     <string name="fill_search">Book on this shelf</string>
-    <string name="fill_list">List</string>
     <string name="fill_left">%1$d books without a shelf in this list</string>
     <string name="fill_assign_all">Put all %1$d results on %2$s</string>
     <string name="fill_assign_all_title">Put %1$d books on shelf %2$s?</string>

@@ -159,6 +159,17 @@ Karşılaştırma büyük/küçük harfe ve boşluğa duyarsızdır. Gelen dosya
 
 Başlıksız dosyada eşleme ekranı ilk satırları gösterip "1. sütun Kitap Adı, 2. sütun Yazar" önerir.
 
+Uygulama (S-23):
+
+- `text/Cleaning` `tools/temizleme/booklib.py` kurallarının Kotlin karşılığı (İMZALI çıkarma, ithaf, tür etiketi, cilt numarası).
+- `importing/MergePlan`: `clean` → `plan` → `changes`. Eşleme sırası: aynı kimlik (ad + yazar + imza, katlanmış) → ad + yazar tek eşse imza farkı "değişen" → aynı yazarda yazım hatası (EditDistance; sayıları farklı adlar asla) → kuşkulu çiftler (yalnızca sayısı farklı ya da cilt/sözcük eklenmiş ad) kullanıcıya sorulur. Yanıtlar `FileLinks.mergeDecisions` içinde (`decisionKey`), bir dahaki birleştirmede sorulmaz.
+- Gelen kitaplar hedef dosyanın tanınmayan sütunlarına uydurulur (`fitTo`, boş). Gelen dosyanın kendi fazla sütunları alınmaz.
+- Ekran (`ui/importing/ImportScreen`) ayrı bir yol değil, Ekle/Düzenle gibi içeriğin üstünde açılır. Seçimler: yeniler varsayılan açık, değişenler açık, dosyada olmayanlar kapalı; soru yanıtlanmadan "Uygula" kapalı. Öteki kişinin listesine yazmadan önce onay sorulur.
+- "Uygula" tek `submitAll` çağrısıdır: tek geri alma adımı, tek `pending.json` yazımı, sonra her zamanki güvenli yazma (yedek dahil). Binlerce değişiklik için `ChangeApplier.Rows` her satırın kimliğini bir kez hesaplar ve sayar; kimliği olmayan kitap aramasız eklenir (7.000 ekleme + 1.000 düzeltme/silme 7.000 satırda testte 2 sn'nin altında).
+- Küçük karşılaştırmalar (≤ 2.000 satır) hemen, büyükler arka iş parçacığında yapılır.
+
+Ayarlar (S-24, S-25): "Yedek ve aktarma" bölümü. Geri yükleme şimdiki dosyanın da yedeğini alır, yedeğin baytlarını yazar, geri okur; o listenin bekleyen değişiklikleri atılır. Dışa aktarma `Babam` ve `Benim` sayfalı tek dosyayı `CreateDocument` ile kullanıcının seçtiği yere yazar; uygulama onu okumaz.
+
 ## 11. Arayüz
 
 - Kit: `desktop-kit` 0.1.0. Kabuk `DesktopShell` + `ShellSpec`; ekranlar: Ara, Kütüphane, Raflar, Ayarlar.

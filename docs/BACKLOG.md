@@ -159,77 +159,77 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 
 ## Sprint 4: Sil, düzelt, kütüphane, raflar
 
-### S-18 Silme ve geri alma · 3 · [O] · bekliyor
-- [ ] Silmeden önce onay sorulur.
-- [ ] Sildikten sonra birkaç saniye "Geri al" görünür; Ctrl+Z de geri alır; kitap bütün alanlarıyla geri gelir.
-- [ ] Adet'i 1'den büyük kitapta "bir kopyayı sil" (Adet bir azalır) ile "hepsini sil" ayrı.
-- [ ] Öteki kişinin kitabı için: "Bu Babam'ın listesi, yine de değiştirilsin mi?"
+### S-18 Silme ve geri alma · 3 · [O] · bitti (tablet denemesi bekleniyor)
+- [x] Silmeden önce onay sorulur.
+- [x] Sildikten sonra birkaç saniye "Geri al" görünür; Ctrl+Z de geri alır; kitap bütün alanlarıyla geri gelir.
+- [x] Adet'i 1'den büyük kitapta "bir kopyayı sil" (Adet bir azalır) ile "hepsini sil" ayrı.
+- [x] Öteki kişinin kitabı için: "Bu Babam'ın listesi, yine de değiştirilsin mi?"
 
-### S-19 Düzenleme ve taşıma · 3 · [O] · bekliyor
-- [ ] Her alan değiştirilebilir.
-- [ ] "Kimin" değişirse kitap öteki dosyaya taşınır; kitap hiçbir anda iki dosyadan birden eksik kalmaz.
-- [ ] Öteki kişinin kitabı için onay sorulur; yazmadan hemen önce o dosya yeniden okunur.
-- [ ] Ctrl+Z son düzenlemeyi geri alır.
+### S-19 Düzenleme ve taşıma · 3 · [O] · bitti (tablet denemesi bekleniyor)
+- [x] Her alan değiştirilebilir.
+- [x] "Kimin" değişirse kitap öteki dosyaya taşınır; kitap hiçbir anda iki dosyadan birden eksik kalmaz.
+- [x] Öteki kişinin kitabı için onay sorulur; yazmadan hemen önce o dosya yeniden okunur.
+- [x] Ctrl+Z son düzenlemeyi geri alır.
 
-### S-20 Kütüphane görünümü · 5 · [O] · bekliyor
-- [ ] Babam ve Benim sekmeleri; bütün kitaplar `DenseTable` içinde; 10.000 satırda akıcı.
-- [ ] Sütuna tıklayınca Türkçe sıraya göre sıralanır.
-- [ ] Sağ tık menüsü: Düzenle, Sil, Öteki kütüphaneye taşı, Raftaki diğer kitaplar, Kopyala.
-- [ ] Üstte son eşitleme zamanı; F5 iki dosyayı hemen yeniden okur.
-- [ ] F2 düzenler, Del siler (yalnızca tablo odaktayken).
+### S-20 Kütüphane görünümü · 5 · [O] · bitti (tablet denemesi bekleniyor)
+- [x] Babam ve Benim sekmeleri; bütün kitaplar `DenseTable` içinde; 10.000 satırda akıcı.
+- [x] Sütuna tıklayınca Türkçe sıraya göre sıralanır.
+- [x] Sağ tık menüsü: Düzenle, Sil, Öteki kütüphaneye taşı, Raftaki diğer kitaplar, Kopyala.
+- [x] Üstte son eşitleme zamanı; F5 iki dosyayı hemen yeniden okur.
+- [x] F2 düzenler, Del siler (yalnızca tablo odaktayken).
 
-### S-21 Raflar görünümü · 3 · [O] · bekliyor
-- [ ] Raf raf gruplanmış liste; her rafta kaç kitap olduğu.
-- [ ] "Rafı yazılmamış" grubu ayrı görünür.
-- [ ] Rafa tıklayınca o raftaki kitaplar listelenir.
+### S-21 Raflar görünümü · 3 · [O] · bitti (tablet denemesi bekleniyor)
+- [x] Raf raf gruplanmış liste; her rafta kaç kitap olduğu.
+- [x] "Rafı yazılmamış" grubu ayrı görünür.
+- [x] Rafa tıklayınca o raftaki kitaplar listelenir.
 
-### S-22 Raf doldurma · 5 · [O] · bekliyor (öneri: listede hiç raf bilgisi yok)
-- [ ] "Aktif raf" seçilir (örnek: B3); kitap aranıp Enter'a basılınca o rafa atanır, kutu temizlenir, sıradaki kitap yazılır.
-- [ ] Arama sonuçlarının tamamına tek adımda raf atanabilir; onay sorar.
-- [ ] Rafı yazılmamış kitap sayısı görünür ve azaldıkça güncellenir.
-- [ ] Her atama Ctrl+Z ile geri alınır.
+### S-22 Raf doldurma · 5 · [O] · bitti (tablet denemesi bekleniyor)
+- [x] "Aktif raf" seçilir (örnek: B3); kitap aranıp Enter'a basılınca o rafa atanır, kutu temizlenir, sıradaki kitap yazılır.
+- [x] Arama sonuçlarının tamamına tek adımda raf atanabilir; onay sorar.
+- [x] Rafı yazılmamış kitap sayısı görünür ve azaldıkça güncellenir.
+- [x] Her atama Ctrl+Z ile geri alınır.
 
 ## Sprint 5: Dışarıdan gelen Excel ve ayarlar
 
-### S-23 Excel birleştirme · 8 · [F] · bekliyor
-- [ ] Ayarlar'da ve "Dosya" menüsünde "Excel birleştir…" (Ctrl+Shift+O); dosya seçilir, hangi listeye (Babam / Benim) birleştirileceği sorulur.
-- [ ] Sütunlar farklıysa ya da başlık yoksa eşleme ekranı çıkar.
-- [ ] İlk temizlikteki kurallar gelen dosyaya aynen uygulanır (ARCHITECTURE 10); eski 2 sütunlu dosya birleştirildiğinde sahte "yeni" ya da "değişen" çıkmaz.
-- [ ] Karşılaştırma Türkçe duyarlı ve hataya toleranslı; aynı kitap küçük yazım farkıyla iki kez sayılmaz.
-- [ ] Özet ekranı: yeni kitaplar (varsayılan: eklenir); değişenler eski ve yeni değer yan yana (varsayılan: yeni değer); gelen dosyada olmayanlar (varsayılan: silinmez, tek tek işaretlenirse silinir); belirsiz eşleşmeler ("Suç ve Ceza" ile "Suç ve Ceza 1. Cilt") kullanıcıya sorulur.
-- [ ] Gelen dosyadaki boş alan dolu alanı silmez (özellikle Raf). Adet ve İmzalı farkları da "değişen" olarak gösterilir.
-- [ ] Her satır işaretlenip kaldırılabilir; "Uygula" denmeden dosyaya hiçbir şey yazılmaz; uygulamadan önce yedek alınır.
-- [ ] Belirsiz eşleşmelerde verilen kararlar hatırlanır; sonraki birleştirmede yeniden sorulmaz.
-- [ ] Sonuç tek satır: "47 kitap eklendi, 3 kitabın rafı güncellendi, 0 kitap silindi."
+### S-23 Excel birleştirme · 8 · [F] · bitti (tablet denemesi bekleniyor; Fable yerine Opus ile yapıldı)
+- [x] Ayarlar'da ve "Dosya" menüsünde "Excel birleştir…" (Ctrl+Shift+O); dosya seçilir, hangi listeye (Babam / Benim) birleştirileceği sorulur.
+- [x] Sütunlar farklıysa ya da başlık yoksa eşleme ekranı çıkar.
+- [x] İlk temizlikteki kurallar gelen dosyaya aynen uygulanır (ARCHITECTURE 10); eski 2 sütunlu dosya birleştirildiğinde sahte "yeni" ya da "değişen" çıkmaz.
+- [x] Karşılaştırma Türkçe duyarlı ve hataya toleranslı; aynı kitap küçük yazım farkıyla iki kez sayılmaz.
+- [x] Özet ekranı: yeni kitaplar (varsayılan: eklenir); değişenler eski ve yeni değer yan yana (varsayılan: yeni değer); gelen dosyada olmayanlar (varsayılan: silinmez, tek tek işaretlenirse silinir); belirsiz eşleşmeler ("Suç ve Ceza" ile "Suç ve Ceza 1. Cilt") kullanıcıya sorulur.
+- [x] Gelen dosyadaki boş alan dolu alanı silmez (özellikle Raf). Adet ve İmzalı farkları da "değişen" olarak gösterilir.
+- [x] Her satır işaretlenip kaldırılabilir; "Uygula" denmeden dosyaya hiçbir şey yazılmaz; uygulamadan önce yedek alınır.
+- [x] Belirsiz eşleşmelerde verilen kararlar hatırlanır; sonraki birleştirmede yeniden sorulmaz.
+- [x] Sonuç tek satır: "47 kitap eklendi, 3 kitabın rafı güncellendi, 0 kitap silindi."
 
-### S-24 Ayarlar ve yedekten geri yükleme · 5 · [O] · bekliyor
-- [ ] Kitin `AppearanceSection`, `InputSection`, `ShortcutListSection` bölümleri.
-- [ ] "Ben kimim", bağlı dosyalar (ya da klasör), "Başka dosya seç".
-- [ ] "Yedekten geri yükle": son 10 yedek tarih ve kitap sayısıyla listelenir; geri yüklemeden önce şimdiki dosyanın da yedeği alınır; onay sorulur.
-- [ ] Bekleyen yazma varsa burada görünür; "Şimdi dene" düğmesi vardır.
+### S-24 Ayarlar ve yedekten geri yükleme · 5 · [O] · bitti (tablet denemesi bekleniyor)
+- [x] Kitin `AppearanceSection`, `InputSection`, `ShortcutListSection` bölümleri.
+- [x] "Ben kimim", bağlı dosyalar (ya da klasör), "Başka dosya seç".
+- [x] "Yedekten geri yükle": son 10 yedek tarih ve kitap sayısıyla listelenir; geri yüklemeden önce şimdiki dosyanın da yedeği alınır; onay sorulur.
+- [x] Bekleyen yazma varsa burada görünür; "Şimdi dene" düğmesi vardır.
 
-### S-25 Tek Excel olarak dışa aktar · 2 · [O] · bekliyor
-- [ ] Düğme `Babam` ve `Benim` sayfalı tek dosya üretir; nereye kaydedileceğini kullanıcı seçer.
+### S-25 Tek Excel olarak dışa aktar · 2 · [O] · bitti (Excel, Office NX ve Google E-Tablolar denemesi bekleniyor)
+- [x] Düğme `Babam` ve `Benim` sayfalı tek dosya üretir; nereye kaydedileceğini kullanıcı seçer.
 - [ ] Uygulama bu dosyadan okumaz; dosya Excel, Office NX ve Google E-Tablolar'da açılır.
 
-### S-26 Kısayollar ve menü çubuğu · 3 · [O] · bekliyor
-- [ ] Ctrl+K ara, Ctrl+N kitap ekle, Ctrl+O dosya seç, Ctrl+Shift+O Excel birleştir, Ctrl+Z geri al, F5 yenile, Ctrl+, ayarlar, Ctrl+/ kısayol listesi.
-- [ ] Hepsi tek `ShortcutRegistry` içinde; menü çubuğu, ipuçları ve Ayarlar'daki liste oradan üretilir; çakışma testi geçer.
-- [ ] Tek tuşlu kısayollar (F2, Del) metin kutusuna yazmayı bozmaz.
+### S-26 Kısayollar ve menü çubuğu · 3 · [O] · bitti
+- [x] Ctrl+K ara, Ctrl+N kitap ekle, Ctrl+O dosya seç, Ctrl+Shift+O Excel birleştir, Ctrl+Z geri al, F5 yenile, Ctrl+, ayarlar, Ctrl+/ kısayol listesi.
+- [x] Hepsi tek `ShortcutRegistry` içinde; menü çubuğu, ipuçları ve Ayarlar'daki liste oradan üretilir; çakışma testi geçer.
+- [x] Tek tuşlu kısayollar (F2, Del) metin kutusuna yazmayı bozmaz.
 
 ## Sprint 6: Cilalama ve 1.0.0
 
-### S-27 Tema son hâli · 3 · [F] · bekliyor
+### S-27 Tema son hâli · 3 · [F] · bitti; kütüphane tablosundaki kitap adları K-01 ile Literata olacak (Fable yerine Opus ile yapıldı)
 - [ ] Başlıklar ve kitap adları serif (Literata ya da Source Serif 4; OFL lisans dosyası depoda); arayüz IBM Plex Sans; raf kodları mono.
-- [ ] Kitap, raf ve içe aktar simgeleri `DeskIcons.build` ile kitin çizgi stilinde.
-- [ ] Gerçek ekranlarda açık ve koyu temada son kontrast denetimi; bütün ekranların DeX genişliğinde ekran görüntüsü.
+- [x] Kitap, raf ve içe aktar simgeleri `DeskIcons.build` ile kitin çizgi stilinde.
+- [x] Gerçek ekranlarda açık ve koyu temada son kontrast denetimi; bütün ekranların DeX genişliğinde ekran görüntüsü.
 
-### S-28 Türkçe ve İngilizce metinler · 2 · [O] · bekliyor
-- [ ] Bütün metinler `strings.xml` içinde; Türkçe ve İngilizce tam.
-- [ ] Mesajlar kısa ve sade; hata mesajları ne yapılacağını söyler.
+### S-28 Türkçe ve İngilizce metinler · 2 · [O] · bitti
+- [x] Bütün metinler `strings.xml` içinde; Türkçe ve İngilizce tam.
+- [x] Mesajlar kısa ve sade; hata mesajları ne yapılacağını söyler.
 
-### S-29 Cilalama ve 1.0.0 · 5 · [O] · bekliyor
-- [ ] README (kurulum, Drive klasörü, babanın telefonu), CHANGELOG, sürüm 1.0.0.
+### S-29 Cilalama ve 1.0.0 · 5 · [O] · bitti (tablet ve babanın telefonunda deneme bekleniyor)
+- [x] README (kurulum, Drive klasörü, babanın telefonu), CHANGELOG, sürüm 1.0.0.
 - [ ] 1.0.0 APK'sı önceki sürümlerin üstüne kurulur; ayarlar ve yedekler kalır.
 - [ ] Tablette ve babanın telefonunda baştan sona deneme listesi geçti.
 

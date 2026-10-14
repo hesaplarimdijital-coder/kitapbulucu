@@ -30,14 +30,14 @@
     <string name="status_loading">Okunuyor…</string>
     <string name="status_from_cache">Son kopya gösteriliyor; dosya okunuyor…</string>
     <string name="status_books">%1$d kitap</string>
-    <string name="failure_not_found">Dosya bulunamadı; silinmiş ya da taşınmış olabilir.</string>
-    <string name="failure_no_permission">Dosyaya erişim izni kalmamış.</string>
-    <string name="failure_io">Dosya okunamadı.</string>
-    <string name="failure_too_large">Dosya çok büyük.</string>
+    <string name="failure_not_found">Dosya bulunamadı; silinmiş ya da taşınmış olabilir. Dosyayı yeniden seçin.</string>
+    <string name="failure_no_permission">Dosyaya erişim izni kalmamış. Dosyayı yeniden seçin.</string>
+    <string name="failure_io">Dosya okunamadı. Drive uygulamasında dosyanın açıldığını kontrol edip yeniden deneyin.</string>
+    <string name="failure_too_large">Dosya çok büyük. Excel\'de gereksiz sayfaları silip yeniden deneyin.</string>
     <string name="failure_old_xls">Bu eski bir Excel dosyası (.xls). Excel\'de .xlsx olarak kaydedip tekrar deneyin.</string>
-    <string name="failure_not_a_spreadsheet">Bu bir Excel dosyası değil.</string>
-    <string name="failure_damaged">Dosya bozuk ya da yarım.</string>
-    <string name="failure_no_header">Dosyada sütun başlıkları (Kitap Adı, Yazar…) bulunamadı.</string>
+    <string name="failure_not_a_spreadsheet">Bu bir Excel dosyası değil. .xlsx ya da .csv dosyası seçin.</string>
+    <string name="failure_damaged">Dosya bozuk ya da yarım. Excel\'de açıp yeniden kaydedin ya da Ayarlar\'dan bir yedeği geri yükleyin.</string>
+    <string name="failure_no_header">Dosyada sütun başlıkları (Kitap Adı, Yazar…) bulunamadı. Hangi sütunda ne olduğunu bir kez seçin.</string>
     <string name="action_choose_other_file">Başka dosya seç</string>
     <string name="action_retry">Yeniden dene</string>
     <string name="stray_files_title">Listelerin yanında fazladan dosyalar var</string>
@@ -99,7 +99,6 @@
     <string name="search_found_one">1 kitap bulundu</string>
     <string name="search_shelf">Raf</string>
     <string name="search_no_shelf">Raf yazılmamış</string>
-    <string name="search_copies">%1$d adet</string>
     <string name="search_signed">İmzalı</string>
     <string name="search_empty_title">Hangi kitabı arıyorsunuz?</string>
     <string name="search_empty_text">Kitap adının ya da yazarın bir kısmını yazın. Sözcük sırası ve Türkçe harfler önemli değil.</string>
@@ -117,15 +116,14 @@
 
     <!-- yazma (S-15) -->
     <string name="write_failed_title">%1$s: %2$d değişiklik yazılamadı</string>
-    <string name="write_failure_cannot_read">Dosya yazmadan önce okunamadı.</string>
+    <string name="write_failure_cannot_read">Dosya yazmadan önce okunamadı. Drive uygulamasında dosyayı kontrol edin.</string>
     <string name="write_failure_not_xlsx">Bu dosya .xlsx değil; uygulama .csv ve .xls dosyalarına yazmaz. Excel\'de .xlsx olarak kaydedip o dosyayı seçin.</string>
     <string name="write_failure_verify">Yeni içerik doğrulanamadı; dosyaya dokunulmadı.</string>
     <string name="write_failure_backup">Yedek alınamadı; dosyaya dokunulmadı.</string>
-    <string name="write_failure_no_permission">Dosyaya yazma izni yok.</string>
-    <string name="write_failure_cannot_write">Dosyaya yazılamadı.</string>
+    <string name="write_failure_no_permission">Dosyaya yazma izni yok. Dosyayı yeniden seçin.</string>
+    <string name="write_failure_cannot_write">Dosyaya yazılamadı. Drive\'da yer olduğunu kontrol edin.</string>
     <string name="write_failure_read_back">Yazılan dosya geri okununca aynı çıkmadı. Drive\'daki dosyayı kontrol edin; değişiklikler bekliyor.</string>
     <string name="write_retry_note">Hiçbir şey kaybolmadı: uygulama öne gelince ve F5\'te yeniden dener.</string>
-    <string name="pending_changes">%1$d değişiklik yazılmayı bekliyor</string>
     <string name="notice_first_write_title">Dosya yeniden yazılacak</string>
     <string name="notice_first_write_text">Uygulama her değişiklikte Excel dosyasını baştan yazar. Excel\'de elle verilmiş renk, yazı biçimi ve formüller korunmaz; kitaplar ve bütün sütunlar korunur.</string>
     <string name="notice_other_sheets_title">%1$s dosyasında başka sayfalar var</string>
@@ -137,7 +135,6 @@
     <string name="landed_already_gone">“%1$s” zaten silinmişti.</string>
 
     <!-- kitap ekleme (S-17) -->
-    <string name="nav_add">Ekle</string>
     <string name="shortcut_add">Kitap ekle</string>
     <string name="add_title">Kitap ekle</string>
     <string name="add_field_title">Kitap adı</string>
@@ -202,7 +199,6 @@
     <string name="shortcut_undo">Geri al</string>
     <string name="edit_title">Kitabı düzenle</string>
     <string name="edit_done">“%1$s” kaydedildi.</string>
-    <string name="copied">Kopyalandı</string>
 
     <!-- kütüphane (S-20) -->
     <string name="library_add">Kitap ekle</string>
@@ -219,7 +215,6 @@
     <string name="fill_text">Rafı yazın, sonra o raftaki her kitabı arayıp Enter\'a basın: ilk sonuç o rafa konur, arama sıradaki kitap için temizlenir.</string>
     <string name="fill_shelf">Aktif raf</string>
     <string name="fill_search">Bu raftaki kitap</string>
-    <string name="fill_list">Liste</string>
     <string name="fill_left">Bu listede rafı yazılmamış %1$d kitap var</string>
     <string name="fill_assign_all">%1$d sonucun hepsini %2$s rafına koy</string>
     <string name="fill_assign_all_title">%1$d kitap %2$s rafına konsun mu?</string>

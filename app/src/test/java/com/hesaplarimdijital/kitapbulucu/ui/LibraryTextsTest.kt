@@ -39,8 +39,8 @@ class LibraryTextsTest {
         assertEquals("Okunuyor…", LibraryTexts.status(resources, LibraryState(Owner.DAD, LoadStatus.LOADING)))
         assertEquals("Son kopya gösteriliyor; dosya okunuyor…", LibraryTexts.status(resources, LibraryState(Owner.DAD, LoadStatus.LOADING, table, fromCache = true)))
         assertEquals("2 kitap", LibraryTexts.status(resources, LibraryState(Owner.DAD, LoadStatus.READY, table)))
-        assertEquals("Dosyaya erişim izni kalmamış.", LibraryTexts.status(resources, LibraryState(Owner.DAD, LoadStatus.FAILED, table, failure = LoadFailure.NO_PERMISSION)))
+        assertEquals("Dosyaya erişim izni kalmamış. Dosyayı yeniden seçin.", LibraryTexts.status(resources, LibraryState(Owner.DAD, LoadStatus.FAILED, table, failure = LoadFailure.NO_PERMISSION)))
         assertEquals("Bu eski bir Excel dosyası (.xls). Excel'de .xlsx olarak kaydedip tekrar deneyin.", LibraryTexts.failure(resources, LoadFailure.OLD_XLS))
-        assertEquals("Dosyada sütun başlıkları (Kitap Adı, Yazar…) bulunamadı.", LibraryTexts.failure(resources, LoadFailure.NO_HEADER))
+        assertEquals("Dosyada sütun başlıkları (Kitap Adı, Yazar…) bulunamadı. Hangi sütunda ne olduğunu bir kez seçin.", LibraryTexts.failure(resources, LoadFailure.NO_HEADER))
     }
 }

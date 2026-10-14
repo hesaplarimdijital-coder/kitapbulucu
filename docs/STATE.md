@@ -1,24 +1,22 @@
 # Durum
 
-Son güncelleme: 14.10.2026, Sprint 3 bitti (K-01'in son adımı kullanıcının Release'ini bekliyor).
+Son güncelleme: 14.10.2026, Sprint 6 bitti, sürüm 1.0.0 (K-01'in son adımı kullanıcının Release'ini bekliyor).
 
 ## Şu an
 
-- Uygulama: Kitap Bulucu, paket `com.hesaplarimdijital.kitapbulucu`. Depo: `hesaplarimdijital-coder/kitapbulucu` (herkese açık). Kit deposu `hesaplarimdijital-coder/desktop-kit` bu oturuma eklendi (push yetkisi var; etiket gönderilemez).
-- Sprint 0–3 bitti. Uygulama: kurulum, arama (satır yerinde açılır, klavye), kitap ekleme (Ctrl+N, Enter kaydeder, aynı kitap ve öteki liste için onay), güvenli yazma (yeniden oku, uygula, doğrula, yedek son 10, yaz, geri oku; başarısızsa bekler ve F5/öne gelişte yeniden dener).
-- APK: `ci/apk` dalında `kitapbulucu.apk`; `ornek/` altında örnek dosyalar. Ekran görüntüleri `ci/screenshots`; başvuru görüntüleri `app/src/test/screenshots/` (23 ekran).
-- Kod haritası: `xlsx/`, `model/` (Book, Owner, BookColumn, BookTable, ColumnMapping), `text/`, `search/` (SearchIndex, EditDistance, BookGroups), `store/` (AppSettings, FileLinks, Documents, LibraryCache, LibraryStore, LibraryState, Change, ChangeApplier, PendingChanges, Backups, RelativeTime), `ui/` (AppShell, AppShortcuts, Controls, FilePicker, LibraryTexts, setup/, search/, add/, theme/AppPalette, theme/AppFonts), `App.kt`.
-- Yazı: kitap adları Literata (OFL, `res/font`, `licenses/Literata-OFL.txt`, üretici `tools/fonts/make_literata.py`). Ara ekranında raf kodu 20 sp (CLAUDE.md güncellendi).
-- K-01: kit 0.1.1 kit deposunda (`DeskFonts.heading`, `TableColumn.textStyle`), kit CI yeşil. Kullanıcı GitHub'da `desktop-kit` için 0.1.1 Release'ini oluşturunca: `gradle/libs.versions.toml` → 0.1.1, `DesktopKitRoot(fonts = DeskFonts.Plex.copy(heading = AppFonts.Literata))`, ekran görüntülerine bak.
-- Sıradaki: Sprint 4 (S-18 silme, S-19 düzenleme, S-20 kütüphane, S-21 raflar, S-22 raf doldurma), hepsi [O] → Opus. K-01'in son adımı Sprint 4'ün başında.
+- Uygulama: Kitap Bulucu, paket `com.hesaplarimdijital.kitapbulucu`, sürüm 1.0.0. Depo: `hesaplarimdijital-coder/kitapbulucu` (herkese açık). Kit deposu `hesaplarimdijital-coder/desktop-kit` (push yetkisi var; etiket gönderilemez).
+- Sprint 0–6 bitti (kullanıcı "bitene kadar durma, ara mesaj verme" dedi; [F] işler S-23 ve S-27 de Opus ile yapıldı). Açık kalanlar yalnızca kullanıcı denemeleri ve K-01'in son adımı.
+- Uygulama: kurulum, arama, kitap ekleme (Kütüphane'de "+" ve Ctrl+N), silme/düzenleme/taşıma, geri alma, kütüphane tablosu, raflar ve raf doldurma, Excel birleştirme (Ctrl+Shift+O, Ayarlar), yedekten geri yükleme, bekleyen değişiklikler, tek Excel olarak dışa aktarma, Ctrl+O.
+- APK: `ci/apk` dalında `kitapbulucu.apk`; `ornek/` altında örnek dosyalar. Ekran görüntüleri `ci/screenshots`; başvuru görüntüleri `app/src/test/screenshots/` (33 ekran).
+- Kod haritası: `xlsx/`, `model/`, `text/` (TurkishText, Fold, Cleaning), `search/`, `importing/MergePlan`, `store/` (… LibraryStore: restore, exportTo, backupBookCount, mergeDecisions), `ui/` (AppShell, AppShortcuts, Controls + CheckRow, DataSection, BookActions, FilePicker, LibraryTexts, setup/, search/, add/, library/, shelves/, importing/, theme/), `App.kt`.
+- K-01: kit 0.1.1 kit deposunda hazır, kit CI yeşil; GitHub Release'i bekleniyor. Gelince: `gradle/libs.versions.toml` → 0.1.1, `DesktopKitRoot(fonts = DeskFonts.Plex.copy(heading = AppFonts.Literata))`, kütüphane tablosunda ad sütununa `textStyle` ile Literata, ekran görüntülerine bak; S-27'nin ilk maddesi o zaman kapanır.
 
 ## Kullanıcıdan beklenenler
 
-1. GitHub'a iki gizli değer: `KB_KEYSTORE_BASE64` ve `KB_KEYSTORE_PASSWORD` (12.10.2026'da dosya ve parola verildi). Eklenene kadar APK'lar her seferinde başka anahtarla imzalanır; yeni APK eskisinin üstüne kurulamaz (önce kaldır).
-2. S-06 kalanları: seçilen Drive klasörü boş muydu; yeniden başlatma sonrası izin; dosyanın öteki cihazda görünmesi ve değişikliğin ulaşma süresi; tablet denemesi (kullanıcı "yarın söyleyeceğim" dedi).
-3. Sprint 2 tablet kontrol listesi (aşağıda devam mesajında) ve `ornek/Ortak.xlsx` dosyasının Excel, Office NX, Google E-Tablolar'da açılması.
-4. S-30 yapıldı (raf 20 sp, satır yerinde açılır, Babam/raf alt alta, adet yalnızca ayrıntıda, "İmzalı" küçük etiket); kullanıcının telefonda yeniden bakması bekleniyor.
-5. GitHub'da `desktop-kit` deposunda 0.1.1 Release'i (etiket `0.1.1`, `main` üzerindeki son commit).
+1. GitHub'a iki gizli değer: `KB_KEYSTORE_BASE64` ve `KB_KEYSTORE_PASSWORD` (12.10.2026'da dosya ve parola verildi). Eklenene kadar APK'lar her seferinde başka anahtarla imzalanır; yeni APK eskisinin üstüne kurulamaz (önce kaldır). S-29'un "üstüne kurulur" maddesi buna bağlı.
+2. GitHub'da `desktop-kit` deposunda 0.1.1 Release'i (etiket `0.1.1`, `main` üzerindeki son commit).
+3. Tablette ve babanın telefonunda baştan sona deneme (kontrol listesi son mesajda); S-06 kalanları (yeniden başlatma sonrası izin, dosyanın öteki cihazda görünmesi, değişikliğin ulaşma süresi).
+4. `ornek/Ortak.xlsx` ve dışa aktarılan `Kitaplar.xlsx` dosyasının Excel, Office NX ve Google E-Tablolar'da açılması.
 
 ## Veri hakkında bilinenler
 
@@ -51,7 +49,8 @@ Son güncelleme: 14.10.2026, Sprint 3 bitti (K-01'in son adımı kullanıcının
 - Raf bilgisi hiç yok; uygulamanın asıl faydası raflar girilince ortaya çıkar (S-22).
 - Baba eski 2 sütunlu dosyasını kullanmayı sürdürürse birleştirme her seferinde aynı kuralları uygulamalı (ARCHITECTURE 10). Öneri: baba temiz `Babam.xlsx` ile devam etsin.
 - Arama hızı CI'da 10.000 uydurma kitapla ölçülüyor (tuş başına 50 ms altı); gerçek tablette henüz denenmedi.
-- Güvenli yazma yalnızca testlerde ve uydurma dosyalarla denendi; Drive'daki gerçek dosyada ilk yazma S-17 ile gelecek, önce `Benim.xlsx` ile denenmeli.
+- Güvenli yazma yalnızca testlerde ve uydurma dosyalarla denendi; Drive'daki gerçek dosyada ilk yazma önce `Benim.xlsx` ile denenmeli.
+- Excel birleştirme gerçek 7.000 satırlık dosyayla tablette denenmedi; testte 7.000 ekleme 2 sn'nin altında.
 
 ## Sprint 1 retro
 
@@ -65,6 +64,10 @@ Ekran görüntülerine bakmak iki gerçek hatayı yakaladı; her ekran hikâyesi
 
 Fable işini (S-15) öne alıp Opus işlerini arkaya toplamak model değişikliğini ikiye indirdi; kit deposuna erişim baştan oturuma eklenseydi K-01 beklemeden biterdi.
 
+## Sprint 4–6 retro
+
+Kullanıcı durmadan bitirmemi isteyince hikâyeleri ikişer üçer toplayıp CI'a göndermek iyi işledi (üç gönderim, üçü de ilk seferde yeşil); büyük birleştirmenin hızını en baştan testle ölçmek kare zamanlı bir döngüyü yakalattı.
+
 ## Devam mesajı
 
-`CLAUDE.md, docs/STATE.md ve docs/BACKLOG.md dosyalarını oku; önce kit 0.1.1 Release'ini ve tablet deneme sonuçlarını sor, K-01'in son adımını bitir, sonra Sprint 4'ü planla ve onayımı al.`
+`CLAUDE.md, docs/STATE.md ve docs/BACKLOG.md dosyalarını oku; önce tablet ve telefon deneme sonuçlarını, kit 0.1.1 Release'ini ve iki gizli değeri sor; K-01'in son adımını bitir, sonra gelen geri bildirimlerden bir sprint planla ve onayımı al.`
