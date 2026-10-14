@@ -16,6 +16,13 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.sp
+import com.hesaplarimdijital.kitapbulucu.ui.AppSheet
+import com.hesaplarimdijital.kitapbulucu.ui.isCompactLayout
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -120,6 +127,36 @@ fun ShelfFormDialog(
             onSave(Shelves.clean(code), Shelves.clean(note))
         }
     }
+    if (isCompactLayout()) {
+        // phone: a bottom sheet, the fields over the full width and a wide "Kaydet"
+        AppSheet(onDismiss = onDismiss, title = title) { close ->
+            val saveAndClose = {
+                val found = Shelves.checkName(code, existing, renaming)
+                problem = found
+                if (found == null) {
+                    val cleanCode = Shelves.clean(code)
+                    val cleanNote = Shelves.clean(note)
+                    close { onSave(cleanCode, cleanNote) }
+                }
+            }
+            Column(
+                Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(horizontal = dimens.pagePadding).padding(top = dimens.gapS, bottom = dimens.gapS),
+                verticalArrangement = Arrangement.spacedBy(dimens.gapM),
+            ) {
+                if (text != null) Text(text, style = DeskTheme.type.body, color = colors.textSecondary)
+                FormField(
+                    stringResource(R.string.shelves_code), code, { code = it.take(MAX_CODE); problem = null },
+                    modifier = Modifier.fillMaxWidth(), focusRequester = focus,
+                    capitalization = KeyboardCapitalization.Characters, monospace = true, error = problem != null, onEnter = saveAndClose,
+                )
+                NameProblemText(problem, code)
+                FormField(stringResource(R.string.shelves_note), note, { note = it.take(MAX_NOTE) }, modifier = Modifier.fillMaxWidth(), onEnter = saveAndClose)
+                DeskButton(stringResource(R.string.shelves_save), saveAndClose, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), icon = DeskIcons.Check, primary = true)
+            }
+        }
+        LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+        return
+    }
     ShelfDialogFrame(onDismiss) {
         Text(title, style = DeskTheme.type.headline, color = colors.text)
         if (text != null) Text(text, style = DeskTheme.type.body, color = colors.textSecondary)
@@ -128,11 +165,7 @@ fun ShelfFormDialog(
             modifier = Modifier.fillMaxWidth(), focusRequester = focus,
             capitalization = KeyboardCapitalization.Characters, monospace = true, error = problem != null, onEnter = save,
         )
-        when (problem) {
-            Shelves.NameProblem.EMPTY -> Text(stringResource(R.string.shelves_code_empty), style = DeskTheme.type.body, color = colors.danger)
-            Shelves.NameProblem.TAKEN -> Text(stringResource(R.string.shelves_code_taken, Shelves.clean(code)), style = DeskTheme.type.body, color = colors.danger)
-            null -> Unit
-        }
+        NameProblemText(problem, code)
         FormField(stringResource(R.string.shelves_note), note, { note = it.take(MAX_NOTE) }, modifier = Modifier.fillMaxWidth(), onEnter = save)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.gapS), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
             DeskButton(stringResource(R.string.shelves_save), save, icon = DeskIcons.Check, primary = true)
@@ -140,6 +173,16 @@ fun ShelfFormDialog(
         }
     }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+}
+
+@Composable
+private fun NameProblemText(problem: Shelves.NameProblem?, code: String) {
+    val colors = DeskTheme.colors
+    when (problem) {
+        Shelves.NameProblem.EMPTY -> Text(stringResource(R.string.shelves_code_empty), style = DeskTheme.type.body, color = colors.danger)
+        Shelves.NameProblem.TAKEN -> Text(stringResource(R.string.shelves_code_taken, Shelves.clean(code)), style = DeskTheme.type.body, color = colors.danger)
+        null -> Unit
+    }
 }
 
 /**
@@ -169,6 +212,10 @@ fun ShelfPickerDialog(
     val pick = { shelf: String ->
         onDismiss()
         onPick(shelf)
+    }
+    if (isCompactLayout()) {
+        PhonePicker(title, subtitle, shelves, filter, { filter = it.take(MAX_CODE) }, shown, currentKey, onPick, onNew, onDismiss)
+        return
     }
     ShelfDialogFrame(onDismiss) {
         Text(title, style = DeskTheme.type.headline, color = colors.text)
@@ -209,6 +256,127 @@ fun ShelfPickerDialog(
         }
     }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+}
+
+/**
+ * The phone's "Rafa koy…": a bottom sheet with the filter on top, "Yeni raf" as the first row and
+ * the shelves below as large rows; the list scrolls. The filter does not take the cursor on its own:
+ * the keyboard would cover half of the shelves (and, under Robolectric, a text field focused in a
+ * dialog window on the phone qualifiers kept the screenshot test from ever going idle).
+ */
+@Composable
+private fun PhonePicker(
+    title: String,
+    subtitle: String,
+    shelves: List<ShelfGroup>,
+    filter: String,
+    onFilter: (String) -> Unit,
+    shown: List<ShelfGroup>,
+    currentKey: String?,
+    onPick: (String) -> Unit,
+    onNew: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val colors = DeskTheme.colors
+    val dimens = DeskTheme.dimens
+    val typed = Shelves.clean(filter)
+    val exact = typed.isNotEmpty() && shelves.any { Shelves.key(it.shelf) == Shelves.key(typed) }
+    AppSheet(onDismiss = onDismiss, title = title) { close ->
+        Text(
+            subtitle,
+            style = DeskTheme.type.body,
+            color = colors.textSecondary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = dimens.pagePadding),
+        )
+        FormField(
+            stringResource(R.string.picker_filter), filter, onFilter,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding, vertical = dimens.gapS),
+            capitalization = KeyboardCapitalization.Characters, monospace = true,
+            onEnter = {
+                val chosen = shown.firstOrNull()
+                when {
+                    chosen != null -> close { onPick(chosen.shelf) }
+                    filter.isNotBlank() -> close { onNew(filter) }
+                    else -> Unit
+                }
+            },
+        )
+        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+            if (!exact) {
+                PhonePickerRow(
+                    code = null,
+                    label = if (typed.isEmpty()) stringResource(R.string.touchlist_picker_new) else stringResource(R.string.touchlist_picker_new_named, typed),
+                    count = null,
+                ) { close { onNew(filter) } }
+            }
+            when {
+                shelves.isEmpty() -> PickerNote(stringResource(R.string.picker_none))
+                shown.isEmpty() -> PickerNote(stringResource(R.string.touchlist_picker_no_match))
+                else -> shown.forEach { group ->
+                    PhonePickerRow(
+                        code = group.shelf,
+                        label = group.note,
+                        count = if (Shelves.key(group.shelf) == currentKey) stringResource(R.string.picker_current) else shelfCount(group),
+                        current = Shelves.key(group.shelf) == currentKey,
+                    ) { close { onPick(group.shelf) } }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PickerNote(text: String) {
+    Text(
+        text,
+        style = DeskTheme.type.body,
+        color = DeskTheme.colors.textSecondary,
+        modifier = Modifier.padding(horizontal = DeskTheme.dimens.pagePadding, vertical = DeskTheme.dimens.gapM),
+    )
+}
+
+/** A shelf in the phone picker (code, description, count), or with no [code] the "Yeni raf" row. */
+@Composable
+private fun PhonePickerRow(code: String?, label: String, count: String?, current: Boolean = false, onClick: () -> Unit) {
+    val colors = DeskTheme.colors
+    val dimens = DeskTheme.dimens
+    val interaction = remember { MutableInteractionSource() }
+    val state = interaction.collectState()
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 56.dp)
+            .background(stateBackground(state, selected = current))
+            .focusRing(state, RoundedCornerShape(0.dp))
+            .deskClickable(interaction, onClick, role = Role.Button)
+            .padding(horizontal = dimens.pagePadding, vertical = dimens.gapS),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (code == null) {
+            Icon(DeskIcons.Plus, contentDescription = null, tint = colors.accentText, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.width(dimens.gapL))
+            Text(label, style = DeskTheme.type.bodyStrong, color = colors.accentText, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        } else {
+            val main = if (current) colors.onSelection else colors.accentText
+            val second = if (current) colors.onSelection else colors.textSecondary
+            Text(
+                code,
+                style = TextStyle(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 20.sp, lineHeight = 24.sp),
+                color = main,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.widthIn(min = 48.dp, max = 140.dp),
+            )
+            Spacer(Modifier.width(dimens.gapL))
+            Text(label, style = DeskTheme.type.body, color = second, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            if (count != null) {
+                Spacer(Modifier.width(dimens.gapS))
+                Text(count, style = DeskTheme.type.label, color = second, maxLines = 1)
+            }
+        }
+    }
 }
 
 /** Shelves whose code contains the typed text (b3 finds B3, B30), or whose description does. */

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phone layout of the Library and Shelves screens: top bar, sheets, rows. -->
+<resources>
+    <string name="touchlist_close">Close</string>
+    <string name="touchlist_done">Done</string>
+    <string name="touchlist_sort">Sort</string>
+    <string name="touchlist_sort_title">By title</string>
+    <string name="touchlist_sort_author">By author</string>
+    <string name="touchlist_sort_shelf">By shelf</string>
+    <string name="touchlist_sort_file">As in the file</string>
+    <string name="touchlist_selected_count">%d selected</string>
+    <string name="touchlist_select_all">Select all</string>
+    <string name="touchlist_copies">%d copies</string>
+    <string name="touchlist_no_shelf">no shelf</string>
+    <string name="touchlist_list">List</string>
+    <string name="touchlist_no">No</string>
+    <string name="touchlist_shelf_add_title">Add to %1$s</string>
+    <string name="touchlist_picker_new">New shelf</string>
+    <string name="touchlist_picker_new_named">Create shelf %1$s</string>
+    <string name="touchlist_picker_no_match">No such shelf. Tap the row above to create it.</string>
+</resources>

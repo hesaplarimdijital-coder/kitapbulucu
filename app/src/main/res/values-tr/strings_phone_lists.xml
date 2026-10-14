@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kütüphane ve Raflar ekranlarının telefon düzeni: üst çubuk, alt paneller, satırlar. -->
+<resources>
+    <string name="touchlist_close">Kapat</string>
+    <string name="touchlist_done">Bitti</string>
+    <string name="touchlist_sort">Sırala</string>
+    <string name="touchlist_sort_title">Kitap adına göre</string>
+    <string name="touchlist_sort_author">Yazara göre</string>
+    <string name="touchlist_sort_shelf">Rafa göre</string>
+    <string name="touchlist_sort_file">Dosyadaki sırayla</string>
+    <string name="touchlist_selected_count">%d seçili</string>
+    <string name="touchlist_select_all">Tümünü seç</string>
+    <string name="touchlist_copies">%d adet</string>
+    <string name="touchlist_no_shelf">rafsız</string>
+    <string name="touchlist_list">Liste</string>
+    <string name="touchlist_no">Hayır</string>
+    <string name="touchlist_shelf_add_title">%1$s rafına ekle</string>
+    <string name="touchlist_picker_new">Yeni raf</string>
+    <string name="touchlist_picker_new_named">%1$s rafını oluştur</string>
+    <string name="touchlist_picker_no_match">Böyle bir raf yok. Üstteki satırla oluşturabilirsiniz.</string>
+</resources>
