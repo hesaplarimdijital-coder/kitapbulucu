@@ -136,11 +136,11 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [x] İlk yazmadan önce bir kez "Excel'deki renk ve biçimler korunmaz" bilgisi gösterilir.
 - [x] Dosyada başka dolu sayfa varsa uyarır; sayfalar düz metin olarak aynen taşınır (veri kaybı yok), ilk yazışta bir kez bildirilir.
 
-### S-16 Ara ekranında klavye · 3 · [O] · bekliyor
-- [ ] Uygulama açılınca imleç arama kutusunda; herhangi bir harfe basınca aramaya yazılır.
-- [ ] Ctrl+K her ekrandan aramaya götürür ve odaklar.
-- [ ] Ok tuşları sonuçlarda gezer, Enter kitabın detayını açar, Esc aramayı temizler.
-- [ ] Dokunmatikte de rahat: hedefler parmak için yeterli.
+### S-16 Ara ekranında klavye · 3 · [O] · bitti
+- [x] Uygulama açılınca imleç arama kutusunda; satırlar ve süzgeç imleci almaz, yazılan her harf aramaya gider.
+- [x] Ctrl+K her ekrandan aramaya götürür ve odaklar.
+- [x] Ok tuşları sonuçlarda gezer, Enter kitabın detayını yerinde açar, Esc önce açık satırı kapatır sonra aramayı temizler. (S-30 ile birlikte yapıldı.)
+- [x] Dokunmatikte de rahat: hedefler parmak için yeterli.
 
 ### S-17 Kitap ekleme · 5 · [O] · bekliyor
 - [ ] Alanlar: Kitap adı, Yazar, Kimin (varsayılan: kullanıcının kendisi), Raf; isteğe bağlı Adet (varsayılan 1), İmzalı, Yayınevi, Yıl, ISBN, Not.
@@ -236,14 +236,14 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 
 Bir sonraki sprint planlanırken sıraya konur.
 
-### S-30 Ara ekranı: daha sade ve kullanışlı sonuçlar · 3 · [O] · bekliyor
+### S-30 Ara ekranı: daha sade ve kullanışlı sonuçlar · 3 · [O] · bitti
 Kaynak: kullanıcının 12.10.2026'da telefondan gönderdiği "dostoyevski" araması (`docs/design/geri-bildirim-2026-10-12-ara.jpg`). Bu hikâyeye kadar ekranda değişiklik yapılmaz.
-- [ ] Yazılar küçülür: kartta "Babam · Raf …" satırı ve "Raf yazılmamış" gereğinden büyük (şu an 36 sp; "Raf yazılmamış" iki satıra taşıyor). Raf kodu yine öne çıkar ama ölçü küçülür. CLAUDE.md'deki "raf yazısı en az 32 sp" kuralı kullanıcıyla yeni ölçü kararlaştırılınca güncellenir.
-- [ ] Listede bir sonuca basınca bilgi en üstteki karta taşınmaz: basılan satır olduğu yerde açılır, ayrıntı (kimde, hangi raf, adet, imza, not) orada görünür. Üstteki büyük kartın kalıp kalmayacağına tasarımda karar verilir.
-- [ ] Satırda kütüphane adı ("Babam") ve raf ("Raf yazılmamış" / "Raf C2") yan yana değil üst üste durur; kitap adı ve yazara yer kalır, "DOSTO…" gibi kesilmez.
-- [ ] Arama sonuçlarında "2 adet" gösterilmez; adet yalnızca Kütüphane ekranında (S-20) ve açılan ayrıntıda görünür. ("İmzalı" işaretinin kalıp kalmayacağı kullanıcıya sorulur.)
-- [ ] Klavyeyle: ↑↓ satır seçer, Enter seçili satırı açar ve kapatır.
-- [ ] Telefon (dikey) ve DeX, açık ve koyu ekran görüntüsü; kullanıcı telefonda yeniden baktı.
+- [x] Yazılar küçülür (raf kodu 20 sp, kitap adı 17 sp; CLAUDE.md güncellendi): kartta "Babam · Raf …" satırı ve "Raf yazılmamış" gereğinden büyük (şu an 36 sp; "Raf yazılmamış" iki satıra taşıyor). Raf kodu yine öne çıkar ama ölçü küçülür. CLAUDE.md'deki "raf yazısı en az 32 sp" kuralı kullanıcıyla yeni ölçü kararlaştırılınca güncellenir.
+- [x] Listede bir sonuca basınca bilgi en üstteki karta taşınmaz: basılan satır olduğu yerde açılır, ayrıntı (kimde, hangi raf, adet, imza, not) orada görünür. Üstteki büyük kart kaldırıldı.
+- [x] Satırda kütüphane adı ("Babam") ve raf ("Raf yazılmamış" / "Raf C2") yan yana değil üst üste durur; kitap adı ve yazara yer kalır, "DOSTO…" gibi kesilmez.
+- [x] Arama sonuçlarında "2 adet" gösterilmez; adet yalnızca Kütüphane ekranında (S-20) ve açılan ayrıntıda görünür. ("İmzalı" küçük etiket olarak kaldı; öneri kullanıcıya iletildi.)
+- [x] Klavyeyle: ↑↓ satır seçer, Enter seçili satırı açar ve kapatır.
+- [x] Telefon (dikey) ve DeX, açık ve koyu ekran görüntüsü. (Kullanıcının telefonda yeniden bakması bekleniyor.)
 
 ## Sonraki sürüm (şimdi yapılmayacak)
 

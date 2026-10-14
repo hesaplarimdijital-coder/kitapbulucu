@@ -26,7 +26,7 @@
 - Sütunlar: Kitap Adı, Yazar, Raf, Adet, İmzalı, Yayınevi, Yıl, ISBN, Not (biçim kesin değil; sütunlar başlık adıyla bulunur). Tanınmayan sütunlar silinmez. `Adet` sayı, diğer bütün hücreler metin biçiminde yazılır.
 - Dışarıdan gelen Excel dosyanın yerine konmaz, birleştirilir; ilk temizlikteki kurallar aynen uygulanır (ARCHITECTURE 10).
 - Arama Türkçe duyarlı (I/ı/İ/i, şapka), hataya toleranslı, sözcük sırası önemsiz; 10.000 kitapta tuş başına 50 ms altı.
-- Tasarım: Taslak A "Fiş" (`docs/design/`). Tema kit üzerinden: `Accent.custom`, `colors = { it.copy(...) }`, `DeskFonts`. Her metin/arka plan çifti en az 4.5:1 ve testle denetlenir. Sonuç ekranındaki raf yazısı en az 32 sp.
+- Tasarım: Taslak A "Fiş" (`docs/design/`). Tema kit üzerinden: `Accent.custom`, `colors = { it.copy(...) }`, `DeskFonts`. Her metin/arka plan çifti en az 4.5:1 ve testle denetlenir. Ara ekranında raf kodu 20 sp, kalın, mono ve vurgu renginde; kütüphane adı üstünde (kullanıcı 12.10.2026'da 36 sp'yi çok büyük buldu).
 - Telefonda (dar ekran) yalnızca dikey kullanım; tablet ve DeX'te serbest.
 - Kitap listesi depoya girmez (depo herkese açık): `.gitignore` içinde `*.xlsx`; testlerde yalnızca uydurma kitaplar.
 
