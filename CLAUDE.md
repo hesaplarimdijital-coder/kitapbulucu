@@ -16,11 +16,12 @@
 ## Değişmez kararlar
 - INTERNET izni yok; hesap, reklam, analitik yok. Buluta taşımayı Google Drive uygulaması yapar; uygulama dosyalara SAF ile erişir. Ek depolama izni istenmez.
 - Bağımlılık en az. Her yeni kütüphane için tek cümleyle neden söyle ve onay al. Room yok, Apache POI yok, ML Kit yok.
-- Arayüz kiti: `com.github.hesaplarimdijital-coder:desktop-kit:0.1.0` (JitPack). Kiti uygulamada kopyalama ya da yamama: kit deposunda düzelt, sürümü artır, kullanıcıdan GitHub'da Release oluşturmasını iste (oturum etiket gönderemez).
+- Arayüz kiti: `com.github.hesaplarimdijital-coder:desktop-kit` (JitPack, şu an 0.1.1). Kiti uygulamada kopyalama ya da yamama: kit deposunda düzelt, sürümü artır, kullanıcıdan GitHub'da Release oluşturmasını iste (oturum etiket gönderemez). Release beklenirken uygulama kitin commit sürümüyle (commit kimliğinin ilk 10 karakteri) derlenir; Release gelince sürüm numarasına geçilir.
 - Sürümler: Kotlin 2.1.0, AGP 8.7.3, Gradle 8.11.1, JDK 17, minSdk 26, target/compileSdk 35, Compose BOM 2024.12.01, Robolectric 4.14.1.
 - Excel: `.xlsx` okuyucu ve yazıcı kendi kodumuz (`java.util.zip` + `XmlPullParser`). `.csv` desteklenir (`;` ya da `,`; UTF-8 ya da Windows-1254). `.xls` desteklenmez: ".xlsx olarak kaydedip tekrar deneyin".
 - Asıl kaynak Drive'daki `Babam.xlsx` ve `Benim.xlsx`. Herkes kendi dosyasına yazar, ikisini de okur. Öteki kişinin dosyası için onay sorulur ve yazmadan hemen önce yeniden okunur.
 - Veri güvenliği: her yazmadan önce dosya yeniden okunur; yedek alınır (son 10); içerik önce uygulama klasöründe üretilip doğrulanır, sonra yazılır ve geri okunur; yazılamayan değişiklik bekleyenlerde kalır, kaybolmaz.
+- Raf listesi (oluşturulan raflar, boş olanlar dahil) yalnızca cihazda, kişi başına saklanır; Drive'a gitmez (kullanıcı 15.10.2026). Kitabın rafı yine Excel'deki `Raf` sütunundadır.
 - Sütunlar: Kitap Adı, Yazar, Raf, Adet, İmzalı, Yayınevi, Yıl, ISBN, Not (biçim kesin değil; sütunlar başlık adıyla bulunur). Tanınmayan sütunlar silinmez. `Adet` sayı, diğer bütün hücreler metin biçiminde yazılır.
 - Dışarıdan gelen Excel dosyanın yerine konmaz, birleştirilir; ilk temizlikteki kurallar aynen uygulanır (ARCHITECTURE 10).
 - Arama Türkçe duyarlı (I/ı/İ/i, şapka), hataya toleranslı, sözcük sırası önemsiz; 10.000 kitapta tuş başına 50 ms altı.
