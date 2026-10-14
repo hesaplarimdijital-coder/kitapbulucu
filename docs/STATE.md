@@ -1,22 +1,21 @@
 # Durum
 
-Son güncelleme: 14.10.2026, Sprint 6 bitti, sürüm 1.0.0 (K-01'in son adımı kullanıcının Release'ini bekliyor).
+Son güncelleme: 14.10.2026, Sprint 6 ve K-01 bitti, sürüm 1.0.0.
 
 ## Şu an
 
 - Uygulama: Kitap Bulucu, paket `com.hesaplarimdijital.kitapbulucu`, sürüm 1.0.0. Depo: `hesaplarimdijital-coder/kitapbulucu` (herkese açık). Kit deposu `hesaplarimdijital-coder/desktop-kit` (push yetkisi var; etiket gönderilemez).
-- Sprint 0–6 bitti (kullanıcı "bitene kadar durma, ara mesaj verme" dedi; [F] işler S-23 ve S-27 de Opus ile yapıldı). Açık kalanlar yalnızca kullanıcı denemeleri ve K-01'in son adımı.
+- Sprint 0–6 bitti (kullanıcı "bitene kadar durma, ara mesaj verme" dedi; [F] işler S-23 ve S-27 de Opus ile yapıldı). Açık kalanlar yalnızca kullanıcı denemeleri.
 - Uygulama: kurulum, arama, kitap ekleme (Kütüphane'de "+" ve Ctrl+N), silme/düzenleme/taşıma, geri alma, kütüphane tablosu, raflar ve raf doldurma, Excel birleştirme (Ctrl+Shift+O, Ayarlar), yedekten geri yükleme, bekleyen değişiklikler, tek Excel olarak dışa aktarma, Ctrl+O.
 - APK: `ci/apk` dalında `kitapbulucu.apk`; `ornek/` altında örnek dosyalar. Ekran görüntüleri `ci/screenshots`; başvuru görüntüleri `app/src/test/screenshots/` (33 ekran).
 - Kod haritası: `xlsx/`, `model/`, `text/` (TurkishText, Fold, Cleaning), `search/`, `importing/MergePlan`, `store/` (… LibraryStore: restore, exportTo, backupBookCount, mergeDecisions), `ui/` (AppShell, AppShortcuts, Controls + CheckRow, DataSection, BookActions, FilePicker, LibraryTexts, setup/, search/, add/, library/, shelves/, importing/, theme/), `App.kt`.
-- K-01: kit 0.1.1 kit deposunda hazır, kit CI yeşil; GitHub Release'i bekleniyor. Gelince: `gradle/libs.versions.toml` → 0.1.1, `DesktopKitRoot(fonts = DeskFonts.Plex.copy(heading = AppFonts.Literata))`, kütüphane tablosunda ad sütununa `textStyle` ile Literata, ekran görüntülerine bak; S-27'nin ilk maddesi o zaman kapanır.
+- K-01 bitti (14.10.2026): uygulama kit 0.1.1'de; `AppFonts.desk` = Plex + başlıklarda Literata; kütüphane tablosunda ad sütunu Literata.
 
 ## Kullanıcıdan beklenenler
 
 1. GitHub'a iki gizli değer: `KB_KEYSTORE_BASE64` ve `KB_KEYSTORE_PASSWORD` (12.10.2026'da dosya ve parola verildi). Eklenene kadar APK'lar her seferinde başka anahtarla imzalanır; yeni APK eskisinin üstüne kurulamaz (önce kaldır). S-29'un "üstüne kurulur" maddesi buna bağlı.
-2. GitHub'da `desktop-kit` deposunda 0.1.1 Release'i (etiket `0.1.1`, `main` üzerindeki son commit).
-3. Tablette ve babanın telefonunda baştan sona deneme (kontrol listesi son mesajda); S-06 kalanları (yeniden başlatma sonrası izin, dosyanın öteki cihazda görünmesi, değişikliğin ulaşma süresi).
-4. `ornek/Ortak.xlsx` ve dışa aktarılan `Kitaplar.xlsx` dosyasının Excel, Office NX ve Google E-Tablolar'da açılması.
+2. Tablette ve babanın telefonunda baştan sona deneme (kontrol listesi son mesajda); S-06 kalanları (yeniden başlatma sonrası izin, dosyanın öteki cihazda görünmesi, değişikliğin ulaşma süresi).
+3. `ornek/Ortak.xlsx` ve dışa aktarılan `Kitaplar.xlsx` dosyasının Excel, Office NX ve Google E-Tablolar'da açılması.
 
 ## Veri hakkında bilinenler
 
@@ -70,4 +69,4 @@ Kullanıcı durmadan bitirmemi isteyince hikâyeleri ikişer üçer toplayıp CI
 
 ## Devam mesajı
 
-`CLAUDE.md, docs/STATE.md ve docs/BACKLOG.md dosyalarını oku; önce tablet ve telefon deneme sonuçlarını, kit 0.1.1 Release'ini ve iki gizli değeri sor; K-01'in son adımını bitir, sonra gelen geri bildirimlerden bir sprint planla ve onayımı al.`
+`CLAUDE.md, docs/STATE.md ve docs/BACKLOG.md dosyalarını oku; önce tablet ve telefon deneme sonuçlarını ve iki gizli değeri sor, sonra gelen geri bildirimlerden bir sprint planla ve onayımı al.`

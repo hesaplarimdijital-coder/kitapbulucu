@@ -14,5 +14,5 @@
 - **Excel birleştirme**: başka bir Excel ya da CSV; ilk temizliğin kuralları (İMZALI işareti, ithaf, tekrar eden satırlar) uygulanır. Yeni, değişen, dosyada olmayan kitaplar ve belirsiz eşleşmeler tek tek seçilir; yanıtlar hatırlanır.
 - **Ayarlar**: ben kimim, dosyalar, klasör, görünüm, giriş, kısayollar; yedekten geri yükleme, bekleyen değişiklikler ("Şimdi dene"), iki listeyi tek Excel olarak dışa aktarma.
 - **Kısayollar**: Ctrl+K ara, Ctrl+N ekle, Ctrl+O dosya seç, Ctrl+Shift+O birleştir, Ctrl+Z geri al, F5 yenile, Ctrl+, ayarlar, Ctrl+/ kısayol listesi.
-- **Görünüm**: Taslak A "Fiş"; "Kâğıt" ve "Gece okuması" temaları, dört sıcak vurgu rengi; her metin en az 4.5:1 kontrastta. Aramada ve raflarda kitap adları Literata, arayüz IBM Plex Sans, raf kodları mono.
+- **Görünüm**: Taslak A "Fiş"; "Kâğıt" ve "Gece okuması" temaları, dört sıcak vurgu rengi; her metin en az 4.5:1 kontrastta. Başlıklar ve kitap adları Literata, arayüz IBM Plex Sans, raf kodları mono.
 - **Excel okuyucu ve yazıcı**: kendi kodumuz; `.xlsx` ve `.csv` (UTF-8 ya da Windows-1254). Tanınmayan sütunlar korunur, tarihe dönmüş hücreler metne çevrilir.

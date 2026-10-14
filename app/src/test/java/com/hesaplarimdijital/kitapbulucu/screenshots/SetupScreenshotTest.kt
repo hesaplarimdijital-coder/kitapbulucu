@@ -36,6 +36,7 @@ import com.hesaplarimdijital.kitapbulucu.ui.Routes
 import com.hesaplarimdijital.kitapbulucu.ui.rememberFilePicker
 import com.hesaplarimdijital.kitapbulucu.ui.setup.MappingScreen
 import com.hesaplarimdijital.kitapbulucu.ui.setup.SetupScreen
+import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppPalette
 import com.hesaplarimdijital.kitapbulucu.xlsx.TestWorkbooks
 import com.hesaplarimdijital.kitapbulucu.xlsx.XlsxWriter
@@ -102,7 +103,7 @@ class SetupScreenshotTest {
     private fun capture(name: String, theme: ThemeMode, input: InputMode, content: @Composable () -> Unit) {
         compose.runOnUiThread { compose.activity.actionBar?.hide() }
         compose.setContent {
-            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) { content() }
             }
         }

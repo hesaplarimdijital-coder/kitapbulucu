@@ -4,6 +4,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.hesaplarimdijital.kitapbulucu.R
+import desktopkit.theme.DeskFonts
 
 /**
  * Literata (SIL Open Font License, licenses/Literata-OFL.txt) for book titles, Draft A's serif.
@@ -15,4 +16,7 @@ object AppFonts {
         Font(R.font.kb_literata_regular, FontWeight.Normal),
         Font(R.font.kb_literata_bold, FontWeight.Bold),
     )
+
+    /** The kit's IBM Plex for the interface, Literata for page and section headings (Draft A). */
+    val desk: DeskFonts = DeskFonts.Plex.copy(heading = Literata)
 }

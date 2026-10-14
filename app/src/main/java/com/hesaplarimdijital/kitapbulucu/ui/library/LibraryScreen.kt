@@ -35,6 +35,8 @@ import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.ui.BookActions
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
+import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
+import androidx.compose.ui.text.font.FontWeight
 import desktopkit.components.ColumnWidth
 import desktopkit.components.DenseTable
 import desktopkit.components.DeskButton
@@ -172,9 +174,11 @@ fun BookTable(rows: List<LibraryRow>, actions: BookActions, onShelf: ((Owner, St
 @Composable
 private fun rememberColumns(): List<TableColumn<LibraryRow>> {
     val yes = stringResource(R.string.add_yes)
-    return remember(yes) {
+    // book titles in Literata, like the search results (Draft A)
+    val titleStyle = DeskTheme.type.bodyStrong.copy(fontFamily = AppFonts.Literata, fontWeight = FontWeight.Bold)
+    return remember(yes, titleStyle) {
         listOf(
-            TableColumn(BookColumn.TITLE.header, ColumnWidth.Weight(3f)) { it.book.title },
+            TableColumn(BookColumn.TITLE.header, ColumnWidth.Weight(3f), textStyle = titleStyle) { it.book.title },
             TableColumn(BookColumn.AUTHOR.header, ColumnWidth.Weight(2f)) { it.book.author },
             TableColumn(BookColumn.SHELF.header, ColumnWidth.Fixed(84.dp), mono = true) { it.book.shelf },
             TableColumn(BookColumn.COPIES.header, ColumnWidth.Fixed(64.dp), alignEnd = true) { it.book.copies.toString() },

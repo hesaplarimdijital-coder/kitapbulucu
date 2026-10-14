@@ -150,11 +150,11 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [x] Ara ekranındaki "Ekle" formu aranan adla açar.
 - [x] Öteki kişinin listesine eklerken onay sorar.
 
-### K-01 Kit 0.1.1: başlık yazı tipi ve tablo sütun stili · 3 · [O] · kit tarafı bitti, kullanıcının Release'i bekleniyor
+### K-01 Kit 0.1.1: başlık yazı tipi ve tablo sütun stili · 3 · [O] · bitti
 - [x] `DeskFonts` başlıklar için ayrı bir aile alır (varsayılanı `sans`); `display`, `headline`, `title` onu kullanır.
 - [x] `TableColumn` hücre yazı stilini seçebilir (kitap adı serif olabilsin).
 - [x] Kitin testleri ve ekran görüntüleri güncel; CHANGELOG yazıldı.
-- [ ] Kullanıcı GitHub'da 0.1.1 Release'ini oluşturdu; uygulama 0.1.1'e geçti.
+- [x] Kullanıcı GitHub'da 0.1.1 Release'ini oluşturdu; uygulama 0.1.1'e geçti; sayfa başlıkları ve kütüphane tablosundaki kitap adları Literata.
 - [x] Literata (OFL) uygulamaya eklendi; kitap adları şimdiden Literata ile.
 
 ## Sprint 4: Sil, düzelt, kütüphane, raflar
@@ -219,8 +219,8 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 
 ## Sprint 6: Cilalama ve 1.0.0
 
-### S-27 Tema son hâli · 3 · [F] · bitti; kütüphane tablosundaki kitap adları K-01 ile Literata olacak (Fable yerine Opus ile yapıldı)
-- [ ] Başlıklar ve kitap adları serif (Literata ya da Source Serif 4; OFL lisans dosyası depoda); arayüz IBM Plex Sans; raf kodları mono.
+### S-27 Tema son hâli · 3 · [F] · bitti (Fable yerine Opus ile yapıldı)
+- [x] Başlıklar ve kitap adları serif (Literata ya da Source Serif 4; OFL lisans dosyası depoda); arayüz IBM Plex Sans; raf kodları mono.
 - [x] Kitap, raf ve içe aktar simgeleri `DeskIcons.build` ile kitin çizgi stilinde.
 - [x] Gerçek ekranlarda açık ve koyu temada son kontrast denetimi; bütün ekranların DeX genişliğinde ekran görüntüsü.
 

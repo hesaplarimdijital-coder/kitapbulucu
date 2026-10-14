@@ -25,6 +25,7 @@ import com.hesaplarimdijital.kitapbulucu.ui.setup.MappingScreen
 import com.hesaplarimdijital.kitapbulucu.ui.setup.SetupScreen
 import com.hesaplarimdijital.kitapbulucu.ui.AppShortcuts
 import desktopkit.DesktopKitRoot
+import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppPalette
 import desktopkit.settings.rememberDeskPreferences
 import desktopkit.shell.ShellNavigator
@@ -66,7 +67,7 @@ class MainActivity : ComponentActivity() {
                     onMerge = { mergeFocus++ },
                 )
             }
-            DesktopKitRoot(prefs, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
+            DesktopKitRoot(prefs, fonts = AppFonts.desk, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
                 val picker = rememberFilePicker(store)
                 // Ctrl+O: choose the file of this device's own list again
                 LaunchedEffect(openFile) { if (openFile > 0) picker.pick(settings.me ?: Owner.DAD) }
