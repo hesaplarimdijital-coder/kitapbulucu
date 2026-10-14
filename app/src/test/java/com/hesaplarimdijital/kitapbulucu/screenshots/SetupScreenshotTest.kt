@@ -178,4 +178,10 @@ class SetupScreenshotTest {
 
     @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
     fun searchOpenedDexDark() = search("dex-dark-search-open", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge, "çatıdaki", open = true)
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun addDexLight() = shell("dex-light-add", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge, Routes.ADD, store = sampleStore(myBooks))
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun addPhoneDark() = shell("phone-dark-add", ThemeMode.Dark, InputMode.Touch, WidthClass.Compact, Routes.ADD, store = sampleStore(myBooks))
 }

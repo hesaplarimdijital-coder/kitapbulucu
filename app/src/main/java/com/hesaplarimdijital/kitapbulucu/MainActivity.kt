@@ -51,14 +51,15 @@ class MainActivity : ComponentActivity() {
             var mapping by rememberSaveable { mutableStateOf<Owner?>(null) }
             // every Ctrl+K puts the cursor in the search field again, even when the search screen is already open
             var searchFocus by remember { mutableIntStateOf(0) }
-            perform = { id -> AppShortcuts.perform(id, navigator, prefs, onRefresh = store::refresh, onSearch = { searchFocus++ }) }
+            var addFocus by remember { mutableIntStateOf(0) }
+            perform = { id -> AppShortcuts.perform(id, navigator, prefs, onRefresh = store::refresh, onSearch = { searchFocus++ }, onAdd = { addFocus++ }) }
             DesktopKitRoot(prefs, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
                 val picker = rememberFilePicker(store)
                 val mappingOwner = mapping
                 when {
                     mappingOwner != null -> MappingScreen(mappingOwner, store, onClose = { mapping = null })
                     !settings.setupDone -> SetupScreen(store, settings, picker, onMap = { mapping = it }, onDone = { settings.updateSetupDone(true) })
-                    else -> AppShell(prefs, widthClass, navController, store, settings, picker, onMap = { mapping = it }, onShortcut = { perform(it) }, searchFocus = searchFocus)
+                    else -> AppShell(prefs, widthClass, navController, store, settings, picker, onMap = { mapping = it }, onShortcut = { perform(it) }, searchFocus = searchFocus, addFocus = addFocus)
                 }
             }
         }

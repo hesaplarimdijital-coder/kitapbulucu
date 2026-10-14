@@ -10,7 +10,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -24,6 +27,7 @@ import com.hesaplarimdijital.kitapbulucu.store.LoadFailure
 import com.hesaplarimdijital.kitapbulucu.store.LoadStatus
 import com.hesaplarimdijital.kitapbulucu.store.StoreNotice
 import com.hesaplarimdijital.kitapbulucu.store.WriteFailure
+import com.hesaplarimdijital.kitapbulucu.ui.add.AddBookScreen
 import com.hesaplarimdijital.kitapbulucu.ui.search.SearchScreen
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
@@ -50,6 +54,7 @@ object Routes {
     const val LIBRARY = "library"
     const val SHELVES = "shelves"
     const val SETTINGS = "settings"
+    const val ADD = "add"
 }
 
 @Composable
@@ -60,7 +65,8 @@ fun rememberAppSpec(): ShellSpec {
     val library = stringResource(R.string.nav_library)
     val shelves = stringResource(R.string.nav_shelves)
     val settings = stringResource(R.string.nav_settings)
-    return remember(appName, section, search, library, shelves, settings) {
+    val add = stringResource(R.string.nav_add)
+    return remember(appName, section, search, library, shelves, settings, add) {
         ShellSpec(
             appTitle = appName,
             sections = listOf(
@@ -70,6 +76,7 @@ fun rememberAppSpec(): ShellSpec {
                         NavItem(Routes.SEARCH, search, DeskIcons.Search),
                         NavItem(Routes.LIBRARY, library, AppIcons.Book),
                         NavItem(Routes.SHELVES, shelves, AppIcons.Shelf),
+                        NavItem(Routes.ADD, add, DeskIcons.Plus),
                     ),
                 ),
             ),
@@ -100,9 +107,13 @@ fun AppShell(
     searchFocus: Int = 0,
     /** For screenshots: the first result starts opened. */
     initialSearchOpen: Boolean = false,
+    /** Changes on every Ctrl+N: the add form takes the cursor again. */
+    addFocus: Int = 0,
 ) {
     val spec = rememberAppSpec()
     val resources = LocalContext.current.resources
+    // the title the add form starts with, when it was opened from a search that found nothing
+    var addTitle by rememberSaveable { mutableStateOf("") }
     DesktopShell(
         spec = spec,
         widthClass = widthClass,
@@ -111,13 +122,22 @@ fun AppShell(
         onSidebarCollapsedChange = prefs::updateSidebarCollapsed,
         menus = AppShortcuts.registry.menus(resources, perform = onShortcut),
         onSearch = { onShortcut(CommonShortcuts.SEARCH) },
-    ) { route, _ ->
+    ) { route, navigator ->
         Column(Modifier.fillMaxSize()) {
             if (store != null && picker != null) LibraryNotices(store, picker, onMap)
             Box(Modifier.weight(1f)) {
                 when (route) {
                     Routes.SEARCH -> if (store != null) {
-                        SearchScreen(store, initialQuery = initialSearch, focusKey = searchFocus, openFirst = initialSearchOpen)
+                        SearchScreen(
+                            store,
+                            initialQuery = initialSearch,
+                            focusKey = searchFocus,
+                            openFirst = initialSearchOpen,
+                            onAdd = { title ->
+                                addTitle = title
+                                navigator.navigate(Routes.ADD)
+                            },
+                        )
                     } else {
                         MessageScreen(
                             title = stringResource(R.string.placeholder_search_title),
@@ -138,6 +158,9 @@ fun AppShell(
                         pageTitle = spec.item(route)?.label,
                         description = stringResource(R.string.placeholder_shelves_text),
                     )
+                    Routes.ADD -> if (store != null) {
+                        AddBookScreen(store, settings, initialTitle = addTitle, focusKey = addFocus)
+                    }
                     Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty(), store, settings, picker)
                 }
             }

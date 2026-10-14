@@ -135,4 +135,40 @@
     <string name="landed_loose_edit">“%1$s” satırı bu arada değişmişti; yalnızca değiştirdiğiniz alanlar uygulandı.</string>
     <string name="landed_added_instead">“%1$s” dosyada artık yoktu; yeni satır olarak eklendi.</string>
     <string name="landed_already_gone">“%1$s” zaten silinmişti.</string>
+
+    <!-- kitap ekleme (S-17) -->
+    <string name="nav_add">Ekle</string>
+    <string name="shortcut_add">Kitap ekle</string>
+    <string name="add_title">Kitap ekle</string>
+    <string name="add_field_title">Kitap adı</string>
+    <string name="add_field_author">Yazar</string>
+    <string name="add_field_owner">Kimin</string>
+    <string name="add_field_shelf">Raf</string>
+    <string name="add_field_copies">Adet</string>
+    <string name="add_field_signed">İmzalı</string>
+    <string name="add_field_publisher">Yayınevi</string>
+    <string name="add_field_year">Yıl</string>
+    <string name="add_field_isbn">ISBN</string>
+    <string name="add_field_note">Not</string>
+    <string name="add_more">Diğer bilgiler</string>
+    <string name="add_yes">Evet</string>
+    <string name="add_no">Hayır</string>
+    <string name="add_save">Kaydet</string>
+    <string name="add_clear">Temizle</string>
+    <string name="add_need_title">Kitap adını yazın.</string>
+    <string name="add_bad_copies">Adet 1 ya da daha büyük bir sayı olmalı.</string>
+    <string name="list_in_dad">Babam\'ın listesinde</string>
+    <string name="list_in_me">Benim listemde</string>
+    <string name="list_to_dad">Babam\'ın listesine</string>
+    <string name="list_to_me">Benim listeme</string>
+    <string name="add_exists">Bu kitap zaten %1$s: %2$s.</string>
+    <string name="add_exists_shelf">Raf %1$s</string>
+    <string name="add_exists_no_shelf">raf yazılmamış</string>
+    <string name="add_one_more">Bir kopya daha ekle</string>
+    <string name="add_cancel">Vazgeç</string>
+    <string name="add_other_confirm">Bu kitabı %1$s ekliyorsunuz; o liste öteki kişinin. Eklensin mi?</string>
+    <string name="add_confirm">Evet, ekle</string>
+    <string name="add_done">“%1$s” %2$s eklendi.</string>
+    <string name="add_keys_save">kaydet</string>
+    <string name="add_keys_next">sonraki alan</string>
 </resources>

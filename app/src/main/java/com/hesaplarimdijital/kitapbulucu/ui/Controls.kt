@@ -31,6 +31,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -118,5 +124,78 @@ fun NoticeCard(
             Text(text, style = DeskTheme.type.body, color = colors.textSecondary)
             Row(horizontalArrangement = Arrangement.spacedBy(dimens.gapS)) { actions() }
         }
+    }
+}
+
+/**
+ * A labelled one-line text field in the kit's look. Tab and Shift+Tab move between fields,
+ * Enter runs [onEnter] (the form's save).
+ */
+@Composable
+fun FormField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    focusRequester: androidx.compose.ui.focus.FocusRequester? = null,
+    keyboardType: androidx.compose.ui.text.input.KeyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
+    capitalization: androidx.compose.ui.text.input.KeyboardCapitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences,
+    monospace: Boolean = false,
+    error: Boolean = false,
+    onEnter: () -> Unit = {},
+) {
+    val colors = DeskTheme.colors
+    val dimens = DeskTheme.dimens
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(dimens.radiusControl)
+    val touch = DeskTheme.inputMode == desktopkit.theme.InputMode.Touch
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, style = DeskTheme.type.label, color = if (error) colors.danger else colors.textSecondary)
+        androidx.compose.foundation.text.BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            textStyle = DeskTheme.type.body.copy(
+                color = colors.text,
+                fontFamily = if (monospace) DeskTheme.type.mono.fontFamily else DeskTheme.type.body.fontFamily,
+            ),
+            cursorBrush = androidx.compose.ui.graphics.SolidColor(colors.accent),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = keyboardType,
+                capitalization = capitalization,
+                imeAction = androidx.compose.ui.text.input.ImeAction.Next,
+            ),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onNext = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Next) }),
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                .onFocusChanged { focused = it.isFocused }
+                .onPreviewKeyEvent { event ->
+                    if (event.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                    when (event.key) {
+                        androidx.compose.ui.input.key.Key.Tab -> {
+                            focusManager.moveFocus(if (event.isShiftPressed) androidx.compose.ui.focus.FocusDirection.Previous else androidx.compose.ui.focus.FocusDirection.Next)
+                            true
+                        }
+                        androidx.compose.ui.input.key.Key.Enter, androidx.compose.ui.input.key.Key.NumPadEnter -> {
+                            onEnter()
+                            true
+                        }
+                        else -> false
+                    }
+                },
+            decorationBox = { inner ->
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = if (touch) 48.dp else 36.dp)
+                        .background(colors.surfaceRaised, shape)
+                        .border(if (focused) 2.dp else 1.dp, if (focused) colors.accent else if (error) colors.danger else colors.borderStrong, shape)
+                        .padding(horizontal = dimens.gapM, vertical = 8.dp),
+                    contentAlignment = Alignment.CenterStart,
+                ) { inner() }
+            },
+        )
     }
 }

@@ -136,4 +136,40 @@
     <string name="landed_loose_edit">“%1$s” had changed in the meantime; only the fields you edited were applied.</string>
     <string name="landed_added_instead">“%1$s” was not in the file any more; it was added as a new row.</string>
     <string name="landed_already_gone">“%1$s” had already been removed.</string>
+
+    <!-- adding books (S-17) -->
+    <string name="nav_add">Add</string>
+    <string name="shortcut_add">Add book</string>
+    <string name="add_title">Add book</string>
+    <string name="add_field_title">Title</string>
+    <string name="add_field_author">Author</string>
+    <string name="add_field_owner">Whose</string>
+    <string name="add_field_shelf">Shelf</string>
+    <string name="add_field_copies">Copies</string>
+    <string name="add_field_signed">Signed</string>
+    <string name="add_field_publisher">Publisher</string>
+    <string name="add_field_year">Year</string>
+    <string name="add_field_isbn">ISBN</string>
+    <string name="add_field_note">Note</string>
+    <string name="add_more">More details</string>
+    <string name="add_yes">Yes</string>
+    <string name="add_no">No</string>
+    <string name="add_save">Save</string>
+    <string name="add_clear">Clear</string>
+    <string name="add_need_title">Write the title.</string>
+    <string name="add_bad_copies">Copies must be a number of 1 or more.</string>
+    <string name="list_in_dad">in Babam\'s list</string>
+    <string name="list_in_me">in my list</string>
+    <string name="list_to_dad">to Babam\'s list</string>
+    <string name="list_to_me">to my list</string>
+    <string name="add_exists">This book is already %1$s: %2$s.</string>
+    <string name="add_exists_shelf">shelf %1$s</string>
+    <string name="add_exists_no_shelf">shelf not written</string>
+    <string name="add_one_more">Add one more copy</string>
+    <string name="add_cancel">Cancel</string>
+    <string name="add_other_confirm">You are adding this book %1$s, which belongs to the other person. Add it?</string>
+    <string name="add_confirm">Yes, add</string>
+    <string name="add_done">“%1$s” was added %2$s.</string>
+    <string name="add_keys_save">save</string>
+    <string name="add_keys_next">next field</string>
 </resources>
