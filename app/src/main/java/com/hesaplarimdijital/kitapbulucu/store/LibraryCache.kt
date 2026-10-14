@@ -10,7 +10,7 @@ import java.security.MessageDigest
  * screen the moment the app opens, before Drive answers. Next to each copy a small note says
  * when it was read and when its content was last seen to change.
  */
-class LibraryCache(private val dir: File) {
+class LibraryCache(val dir: File) {
 
     class Meta(
         val hash: String,

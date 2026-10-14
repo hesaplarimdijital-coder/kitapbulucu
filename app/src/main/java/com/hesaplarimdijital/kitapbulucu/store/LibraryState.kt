@@ -40,6 +40,10 @@ data class LibraryState(
     val problems: List<BookTable.Problem> = emptyList(),
     /** Names of the filled sheets, when the workbook has more than one. */
     val sheetNames: List<String> = emptyList(),
+    /** Changes shown in [table] but not yet written to the file. */
+    val pendingChanges: Int = 0,
+    /** Why the last write failed; the changes stay pending and are tried again. */
+    val writeFailure: WriteFailure? = null,
 ) {
     val isLinked: Boolean get() = status != LoadStatus.NOT_LINKED
     val bookCount: Int get() = table?.books?.size ?: 0
@@ -47,6 +51,34 @@ data class LibraryState(
     companion object {
         fun notLinked(owner: Owner) = LibraryState(owner, LoadStatus.NOT_LINKED)
     }
+}
+
+/** Why pending changes could not be written (ARCHITECTURE 7); each is tried again on the next refresh. */
+enum class WriteFailure {
+    /** The file could not be read before writing; [LibraryState.failure] says why. */
+    CANNOT_READ,
+    /** The linked file is not an .xlsx workbook; the app does not write .csv or .xls. */
+    NOT_XLSX,
+    /** The new workbook did not read back as intended; nothing was written. */
+    VERIFY,
+    /** The backup could not be saved; nothing was written. */
+    BACKUP,
+    NO_PERMISSION,
+    CANNOT_WRITE,
+    /** The document did not read back as what was written. */
+    READ_BACK,
+}
+
+/** Something about writing the user should see once; dismissed by hand. */
+sealed class StoreNotice {
+    /** Before the first write ever: Excel's colours and formats are not kept. */
+    object FirstWrite : StoreNotice()
+
+    /** The workbook has other filled sheets; they were carried along as plain text. */
+    data class OtherSheetsKept(val owner: Owner, val names: List<String>) : StoreNotice()
+
+    /** Changes that did not land exactly as made (merged, matched loosely, already gone). */
+    data class ChangesLanded(val owner: Owner, val notes: List<ChangeApplier.Note>) : StoreNotice()
 }
 
 /** The first rows of each filled sheet of a file and the sheet being read. */

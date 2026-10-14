@@ -22,6 +22,8 @@ import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.store.LoadFailure
 import com.hesaplarimdijital.kitapbulucu.store.LoadStatus
+import com.hesaplarimdijital.kitapbulucu.store.StoreNotice
+import com.hesaplarimdijital.kitapbulucu.store.WriteFailure
 import com.hesaplarimdijital.kitapbulucu.ui.search.SearchScreen
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
@@ -147,13 +149,45 @@ private fun LibraryNotices(store: LibraryStore, picker: FilePicker, onMap: (Owne
     val resources = LocalContext.current.resources
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
+    val notices by store.notices.collectAsState()
     val failed = Owner.entries.map { states.getValue(it) }.filter { it.status == LoadStatus.FAILED }
+    val unwritten = Owner.entries.map { states.getValue(it) }.filter { it.writeFailure != null && it.pendingChanges > 0 }
     val stray = warning
-    if (failed.isEmpty() && stray == null) return
+    if (failed.isEmpty() && unwritten.isEmpty() && stray == null && notices.isEmpty()) return
     Column(
         Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding, vertical = dimens.gapS),
         verticalArrangement = Arrangement.spacedBy(dimens.gapS),
     ) {
+        for (state in unwritten) {
+            NoticeCard(
+                title = stringResource(R.string.write_failed_title, LibraryTexts.listName(resources, state.owner), state.pendingChanges),
+                text = LibraryTexts.writeFailure(resources, state.writeFailure!!) + " " + stringResource(R.string.write_retry_note),
+                tone = colors.danger,
+            ) {
+                DeskButton(stringResource(R.string.action_retry), store::refresh, primary = true)
+                if (state.writeFailure == WriteFailure.NOT_XLSX || state.writeFailure == WriteFailure.NO_PERMISSION) {
+                    DeskButton(stringResource(R.string.action_choose_other_file), { picker.pick(state.owner) })
+                }
+            }
+        }
+        for (notice in notices) {
+            when (notice) {
+                StoreNotice.FirstWrite -> NoticeCard(
+                    title = stringResource(R.string.notice_first_write_title),
+                    text = stringResource(R.string.notice_first_write_text),
+                ) { DeskButton(stringResource(R.string.action_understood), { store.dismiss(notice) }) }
+                is StoreNotice.OtherSheetsKept -> NoticeCard(
+                    title = stringResource(R.string.notice_other_sheets_title, LibraryTexts.listName(resources, notice.owner)),
+                    text = stringResource(R.string.notice_other_sheets_text, notice.names.joinToString(", ")),
+                    tone = colors.warning,
+                ) { DeskButton(stringResource(R.string.action_understood), { store.dismiss(notice) }) }
+                is StoreNotice.ChangesLanded -> NoticeCard(
+                    title = stringResource(R.string.notice_changes_landed_title),
+                    text = notice.notes.joinToString("\n") { LibraryTexts.landed(resources, it) },
+                    tone = colors.warning,
+                ) { DeskButton(stringResource(R.string.action_understood), { store.dismiss(notice) }) }
+            }
+        }
         for (state in failed) {
             NoticeCard(
                 title = LibraryTexts.listName(resources, state.owner),

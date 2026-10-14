@@ -11,6 +11,9 @@ class FakeDocuments : Documents {
     var children = listOf<String>()
     var reads = 0
     var writeFailure: DocumentFailure? = null
+    /** When set, a write stores a cut-off copy, as a provider that lost bytes would. */
+    var corruptWrites = false
+    var writes = 0
 
     override fun info(uri: Uri): DocumentInfo? = infos[uri]
 
@@ -24,7 +27,8 @@ class FakeDocuments : Documents {
 
     override fun writeBytes(uri: Uri, bytes: ByteArray) {
         writeFailure?.let { throw DocumentException(it, "test failure") }
-        this.bytes[uri] = bytes
+        writes++
+        this.bytes[uri] = if (corruptWrites) bytes.copyOf(bytes.size / 2) else bytes
     }
 
     override fun keepPermission(uri: Uri): Boolean {

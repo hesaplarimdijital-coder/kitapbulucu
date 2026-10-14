@@ -16,7 +16,22 @@ class SheetSpec(
     val rows: List<List<String>>,
     val numericColumns: Set<Int> = emptySet(),
     val columnWidths: List<Double> = emptyList(),
-)
+) {
+    companion object {
+        /**
+         * A sheet the app does not own, carried along as it was read: every cell as text, the
+         * first row not treated as a header. Colours and formulas are not kept.
+         */
+        fun plain(name: String, rows: List<List<String>>): SheetSpec {
+            val width = rows.maxOfOrNull { it.size }?.coerceAtLeast(1) ?: 1
+            return SheetSpec(name, List(width) { "" }, rows, columnWidths = emptyList()).also { it.plain = true }
+        }
+    }
+
+    /** True for [plain] sheets: no bold header row, no frozen pane; the header list only sets the width. */
+    var plain: Boolean = false
+        private set
+}
 
 /**
  * Writes an .xlsx workbook with nothing but java.util.zip: inline strings, a bold frozen header
@@ -112,13 +127,18 @@ object XlsxWriter {
     private fun worksheet(sheet: SheetSpec): String {
         val columnCount = sheet.header.size
         require(columnCount > 0) { "Sheet ${sheet.name} has no columns" }
-        val lastRow = sheet.rows.size + 1
+        val firstDataRow = if (sheet.plain) 1 else 2
+        val lastRow = (sheet.rows.size + firstDataRow - 1).coerceAtLeast(1)
         val sb = StringBuilder(64 + sheet.rows.size * columnCount * 48)
         sb.append(XML_HEADER)
         sb.append("""<worksheet xmlns="$NS" xmlns:r="$REL">""")
         sb.append("""<dimension ref="A1:${CellReferences.columnName(columnCount - 1)}$lastRow"/>""")
-        // the header row stays visible while scrolling
-        sb.append("""<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView></sheetViews>""")
+        if (sheet.plain) {
+            sb.append("""<sheetViews><sheetView workbookViewId="0"/></sheetViews>""")
+        } else {
+            // the header row stays visible while scrolling
+            sb.append("""<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView></sheetViews>""")
+        }
         sb.append("""<sheetFormatPr defaultRowHeight="15"/>""")
         sb.append("<cols>")
         for (column in 0 until columnCount) {
@@ -129,11 +149,13 @@ object XlsxWriter {
         }
         sb.append("</cols>")
         sb.append("<sheetData>")
-        sb.append("""<row r="1">""")
-        sheet.header.forEachIndexed { column, text -> appendTextCell(sb, 1, column, text, STYLE_HEADER) }
-        sb.append("</row>")
+        if (!sheet.plain) {
+            sb.append("""<row r="1">""")
+            sheet.header.forEachIndexed { column, text -> appendTextCell(sb, 1, column, text, STYLE_HEADER) }
+            sb.append("</row>")
+        }
         sheet.rows.forEachIndexed { index, row ->
-            val rowNumber = index + 2
+            val rowNumber = index + firstDataRow
             sb.append("""<row r="$rowNumber">""")
             for (column in 0 until columnCount) {
                 val text = row.getOrNull(column).orEmpty()

@@ -112,4 +112,25 @@
     <string name="search_loading">Listeler okunuyor…</string>
     <string name="search_keys_move">sonuçlarda gez</string>
     <string name="search_keys_clear">temizle</string>
+
+    <!-- yazma (S-15) -->
+    <string name="write_failed_title">%1$s: %2$d değişiklik yazılamadı</string>
+    <string name="write_failure_cannot_read">Dosya yazmadan önce okunamadı.</string>
+    <string name="write_failure_not_xlsx">Bu dosya .xlsx değil; uygulama .csv ve .xls dosyalarına yazmaz. Excel\'de .xlsx olarak kaydedip o dosyayı seçin.</string>
+    <string name="write_failure_verify">Yeni içerik doğrulanamadı; dosyaya dokunulmadı.</string>
+    <string name="write_failure_backup">Yedek alınamadı; dosyaya dokunulmadı.</string>
+    <string name="write_failure_no_permission">Dosyaya yazma izni yok.</string>
+    <string name="write_failure_cannot_write">Dosyaya yazılamadı.</string>
+    <string name="write_failure_read_back">Yazılan dosya geri okununca aynı çıkmadı. Drive\'daki dosyayı kontrol edin; değişiklikler bekliyor.</string>
+    <string name="write_retry_note">Hiçbir şey kaybolmadı: uygulama öne gelince ve F5\'te yeniden dener.</string>
+    <string name="pending_changes">%1$d değişiklik yazılmayı bekliyor</string>
+    <string name="notice_first_write_title">Dosya yeniden yazılacak</string>
+    <string name="notice_first_write_text">Uygulama her değişiklikte Excel dosyasını baştan yazar. Excel\'de elle verilmiş renk, yazı biçimi ve formüller korunmaz; kitaplar ve bütün sütunlar korunur.</string>
+    <string name="notice_other_sheets_title">%1$s dosyasında başka sayfalar var</string>
+    <string name="notice_other_sheets_text">Şu sayfalar yalnızca metin olarak taşındı: %1$s. Renkleri ve formülleri korunmaz.</string>
+    <string name="notice_changes_landed_title">Bazı değişiklikler farklı uygulandı</string>
+    <string name="landed_merged">“%1$s” zaten vardı; adedi artırıldı.</string>
+    <string name="landed_loose_edit">“%1$s” satırı bu arada değişmişti; yalnızca değiştirdiğiniz alanlar uygulandı.</string>
+    <string name="landed_added_instead">“%1$s” dosyada artık yoktu; yeni satır olarak eklendi.</string>
+    <string name="landed_already_gone">“%1$s” zaten silinmişti.</string>
 </resources>

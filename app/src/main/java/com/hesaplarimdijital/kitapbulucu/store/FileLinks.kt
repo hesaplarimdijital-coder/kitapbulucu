@@ -44,6 +44,13 @@ class FileLinks(private val prefs: SharedPreferences) {
             prefs.edit().apply { if (value == null) remove(KEY_TREE) else putString(KEY_TREE, value.toString()) }.apply()
         }
 
+    /** Whether the one-time "colours and formats are not kept" notice has been shown. */
+    var formatNoticeShown: Boolean
+        get() = prefs.getBoolean(KEY_FORMAT_NOTICE, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_FORMAT_NOTICE, value).apply()
+        }
+
     /** Names of stray files (lock files, conflicted copies) the user has already been told about. */
     var warnedFileNames: Set<String>
         get() = prefs.getStringSet(KEY_WARNED, null)?.toSet().orEmpty()
@@ -60,6 +67,7 @@ class FileLinks(private val prefs: SharedPreferences) {
         const val FILE = "files"
         private const val KEY_TREE = "tree_uri"
         private const val KEY_WARNED = "warned_names"
+        private const val KEY_FORMAT_NOTICE = "format_notice_shown"
 
         fun of(context: Context): FileLinks = FileLinks(context.getSharedPreferences(FILE, Context.MODE_PRIVATE))
     }

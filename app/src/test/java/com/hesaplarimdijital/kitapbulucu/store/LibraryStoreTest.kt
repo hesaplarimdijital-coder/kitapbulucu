@@ -266,4 +266,192 @@ class LibraryStoreTest {
         assertTrue(state.table!!.books.none { it.title == "KİTAP" })
         assertNotNull(store.mapping(Owner.DAD))
     }
+
+    // ------------------------------------------------------------------ writing (S-15)
+
+    private val karTanesi = Book("Kar Tanesi", "Orhan Pamir", "B4")
+
+    private fun fileBooks(uri: Uri = dadUri): List<Book> =
+        BookTable.parse(XlsxReader.read(documents.bytes.getValue(uri).inputStream()).sheets.first())!!.table.books
+
+    @Test
+    fun writesAnAddedBookAfterRereadingTheFile() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        val store = store()
+        store.start()
+        now += 60_000
+        store.submit(Change.Add(Owner.DAD, Book("  Kar   Tanesi ", "Orhan Pamir ", "B4")))
+        val state = store.state(Owner.DAD)
+        assertEquals(LoadStatus.READY, state.status)
+        assertEquals(0, state.pendingChanges)
+        assertNull(state.writeFailure)
+        assertEquals(dadBooks.toList() + karTanesi, state.table!!.books) // tidied on the way in
+        assertEquals(dadBooks.toList() + karTanesi, fileBooks())
+        assertEquals(1, documents.writes)
+        assertEquals(1, store.backups(Owner.DAD).size)
+        assertEquals(dadBooks.toList(), BookTable.parse(XlsxReader.read(store.backups(Owner.DAD).single().file.readBytes().inputStream()).sheets.first())!!.table.books)
+        assertEquals(now, state.updatedAt)
+        assertEquals(1, store.index.value!!.search("kar tanesi").size)
+        assertEquals(dadBooks.toList() + karTanesi, BookTable.parse(XlsxReader.read(cache().load(Owner.DAD)!!.bytes.inputStream()).sheets.first())!!.table.books)
+        assertEquals(listOf(StoreNotice.FirstWrite), store.notices.value)
+        store.dismiss(StoreNotice.FirstWrite)
+        store.submit(Change.Add(Owner.DAD, Book("Sessiz Harita", "Leyla Umut")))
+        assertEquals(emptyList<StoreNotice>(), store.notices.value) // the format notice shows once
+        assertEquals(2, store.backups(Owner.DAD).size)
+    }
+
+    @Test
+    fun whatOthersWroteInTheMeantimeSurvives() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        val store = store()
+        store.start()
+        // Excel on another device adds a row and fixes a shelf before the app writes
+        val external = Book("Sessiz Harita", "Leyla Umut", "E1")
+        documents.bytes[dadUri] = workbook(dadBooks[0].copy(shelf = "A9"), dadBooks[1], external)
+        store.submit(Change.Add(Owner.DAD, karTanesi))
+        assertEquals(listOf(dadBooks[0].copy(shelf = "A9"), dadBooks[1], external, karTanesi), fileBooks())
+        assertEquals(listOf(dadBooks[0].copy(shelf = "A9"), dadBooks[1], external, karTanesi), store.state(Owner.DAD).table!!.books)
+        assertEquals(emptyList<StoreNotice>(), store.notices.value.filterIsInstance<StoreNotice.ChangesLanded>())
+    }
+
+    @Test
+    fun aFailedWriteKeepsTheChangeShownAndPending() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        val store = store()
+        store.start()
+        documents.writeFailure = DocumentFailure.NO_PERMISSION
+        store.submit(Change.Add(Owner.DAD, karTanesi))
+        val failed = store.state(Owner.DAD)
+        assertEquals(WriteFailure.NO_PERMISSION, failed.writeFailure)
+        assertEquals(1, failed.pendingChanges)
+        assertEquals(LoadStatus.READY, failed.status)
+        assertEquals(dadBooks.toList() + karTanesi, failed.table!!.books) // shown as if written
+        assertEquals(dadBooks.toList(), fileBooks())                     // but the file is untouched
+        assertEquals(1, store.backups(Owner.DAD).size)                   // the backup was taken before the attempt
+        assertEquals(1, store.pendingChanges(Owner.DAD).size)
+
+        documents.writeFailure = null
+        store.refresh() // the next foreground or F5
+        val written = store.state(Owner.DAD)
+        assertNull(written.writeFailure)
+        assertEquals(0, written.pendingChanges)
+        assertEquals(dadBooks.toList() + karTanesi, fileBooks())
+    }
+
+    @Test
+    fun pendingChangesSurviveARestartOfTheApp() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        documents.writeFailure = DocumentFailure.IO
+        store().apply {
+            start()
+            submit(Change.Add(Owner.DAD, karTanesi))
+            assertEquals(WriteFailure.CANNOT_WRITE, state(Owner.DAD).writeFailure)
+        }
+        documents.writeFailure = null
+        val restarted = store()
+        restarted.start()
+        assertEquals(0, restarted.state(Owner.DAD).pendingChanges)
+        assertEquals(dadBooks.toList() + karTanesi, fileBooks())
+        assertEquals(dadBooks.toList() + karTanesi, restarted.state(Owner.DAD).table!!.books)
+    }
+
+    @Test
+    fun aDocumentThatReadsBackWrongIsReported() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        val store = store()
+        store.start()
+        documents.corruptWrites = true
+        store.submit(Change.Add(Owner.DAD, karTanesi))
+        assertEquals(WriteFailure.READ_BACK, store.state(Owner.DAD).writeFailure)
+        assertEquals(1, store.state(Owner.DAD).pendingChanges)
+        assertEquals(1, store.backups(Owner.DAD).size)
+        assertEquals(dadBooks.toList(), BookTable.parse(XlsxReader.read(store.backups(Owner.DAD).single().file.readBytes().inputStream()).sheets.first())!!.table.books)
+    }
+
+    @Test
+    fun otherSheetsAreCarriedAlongAsText() {
+        links().set(Owner.ME, meUri, "Benim.xlsx")
+        documents.bytes[meUri] = XlsxWriter.write(
+            listOf(
+                BookTable(listOf(dadBooks[0])).toSheetSpec("Benim"),
+                SheetSpec("Notlar", listOf("Not", "Tarih"), listOf(listOf("Ödünç verdim", "Nis.53"), listOf("", "3-4"))),
+            ),
+        )
+        val store = store()
+        store.start()
+        assertEquals(listOf("Benim", "Notlar"), store.state(Owner.ME).sheetNames)
+        store.submit(Change.Add(Owner.ME, karTanesi))
+        assertEquals(LoadStatus.READY, store.state(Owner.ME).status)
+        assertNull(store.state(Owner.ME).writeFailure)
+        val written = XlsxReader.read(documents.bytes.getValue(meUri).inputStream())
+        assertEquals(listOf("Benim", "Notlar"), written.sheets.map { it.name })
+        assertEquals(listOf(dadBooks[0], karTanesi), BookTable.parse(written.sheets[0])!!.table.books)
+        assertEquals(listOf(listOf("Not", "Tarih"), listOf("Ödünç verdim", "Nis.53"), listOf("", "3-4")), written.sheets[1].rows)
+        assertTrue(store.notices.value.contains(StoreNotice.OtherSheetsKept(Owner.ME, listOf("Notlar"))))
+        store.submit(Change.Add(Owner.ME, Book("Sessiz Harita", "Leyla Umut")))
+        assertEquals(1, store.notices.value.count { it is StoreNotice.OtherSheetsKept }) // warned once
+    }
+
+    @Test
+    fun refusesToWriteATextFile() {
+        links().set(Owner.DAD, dadUri, "Babam.csv")
+        documents.bytes[dadUri] = "Kitap Adı;Yazar;Raf\nSefil Fenerciler;Halit Oruç;A1\n".toByteArray()
+        val store = store()
+        store.start()
+        assertEquals(1, store.state(Owner.DAD).bookCount)
+        store.submit(Change.Add(Owner.DAD, karTanesi))
+        assertEquals(WriteFailure.NOT_XLSX, store.state(Owner.DAD).writeFailure)
+        assertEquals(1, store.state(Owner.DAD).pendingChanges)
+        assertEquals(0, documents.writes)
+        assertEquals(0, store.backups(Owner.DAD).size)
+    }
+
+    @Test
+    fun changesThatLandDifferentlyAreReported() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        val store = store()
+        store.start()
+        store.submit(Change.Add(Owner.DAD, Book("sefil fenerciler", "Halit Oruç", "Z9")))
+        store.submit(Change.Remove(Owner.DAD, karTanesi))
+        assertEquals(listOf(dadBooks[0].copy(copies = 3), dadBooks[1]), fileBooks())
+        val landed = store.notices.value.filterIsInstance<StoreNotice.ChangesLanded>()
+        assertEquals(listOf(ChangeApplier.Outcome.MERGED_INTO_EXISTING, ChangeApplier.Outcome.ALREADY_GONE), landed.flatMap { it.notes }.map { it.outcome })
+    }
+
+    @Test
+    fun anEmptyDocumentGetsHeadersWithTheFirstBook() {
+        links().set(Owner.ME, meUri, "Benim.xlsx")
+        documents.bytes[meUri] = ByteArray(0)
+        val store = store()
+        store.start()
+        assertEquals(LoadStatus.FAILED, store.state(Owner.ME).status)
+        store.submit(Change.Add(Owner.ME, karTanesi))
+        val state = store.state(Owner.ME)
+        assertEquals(LoadStatus.READY, state.status)
+        assertNull(state.writeFailure)
+        assertEquals(listOf(karTanesi), state.table!!.books)
+        val written = XlsxReader.read(documents.bytes.getValue(meUri).inputStream()).sheets.single()
+        assertEquals("Benim", written.name)
+        assertEquals(BookTable.HEADERS, written.rows[0])
+    }
+
+    @Test
+    fun editsAndRemovalsReachTheFile() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        val store = store()
+        store.start()
+        store.submit(Change.Edit(Owner.DAD, dadBooks[0], dadBooks[0].copy(shelf = "B7", note = "Yeni not")))
+        assertEquals(listOf(dadBooks[0].copy(shelf = "B7", note = "Yeni not"), dadBooks[1]), fileBooks())
+        store.submit(Change.Remove(Owner.DAD, dadBooks[1]))
+        assertEquals(listOf(dadBooks[0].copy(shelf = "B7", note = "Yeni not")), fileBooks())
+        assertEquals(1, store.state(Owner.DAD).bookCount)
+        assertEquals(2, store.backups(Owner.DAD).size)
+    }
 }

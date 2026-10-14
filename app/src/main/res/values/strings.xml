@@ -113,4 +113,25 @@
     <string name="search_loading">Reading the lists…</string>
     <string name="search_keys_move">move through results</string>
     <string name="search_keys_clear">clear</string>
+
+    <!-- writing (S-15) -->
+    <string name="write_failed_title">%1$s: %2$d changes could not be written</string>
+    <string name="write_failure_cannot_read">The file could not be read before writing.</string>
+    <string name="write_failure_not_xlsx">This file is not .xlsx; the app does not write .csv or .xls files. Save it as .xlsx in Excel and choose that file.</string>
+    <string name="write_failure_verify">The new content could not be verified; the file was left untouched.</string>
+    <string name="write_failure_backup">The backup could not be saved; the file was left untouched.</string>
+    <string name="write_failure_no_permission">No permission to write to the file.</string>
+    <string name="write_failure_cannot_write">The file could not be written.</string>
+    <string name="write_failure_read_back">The file did not read back as written. Check it in Drive; the changes are still waiting.</string>
+    <string name="write_retry_note">Nothing is lost: the app tries again when it comes to the front and on F5.</string>
+    <string name="pending_changes">%1$d changes waiting to be written</string>
+    <string name="notice_first_write_title">The file will be rewritten</string>
+    <string name="notice_first_write_text">On every change the app writes the Excel file afresh. Colours, fonts and formulas set by hand in Excel are not kept; the books and every column are.</string>
+    <string name="notice_other_sheets_title">%1$s has other sheets</string>
+    <string name="notice_other_sheets_text">These sheets were carried along as plain text: %1$s. Their colours and formulas are not kept.</string>
+    <string name="notice_changes_landed_title">Some changes landed differently</string>
+    <string name="landed_merged">“%1$s” was already there; its count was raised.</string>
+    <string name="landed_loose_edit">“%1$s” had changed in the meantime; only the fields you edited were applied.</string>
+    <string name="landed_added_instead">“%1$s” was not in the file any more; it was added as a new row.</string>
+    <string name="landed_already_gone">“%1$s” had already been removed.</string>
 </resources>

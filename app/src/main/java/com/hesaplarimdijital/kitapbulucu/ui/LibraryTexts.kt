@@ -3,10 +3,13 @@ package com.hesaplarimdijital.kitapbulucu.ui
 import android.content.res.Resources
 import com.hesaplarimdijital.kitapbulucu.R
 import com.hesaplarimdijital.kitapbulucu.model.Owner
+import com.hesaplarimdijital.kitapbulucu.store.Change
+import com.hesaplarimdijital.kitapbulucu.store.ChangeApplier
 import com.hesaplarimdijital.kitapbulucu.store.LibraryState
 import com.hesaplarimdijital.kitapbulucu.store.LoadFailure
 import com.hesaplarimdijital.kitapbulucu.store.LoadStatus
 import com.hesaplarimdijital.kitapbulucu.store.RelativeTime
+import com.hesaplarimdijital.kitapbulucu.store.WriteFailure
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
@@ -58,6 +61,34 @@ object LibraryTexts {
             LoadFailure.NO_HEADER -> R.string.failure_no_header
         },
     )
+
+    fun writeFailure(resources: Resources, failure: WriteFailure): String = resources.getString(
+        when (failure) {
+            WriteFailure.CANNOT_READ -> R.string.write_failure_cannot_read
+            WriteFailure.NOT_XLSX -> R.string.write_failure_not_xlsx
+            WriteFailure.VERIFY -> R.string.write_failure_verify
+            WriteFailure.BACKUP -> R.string.write_failure_backup
+            WriteFailure.NO_PERMISSION -> R.string.write_failure_no_permission
+            WriteFailure.CANNOT_WRITE -> R.string.write_failure_cannot_write
+            WriteFailure.READ_BACK -> R.string.write_failure_read_back
+        },
+    )
+
+    /** One line per change that did not land exactly as made. */
+    fun landed(resources: Resources, note: ChangeApplier.Note): String {
+        val title = when (val change = note.change) {
+            is Change.Add -> change.book.title
+            is Change.Edit -> change.after.title
+            is Change.Remove -> change.before.title
+        }
+        return when (note.outcome) {
+            ChangeApplier.Outcome.MERGED_INTO_EXISTING -> resources.getString(R.string.landed_merged, title)
+            ChangeApplier.Outcome.EDITED_LOOSE_MATCH -> resources.getString(R.string.landed_loose_edit, title)
+            ChangeApplier.Outcome.ADDED_INSTEAD_OF_EDIT -> resources.getString(R.string.landed_added_instead, title)
+            ChangeApplier.Outcome.ALREADY_GONE -> resources.getString(R.string.landed_already_gone, title)
+            ChangeApplier.Outcome.APPLIED -> title
+        }
+    }
 
     private fun dateText(at: Long): String = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale("tr", "TR")).format(Date(at))
 }

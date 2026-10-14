@@ -1,13 +1,20 @@
 package com.hesaplarimdijital.kitapbulucu.store
 
 import android.net.Uri
+import com.hesaplarimdijital.kitapbulucu.model.Book
 import com.hesaplarimdijital.kitapbulucu.model.BookTable
 import com.hesaplarimdijital.kitapbulucu.model.ColumnMapping
 import com.hesaplarimdijital.kitapbulucu.model.Owner
 import com.hesaplarimdijital.kitapbulucu.search.SearchIndex
-import com.hesaplarimdijital.kitapbulucu.xlsx.SpreadsheetException
+import com.hesaplarimdijital.kitapbulucu.text.TurkishText
+import com.hesaplarimdijital.kitapbulucu.xlsx.FileKind
+import com.hesaplarimdijital.kitapbulucu.xlsx.FileKinds
 import com.hesaplarimdijital.kitapbulucu.xlsx.Sheet
+import com.hesaplarimdijital.kitapbulucu.xlsx.SheetSpec
+import com.hesaplarimdijital.kitapbulucu.xlsx.SpreadsheetException
 import com.hesaplarimdijital.kitapbulucu.xlsx.SpreadsheetReader
+import com.hesaplarimdijital.kitapbulucu.xlsx.Workbook
+import com.hesaplarimdijital.kitapbulucu.xlsx.XlsxReader
 import com.hesaplarimdijital.kitapbulucu.xlsx.XlsxWriter
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -21,8 +28,10 @@ import kotlinx.coroutines.withContext
 /**
  * The two libraries as the screens see them (ARCHITECTURE 7, 8). [start] shows the cached
  * copies at once and then reads the files; [refresh] reads them again (on every return to the
- * foreground and on F5). A read that finds the same bytes changes nothing on screen; a read
- * that fails keeps the last good list and says why. State changes happen on [scope]'s thread.
+ * foreground and on F5) and writes whatever changes are still pending. A read that finds the
+ * same bytes changes nothing on screen; a read that fails keeps the last good list and says
+ * why. The table a screen sees is the file's table with the pending changes already applied.
+ * State changes happen on [scope]'s thread.
  */
 class LibraryStore(
     private val links: FileLinks,
@@ -31,6 +40,8 @@ class LibraryStore(
     private val scope: CoroutineScope,
     private val io: CoroutineDispatcher = Dispatchers.IO,
     private val clock: () -> Long = System::currentTimeMillis,
+    private val pending: PendingChanges = PendingChanges(cache.dir.resolve("pending.json")),
+    private val backups: Backups = Backups(cache.dir.resolve("backups")),
 ) {
     private val _states = MutableStateFlow(Owner.entries.associateWith { LibraryState.notLinked(it) })
     val states: StateFlow<Map<Owner, LibraryState>> = _states.asStateFlow()
@@ -42,13 +53,20 @@ class LibraryStore(
     private val _warning = MutableStateFlow<StrayFileWarning?>(null)
     val warning: StateFlow<StrayFileWarning?> = _warning.asStateFlow()
 
+    private val _notices = MutableStateFlow<List<StoreNotice>>(emptyList())
+    /** Things the user should know about writing, newest last; each is dismissed by hand. */
+    val notices: StateFlow<List<StoreNotice>> = _notices.asStateFlow()
+
     private val _previews = MutableStateFlow<Map<Owner, WorkbookPreview>>(emptyMap())
     /** The first rows of every filled sheet of each file, for choosing a sheet and mapping columns. */
     val previews: StateFlow<Map<Owner, WorkbookPreview>> = _previews.asStateFlow()
 
     /** Hash of the bytes behind each shown table. */
     private val hashes = HashMap<Owner, String>()
+    /** The table as the file (or its cached copy) holds it, before pending changes. */
+    private val baseTables = HashMap<Owner, BookTable?>()
     private val indexed = HashMap<Owner, BookTable?>()
+    private val otherSheetsWarned = HashSet<Owner>()
     private var refreshing = false
     private var refreshAgain = false
 
@@ -62,10 +80,47 @@ class LibraryStore(
         }
     }
 
-    /** Reads both files again; calls while a read runs are folded into one more pass. */
+    /** Reads both files again and writes pending changes; calls while a pass runs are folded into one more pass. */
     fun refresh() {
         scope.launch { refreshNow() }
     }
+
+    // ------------------------------------------------------------------ changes
+
+    /**
+     * Records what the user did and shows it at once; the file is written right after, or on the
+     * next refresh when that fails. Text fields are tidied the way a read would tidy them, so
+     * the write can be checked against what the file reads back as.
+     */
+    fun submit(change: Change) {
+        val tidy = when (change) {
+            is Change.Add -> change.copy(book = tidy(change.book), at = clock())
+            is Change.Edit -> change.copy(before = change.before, after = tidy(change.after), at = clock())
+            is Change.Remove -> change.copy(at = clock())
+        }
+        pending.add(tidy)
+        if (!links.formatNoticeShown) {
+            links.formatNoticeShown = true
+            notice(StoreNotice.FirstWrite)
+        }
+        refreshShown(change.owner)
+        scope.launch {
+            rebuildIndex()
+            refreshNow()
+        }
+    }
+
+    /** Changes still waiting to be written to [owner]'s file. */
+    fun pendingChanges(owner: Owner): List<Change> = pending.forOwner(owner)
+
+    /** Copies of [owner]'s file taken right before each write, newest first. */
+    fun backups(owner: Owner): List<Backups.Backup> = backups.list(owner)
+
+    fun dismiss(notice: StoreNotice) {
+        _notices.value = _notices.value - notice
+    }
+
+    // ------------------------------------------------------------------ links
 
     fun relink(owner: Owner, uri: Uri, displayName: String?) {
         documents.keepPermission(uri)
@@ -75,7 +130,8 @@ class LibraryStore(
         _previews.value = _previews.value - owner
         cache.clear(owner)
         hashes.remove(owner)
-        update(LibraryState(owner, LoadStatus.LOADING, displayName = displayName))
+        baseTables.remove(owner)
+        update(LibraryState(owner, LoadStatus.LOADING, displayName = displayName, pendingChanges = pending.forOwner(owner).size))
         refresh()
     }
 
@@ -84,7 +140,8 @@ class LibraryStore(
         _previews.value = _previews.value - owner
         cache.clear(owner)
         hashes.remove(owner)
-        update(LibraryState.notLinked(owner))
+        baseTables.remove(owner)
+        update(LibraryState.notLinked(owner).copy(pendingChanges = pending.forOwner(owner).size))
         scope.launch { rebuildIndex() }
     }
 
@@ -146,22 +203,23 @@ class LibraryStore(
             val link = links.link(owner) ?: continue
             val entry = withContext(io) { cache.load(owner) }
             if (entry == null) {
-                update(LibraryState(owner, LoadStatus.LOADING, displayName = link.displayName))
+                update(LibraryState(owner, LoadStatus.LOADING, displayName = link.displayName, pendingChanges = pending.forOwner(owner).size))
                 continue
             }
             when (val parsed = withContext(io) { parse(owner, entry.bytes, entry.meta.displayName ?: link.displayName) }) {
                 is Parsed.Ok -> {
                     hashes[owner] = entry.meta.hash
                     setPreview(owner, parsed.preview)
+                    setBase(owner, parsed.table)
                     update(
                         LibraryState(
-                            owner, LoadStatus.LOADING, parsed.table, fromCache = true, displayName = entry.meta.displayName ?: link.displayName,
+                            owner, LoadStatus.LOADING, shown(owner), fromCache = true, displayName = entry.meta.displayName ?: link.displayName,
                             readAt = entry.meta.readAt, updatedAt = latest(entry.meta.fileModifiedAt, entry.meta.changedAt),
-                            problems = parsed.problems, sheetNames = parsed.sheetNames,
+                            problems = parsed.problems, sheetNames = parsed.sheetNames, pendingChanges = pending.forOwner(owner).size,
                         ),
                     )
                 }
-                is Parsed.Failed -> update(LibraryState(owner, LoadStatus.LOADING, displayName = link.displayName))
+                is Parsed.Failed -> update(LibraryState(owner, LoadStatus.LOADING, displayName = link.displayName, pendingChanges = pending.forOwner(owner).size))
             }
         }
         rebuildIndex()
@@ -176,7 +234,9 @@ class LibraryStore(
         try {
             do {
                 refreshAgain = false
-                for (owner in Owner.entries) read(owner)
+                for (owner in Owner.entries) {
+                    if (pending.forOwner(owner).isNotEmpty() && links.link(owner) != null) write(owner) else read(owner)
+                }
                 scanStrayFiles()
                 rebuildIndex()
             } while (refreshAgain)
@@ -189,7 +249,8 @@ class LibraryStore(
         val link = links.link(owner)
         if (link == null) {
             hashes.remove(owner)
-            update(LibraryState.notLinked(owner))
+            baseTables.remove(owner)
+            update(LibraryState.notLinked(owner).copy(pendingChanges = pending.forOwner(owner).size))
             return
         }
         val before = state(owner)
@@ -219,10 +280,12 @@ class LibraryStore(
                     hashes[owner] = outcome.hash
                     if (displayName != link.displayName && displayName != null) links.set(owner, link.uri, displayName)
                     withContext(io) { cache.save(owner, outcome.bytes, LibraryCache.Meta(outcome.hash, now, changedAt, outcome.info?.lastModified, displayName)) }
+                    setBase(owner, parsed.table)
                     update(
                         LibraryState(
-                            owner, LoadStatus.READY, parsed.table, fromCache = false, displayName = displayName, readAt = now,
+                            owner, LoadStatus.READY, shown(owner), fromCache = false, displayName = displayName, readAt = now,
                             updatedAt = updatedAt, problems = parsed.problems, sheetNames = parsed.sheetNames,
+                            pendingChanges = pending.forOwner(owner).size, writeFailure = current.writeFailure,
                         ),
                     )
                 }
@@ -237,7 +300,7 @@ class LibraryStore(
     }
 
     private sealed class Parsed {
-        class Ok(val table: BookTable, val problems: List<BookTable.Problem>, val sheetNames: List<String>, val preview: WorkbookPreview) : Parsed()
+        class Ok(val table: BookTable, val problems: List<BookTable.Problem>, val sheetNames: List<String>, val preview: WorkbookPreview, val workbook: Workbook, val sheetName: String) : Parsed()
         class Failed(val failure: LoadFailure, val preview: WorkbookPreview? = null) : Parsed()
     }
 
@@ -246,14 +309,7 @@ class LibraryStore(
         val bytes = try {
             documents.readBytes(link.uri)
         } catch (e: DocumentException) {
-            return Fetched.Failed(
-                when (e.failure) {
-                    DocumentFailure.NOT_FOUND -> LoadFailure.NOT_FOUND
-                    DocumentFailure.NO_PERMISSION -> LoadFailure.NO_PERMISSION
-                    DocumentFailure.IO -> LoadFailure.IO
-                    DocumentFailure.TOO_LARGE -> LoadFailure.TOO_LARGE
-                },
-            )
+            return Fetched.Failed(loadFailure(e))
         }
         val info = documents.info(link.uri)
         val hash = LibraryCache.hashOf(bytes)
@@ -282,8 +338,146 @@ class LibraryStore(
             sheets = (filled.ifEmpty { listOf(sheet) }).map { Sheet(it.name, it.rows.take(WorkbookPreview.ROWS)) },
             selected = sheet.name,
         )
+        if (sheet.isEmpty) return Parsed.Ok(BookTable(emptyList()), emptyList(), preview.filledSheetNames, preview, workbook, sheet.name)
         val parsed = BookTable.parse(sheet, links.mapping(owner)) ?: return Parsed.Failed(LoadFailure.NO_HEADER, preview)
-        return Parsed.Ok(parsed.table, parsed.problems, preview.filledSheetNames, preview)
+        return Parsed.Ok(parsed.table, parsed.problems, preview.filledSheetNames, preview, workbook, sheet.name)
+    }
+
+    /** A document with nothing in it yet is an empty list on a sheet named after its owner. */
+    private fun emptyParsed(owner: Owner): Parsed.Ok {
+        val sheet = Sheet(owner.label, emptyList())
+        return Parsed.Ok(BookTable(emptyList()), emptyList(), emptyList(), WorkbookPreview(listOf(sheet), sheet.name), Workbook(listOf(sheet)), sheet.name)
+    }
+
+    // ------------------------------------------------------------------ writing
+
+    private sealed class Written {
+        class Ok(
+            val bytes: ByteArray,
+            val hash: String,
+            val parsed: Parsed.Ok,
+            val info: DocumentInfo?,
+            val applied: ChangeApplier.Result,
+            val otherSheets: List<String>,
+        ) : Written()
+
+        class Failed(val failure: WriteFailure, val detail: LoadFailure? = null) : Written()
+    }
+
+    /**
+     * ARCHITECTURE 7: read the file again, apply the pending changes to what it holds now, build
+     * the new workbook and check it reads back as intended, keep a backup of the old bytes,
+     * write, read the document back and compare. Only then are the changes dropped.
+     */
+    private suspend fun write(owner: Owner) {
+        val link = links.link(owner) ?: return
+        val changes = pending.forOwner(owner)
+        if (changes.isEmpty()) return
+        val before = state(owner)
+        update(before.copy(status = LoadStatus.LOADING, displayName = before.displayName ?: link.displayName, pendingChanges = changes.size))
+        val now = clock()
+        val outcome = withContext(io) { commit(owner, link, changes, now) }
+        when (outcome) {
+            is Written.Failed -> {
+                val current = state(owner)
+                // a file that cannot even be read shows that too
+                val failure = outcome.detail
+                update(
+                    current.copy(
+                        status = if (failure != null) LoadStatus.FAILED else if (current.table != null) LoadStatus.READY else LoadStatus.FAILED,
+                        failure = failure ?: current.failure,
+                        writeFailure = outcome.failure,
+                        pendingChanges = changes.size,
+                    ),
+                )
+            }
+            is Written.Ok -> {
+                pending.remove(changes.map { it.id })
+                val current = state(owner)
+                val displayName = outcome.info?.displayName ?: current.displayName ?: link.displayName
+                hashes[owner] = outcome.hash
+                withContext(io) { cache.save(owner, outcome.bytes, LibraryCache.Meta(outcome.hash, now, now, outcome.info?.lastModified, displayName)) }
+                setPreview(owner, outcome.parsed.preview)
+                setBase(owner, outcome.applied.table)
+                update(
+                    LibraryState(
+                        owner, LoadStatus.READY, shown(owner), fromCache = false, displayName = displayName, readAt = now,
+                        updatedAt = now, problems = outcome.parsed.problems, sheetNames = outcome.parsed.sheetNames,
+                        pendingChanges = pending.forOwner(owner).size, writeFailure = null,
+                    ),
+                )
+                if (outcome.applied.surprises.isNotEmpty()) notice(StoreNotice.ChangesLanded(owner, outcome.applied.surprises))
+                if (outcome.otherSheets.isNotEmpty() && otherSheetsWarned.add(owner)) notice(StoreNotice.OtherSheetsKept(owner, outcome.otherSheets))
+            }
+        }
+    }
+
+    /** On the IO thread. */
+    private fun commit(owner: Owner, link: FileLinks.Link, changes: List<Change>, now: Long): Written {
+        // 1. the file as it is right now
+        val original = try {
+            documents.readBytes(link.uri)
+        } catch (e: DocumentException) {
+            return Written.Failed(WriteFailure.CANNOT_READ, loadFailure(e))
+        }
+        val info = documents.info(link.uri)
+        when (FileKinds.detect(original)) {
+            FileKind.XLSX -> Unit
+            FileKind.XLS, FileKind.CSV -> return Written.Failed(WriteFailure.NOT_XLSX)
+            FileKind.UNKNOWN -> if (original.isNotEmpty()) return Written.Failed(WriteFailure.CANNOT_READ, LoadFailure.DAMAGED)
+        }
+        val parsed = if (original.isEmpty()) {
+            emptyParsed(owner)
+        } else {
+            when (val p = parse(owner, original, info?.displayName ?: link.displayName)) {
+                is Parsed.Ok -> p
+                is Parsed.Failed -> return Written.Failed(WriteFailure.CANNOT_READ, p.failure)
+            }
+        }
+        // 2. the changes on top of that
+        val applied = ChangeApplier.apply(parsed.table, changes)
+        // 3. the new workbook, checked by reading it back before anything is touched
+        val sheets = parsed.workbook.sheets.map { sheet ->
+            if (sheet.name == parsed.sheetName) applied.table.toSheetSpec(sheet.name) else SheetSpec.plain(sheet.name, sheet.rows)
+        }
+        val bytes = XlsxWriter.write(sheets)
+        if (!readsBackAs(bytes, parsed.sheetName, applied.table)) return Written.Failed(WriteFailure.VERIFY)
+        val otherSheets = parsed.workbook.sheets.filter { it.name != parsed.sheetName && !it.isEmpty }.map { it.name }
+        // 4. the old bytes are kept
+        try {
+            backups.save(owner, original, now)
+        } catch (e: Exception) {
+            return Written.Failed(WriteFailure.BACKUP)
+        }
+        // 5. the write itself
+        try {
+            documents.writeBytes(link.uri, bytes)
+        } catch (e: DocumentException) {
+            return Written.Failed(if (e.failure == DocumentFailure.NO_PERMISSION) WriteFailure.NO_PERMISSION else WriteFailure.CANNOT_WRITE)
+        }
+        // 6. what the document holds now
+        val readBack = try {
+            documents.readBytes(link.uri)
+        } catch (e: DocumentException) {
+            return Written.Failed(WriteFailure.READ_BACK)
+        }
+        val hash = LibraryCache.hashOf(bytes)
+        if (LibraryCache.hashOf(readBack) != hash && !readsBackAs(readBack, parsed.sheetName, applied.table)) {
+            return Written.Failed(WriteFailure.READ_BACK)
+        }
+        return Written.Ok(bytes, hash, parsed, info, applied, otherSheets)
+    }
+
+    /** True when [bytes] hold [table] on sheet [sheetName] the way the app's own reader sees them. */
+    private fun readsBackAs(bytes: ByteArray, sheetName: String, table: BookTable): Boolean {
+        val workbook = try {
+            XlsxReader.read(bytes.inputStream())
+        } catch (e: SpreadsheetException) {
+            return false
+        }
+        val sheet = workbook.sheets.firstOrNull { it.name == sheetName } ?: return false
+        val parsed = BookTable.parse(sheet) ?: return false
+        return parsed.table.books == table.books && parsed.table.extraHeaders == table.extraHeaders
     }
 
     // ------------------------------------------------------------------ index and stray files
@@ -304,6 +498,24 @@ class LibraryStore(
         if (fresh.isNotEmpty()) _warning.value = StrayFileWarning(fresh)
     }
 
+    // ------------------------------------------------------------------ helpers
+
+    private fun setBase(owner: Owner, table: BookTable?) {
+        baseTables[owner] = table
+    }
+
+    /** The file's table with the pending changes applied: what the screens show. */
+    private fun shown(owner: Owner): BookTable? = ChangeApplier.preview(baseTables[owner], pending.forOwner(owner))
+
+    private fun refreshShown(owner: Owner) {
+        val current = state(owner)
+        update(current.copy(table = shown(owner) ?: current.table, pendingChanges = pending.forOwner(owner).size))
+    }
+
+    private fun notice(notice: StoreNotice) {
+        _notices.value = _notices.value + notice
+    }
+
     private fun setPreview(owner: Owner, preview: WorkbookPreview?) {
         _previews.value = if (preview == null) _previews.value - owner else _previews.value + (owner to preview)
     }
@@ -317,6 +529,25 @@ class LibraryStore(
         fun isStrayFile(name: String): Boolean {
             val lower = name.lowercase()
             return name.startsWith("~$") || "çakışan kopya" in lower || "conflicted copy" in lower || "çakisan kopya" in lower
+        }
+
+        /** Text fields trimmed and squeezed, as a read would deliver them. */
+        fun tidy(book: Book): Book = book.copy(
+            title = TurkishText.squeeze(book.title),
+            author = TurkishText.squeeze(book.author),
+            shelf = TurkishText.squeeze(book.shelf),
+            copies = book.copies.coerceAtLeast(1),
+            publisher = TurkishText.squeeze(book.publisher),
+            year = TurkishText.squeeze(book.year),
+            isbn = TurkishText.squeeze(book.isbn),
+            note = TurkishText.squeeze(book.note),
+        )
+
+        private fun loadFailure(e: DocumentException): LoadFailure = when (e.failure) {
+            DocumentFailure.NOT_FOUND -> LoadFailure.NOT_FOUND
+            DocumentFailure.NO_PERMISSION -> LoadFailure.NO_PERMISSION
+            DocumentFailure.IO -> LoadFailure.IO
+            DocumentFailure.TOO_LARGE -> LoadFailure.TOO_LARGE
         }
 
         private fun latest(a: Long?, b: Long?): Long? = when {
