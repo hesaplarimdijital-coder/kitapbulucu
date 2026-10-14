@@ -34,12 +34,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hesaplarimdijital.kitapbulucu.R
 import com.hesaplarimdijital.kitapbulucu.model.Owner
+import com.hesaplarimdijital.kitapbulucu.model.Shelves
 import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.Change
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.ui.FormField
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
 import com.hesaplarimdijital.kitapbulucu.ui.NoticeCard
+import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelfField
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
 import desktopkit.components.SegmentedChoice
@@ -67,6 +69,7 @@ fun AddBookScreen(
     onEdited: () -> Unit = {},
 ) {
     val states by store.states.collectAsState()
+    val catalog by store.shelfCatalog.entries.collectAsState()
     val resources = LocalContext.current.resources
     val colors = DeskTheme.colors
     val type = DeskTheme.type
@@ -77,6 +80,9 @@ fun AddBookScreen(
     var done by rememberSaveable { mutableStateOf<String?>(null) }
     var showMore by rememberSaveable(editing != null) { mutableStateOf(editing != null) }
     val titleFocus = remember { FocusRequester() }
+    val ownerBooks = states.getValue(fields.owner).table?.books.orEmpty()
+    val ownerSaved = catalog[fields.owner].orEmpty()
+    val shelves = remember(ownerBooks, ownerSaved) { Shelves.overview(ownerBooks, ownerSaved).filterNot { it.isUnshelved } }
     LaunchedEffect(focusKey, initialTitle) { runCatching { titleFocus.requestFocus() } }
 
     fun submit(confirmedOther: Boolean = false, confirmedDuplicate: Boolean = false) {
@@ -127,9 +133,10 @@ fun AddBookScreen(
                                 onSelect = { fields = fields.copy(owner = it); check = null },
                             )
                         }
-                        FormField(
+                        ShelfField(
                             stringResource(R.string.add_field_shelf), fields.shelf, { fields = fields.copy(shelf = it) },
-                            modifier = Modifier.width(if (wide) 160.dp else 120.dp), capitalization = KeyboardCapitalization.Characters, monospace = true, onEnter = { submit() },
+                            shelves = shelves,
+                            modifier = Modifier.width(if (wide) 220.dp else 170.dp), onEnter = { submit() },
                         )
                     }
                     DeskButton(

@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.net.Uri
+import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -36,6 +37,7 @@ import com.hesaplarimdijital.kitapbulucu.ui.Routes
 import com.hesaplarimdijital.kitapbulucu.ui.rememberFilePicker
 import com.hesaplarimdijital.kitapbulucu.ui.setup.MappingScreen
 import com.hesaplarimdijital.kitapbulucu.ui.setup.SetupScreen
+import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelfTarget
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppPalette
 import com.hesaplarimdijital.kitapbulucu.xlsx.TestWorkbooks
@@ -100,7 +102,7 @@ class SetupScreenshotTest {
     private fun sampleSettings(): AppSettings =
         AppSettings(context.getSharedPreferences("screenshot-app", Context.MODE_PRIVATE)).also { it.updateMe(Owner.DAD) }
 
-    private fun capture(name: String, theme: ThemeMode, input: InputMode, content: @Composable () -> Unit) {
+    private fun capture(name: String, theme: ThemeMode, input: InputMode, dialogs: Boolean = false, content: @Composable () -> Unit) {
         compose.runOnUiThread { compose.activity.actionBar?.hide() }
         compose.setContent {
             DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
@@ -110,8 +112,35 @@ class SetupScreenshotTest {
         compose.waitForIdle()
         val window = compose.activity.window.decorView
         val bitmap = Bitmap.createBitmap(window.width, window.height, Bitmap.Config.ARGB_8888)
-        compose.runOnIdle { window.draw(Canvas(bitmap)) }
+        compose.runOnIdle {
+            val canvas = Canvas(bitmap)
+            window.draw(canvas)
+            if (dialogs) drawDialogs(canvas, window, bitmap.width, bitmap.height)
+        }
         ShellScreenshotTest.save(name, bitmap)
+    }
+
+    /**
+     * A dialog is a window of its own and the activity's view does not draw it: the other root
+     * views (from WindowManagerGlobal) are drawn on top, centred, over a dimmed screen.
+     */
+    private fun drawDialogs(canvas: Canvas, activityRoot: View, width: Int, height: Int) {
+        val roots: List<View> = try {
+            val global = Class.forName("android.view.WindowManagerGlobal").getMethod("getInstance").invoke(null)
+            val field = global.javaClass.getDeclaredField("mViews").apply { isAccessible = true }
+            @Suppress("UNCHECKED_CAST")
+            (field.get(global) as List<View>).toList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+        for (root in roots) {
+            if (root === activityRoot || root.width <= 0 || root.height <= 0 || !root.isAttachedToWindow) continue
+            canvas.drawColor(0x8C000000.toInt())
+            canvas.save()
+            canvas.translate((width - root.width) / 2f, (height - root.height) / 2f)
+            root.draw(canvas)
+            canvas.restore()
+        }
     }
 
     private fun setup(name: String, theme: ThemeMode, input: InputMode) {
@@ -130,13 +159,17 @@ class SetupScreenshotTest {
     private fun shell(
         name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, route: String, query: String = "", store: LibraryStore = sampleStore(),
         open: Boolean = false, addFocus: Int = 0, form: FormRequest? = null, importPreview: Pair<PickedFile, Owner>? = null,
+        shelf: ShelfTarget? = null, shelfQuery: String? = null, place: Pair<Owner, List<Book>>? = null,
     ) {
         val settings = sampleSettings()
-        capture(name, theme, input) {
+        capture(name, theme, input, dialogs = place != null) {
             val prefs = rememberDeskPreferences(accents = AppPalette.accents)
             val navController = rememberNavController()
             LaunchedEffect(route) { if (route != Routes.SEARCH) ShellNavigator(navController).navigate(route) }
-            AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store), initialSearch = query, initialSearchOpen = open, addFocus = addFocus, initialForm = form, importPreview = importPreview)
+            AppShell(
+                prefs, widthClass, navController, store, settings, rememberFilePicker(store), initialSearch = query, initialSearchOpen = open, addFocus = addFocus,
+                initialForm = form, importPreview = importPreview, initialShelf = shelf, initialShelfQuery = shelfQuery, initialPlace = place,
+            )
         }
     }
 
@@ -238,11 +271,51 @@ class SetupScreenshotTest {
     @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
     fun libraryPhoneLight() = shell("phone-light-library", ThemeMode.Light, InputMode.Touch, WidthClass.Compact, Routes.LIBRARY, store = sampleStore(myBooks))
 
+    /** The sample lists plus shelves created on the device: two empty ones in Babam's list, a description for my 3C. */
+    private fun shelfStore(): LibraryStore = sampleStore(myBooks).also {
+        it.shelfCatalog.add(Owner.DAD, "B4", "Salon, sağ dolap")
+        it.shelfCatalog.add(Owner.DAD, "C1", "Çalışma odası")
+        it.shelfCatalog.add(Owner.ME, "3C", "Yatak odası")
+    }
+
+    private fun shelves(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass) =
+        shell(name, theme, input, widthClass, Routes.SHELVES, store = shelfStore())
+
     @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
-    fun shelvesDexLight() = shell("dex-light-shelves", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge, Routes.SHELVES, store = sampleStore(myBooks))
+    fun shelvesDexLight() = shelves("dex-light-shelves", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge)
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun shelvesDexDark() = shelves("dex-dark-shelves", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge)
 
     @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
-    fun shelvesPhoneDark() = shell("phone-dark-shelves", ThemeMode.Dark, InputMode.Touch, WidthClass.Compact, Routes.SHELVES, store = sampleStore(myBooks))
+    fun shelvesPhoneLight() = shelves("phone-light-shelves", ThemeMode.Light, InputMode.Touch, WidthClass.Compact)
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun shelvesPhoneDark() = shelves("phone-dark-shelves", ThemeMode.Dark, InputMode.Touch, WidthClass.Compact)
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun shelfAddDexLight() = shell(
+        "dex-light-shelf-add", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge, Routes.SHELVES, store = shelfStore(),
+        shelf = ShelfTarget(Owner.ME, "3C"), shelfQuery = "çatıdaki",
+    )
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun shelfAddPhoneDark() = shell(
+        "phone-dark-shelf-add", ThemeMode.Dark, InputMode.Touch, WidthClass.Compact, Routes.SHELVES, store = shelfStore(),
+        shelf = ShelfTarget(Owner.ME, "3C"), shelfQuery = "çatıdaki",
+    )
+
+    private fun picker(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass) {
+        val store = shelfStore()
+        val book = store.state(Owner.DAD).table!!.books.first { it.title.startsWith("Kürk") }
+        shell(name, theme, input, widthClass, Routes.LIBRARY, store = store, place = Owner.DAD to listOf(book))
+    }
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun shelfPickerDexDark() = picker("dex-dark-shelf-picker", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge)
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun shelfPickerPhoneLight() = picker("phone-light-shelf-picker", ThemeMode.Light, InputMode.Touch, WidthClass.Compact)
 
     @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
     fun mergeDexLight() = merge("dex-light-merge", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge)

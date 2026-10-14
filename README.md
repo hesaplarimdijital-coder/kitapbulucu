@@ -34,8 +34,8 @@ Yeni sürüm aynı yoldan kurulur; ayarlar, dosya bağlantıları ve yedekler ka
 ## Kullanım
 
 - **Ara** (Ctrl+K): adın ya da yazarın bir parçasını yazın. Türkçe harfler, şapka ve küçük yazım hataları sorun değil; sözcük sırası önemsiz.
-- **Kütüphane**: bütün liste tablo hâlinde; sütun başlığına tıklayınca sıralanır. Sağ tık ya da uzun basış: düzenle, sil, taşı, raftaki öteki kitaplar. Seçili satırda F2 düzenler, Del siler. "+" yeni kitap ekler (Ctrl+N).
-- **Raflar**: raf raf kitaplar; "Raf doldur" ile bir rafın kitaplarını art arda işaretleyin.
+- **Kütüphane**: bütün liste tablo hâlinde; sütun başlığına tıklayınca sıralanır. Sağ tık ya da uzun basış: düzenle, sil, taşı, rafa koy, raftaki öteki kitaplar. Seçili satırda F2 düzenler, Del siler. "+" yeni kitap ekler (Ctrl+N).
+- **Raflar**: raf raf kitaplar. "Yeni raf" ile raf oluşturun (raf listesi yalnızca bu cihazda durur); rafı açıp "Kitap ekle" ile kitapları arayıp art arda o rafa koyun. Raf adı değiştirilebilir, boş raf silinebilir.
 - **Geri al** (Ctrl+Z): son değişiklikleri birer birer geri alır.
 - **Ayarlar → Yedek ve aktarma**: başka bir Excel'i birleştirme (Ctrl+Shift+O), iki listeyi tek Excel olarak dışa aktarma, bekleyen değişiklikler, yedekten geri yükleme.
 - F5 iki dosyayı yeniden okur; Ctrl+O kendi listenizin dosyasını yeniden seçtirir; Ctrl+/ bütün kısayolları gösterir.

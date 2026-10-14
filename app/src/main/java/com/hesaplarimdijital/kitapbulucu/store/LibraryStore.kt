@@ -5,6 +5,7 @@ import com.hesaplarimdijital.kitapbulucu.model.Book
 import com.hesaplarimdijital.kitapbulucu.model.BookTable
 import com.hesaplarimdijital.kitapbulucu.model.ColumnMapping
 import com.hesaplarimdijital.kitapbulucu.model.Owner
+import com.hesaplarimdijital.kitapbulucu.model.Shelves
 import com.hesaplarimdijital.kitapbulucu.search.SearchIndex
 import com.hesaplarimdijital.kitapbulucu.text.TurkishText
 import com.hesaplarimdijital.kitapbulucu.xlsx.FileKind
@@ -42,6 +43,8 @@ class LibraryStore(
     private val clock: () -> Long = System::currentTimeMillis,
     private val pending: PendingChanges = PendingChanges(cache.dir.resolve("pending.json")),
     private val backups: Backups = Backups(cache.dir.resolve("backups")),
+    /** The shelves created on this device (S-33); never written to the Excel files. */
+    val shelfCatalog: ShelfCatalog = ShelfCatalog(cache.dir.resolve("shelves.json")),
 ) {
     private val _states = MutableStateFlow(Owner.entries.associateWith { LibraryState.notLinked(it) })
     val states: StateFlow<Map<Owner, LibraryState>> = _states.asStateFlow()
@@ -69,7 +72,7 @@ class LibraryStore(
     private val otherSheetsWarned = HashSet<Owner>()
     private val undoStack = ArrayDeque<UndoStep>()
 
-    private class UndoStep(val label: String, val inverses: List<Change>)
+    private class UndoStep(val label: String, val inverses: List<Change>, val onUndo: (() -> Unit)?)
 
     /** The step just made, for the "Geri al" bar; null once undone or dismissed. */
     data class LastStep(val label: String, val at: Long)
@@ -108,8 +111,9 @@ class LibraryStore(
      * is many Edits) as one step: shown at once, written right after, undone together. A Remove
      * in the group waits for the group's Add to the other file, so a moved book is never missing
      * from both. [label] is what the undo bar says; null keeps the step out of the undo history.
+     * [onUndo] runs when the step is undone, for state kept outside the files (the shelf list).
      */
-    fun submitAll(changes: List<Change>, label: String? = null) {
+    fun submitAll(changes: List<Change>, label: String? = null, onUndo: (() -> Unit)? = null) {
         if (changes.isEmpty()) return
         val now = clock()
         var tidy = changes.map { change ->
@@ -130,7 +134,7 @@ class LibraryStore(
         }
         if (label != null) {
             val inverses = inverses(tidy)
-            undoStack.addLast(UndoStep(label, inverses))
+            undoStack.addLast(UndoStep(label, inverses, onUndo))
             while (undoStack.size > UNDO_LIMIT) undoStack.removeFirst()
             _lastStep.value = LastStep(label, now)
         }
@@ -150,8 +154,25 @@ class LibraryStore(
     fun undo(): Boolean {
         val step = undoStack.removeLastOrNull() ?: return false
         _lastStep.value = null
+        step.onUndo?.invoke()
         submitAll(step.inverses, label = null)
         return true
+    }
+
+    /**
+     * Renames shelf [from] of [owner]'s list to [to] (S-33): the created shelf (a shelf only the
+     * books named joins the list) and the Raf of every book on it, as one undoable step that also
+     * puts the old name back on the list. [label] is what the undo bar says.
+     */
+    fun renameShelf(owner: Owner, from: String, to: String, note: String, label: String) {
+        val before = shelfCatalog.list(owner).firstOrNull { Shelves.key(it.code) == Shelves.key(from) }
+        val changes = ShelfPlacement.rename(owner, state(owner).table?.books.orEmpty(), from, to)
+        shelfCatalog.rename(owner, from, to, note)
+        if (changes.isEmpty()) return
+        val restoredCode = before?.code ?: Shelves.clean(from)
+        val restoredNote = before?.note.orEmpty()
+        val renamedTo = Shelves.clean(to)
+        submitAll(changes, label, onUndo = { shelfCatalog.rename(owner, renamedTo, restoredCode, restoredNote) })
     }
 
     val canUndo: Boolean get() = undoStack.isNotEmpty()

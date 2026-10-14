@@ -56,7 +56,8 @@ class LibraryRow(val owner: Owner, val position: Int, val book: Book)
 
 /**
  * Every book of one list in a dense table (S-20): Babam / Benim tabs, sortable columns in Turkish
- * order, a context menu per row (edit, delete, move, other books on the shelf, copy), F2 and Del
+ * order, a context menu per row (edit, delete, move, put on a shelf, other books on the shelf,
+ * copy), F2 and Del
  * on the selected row, and the + button for a new book.
  */
 @Composable
@@ -157,6 +158,8 @@ fun BookTable(rows: List<LibraryRow>, actions: BookActions, onShelf: ((Owner, St
                         MenuEntry.Item(resources.getString(R.string.action_edit), { actions.edit(row.owner, row.book) }, shortcut = "F2"),
                         MenuEntry.Item(resources.getString(R.string.action_delete), { actions.delete(row.owner, row.book) }, shortcut = "Del", destructive = true),
                         MenuEntry.Item(resources.getString(R.string.action_move), { actions.move(row.owner, row.book) }),
+                        // one row for now; a multi-row selection (kit 0.1.2) passes every selected book
+                        MenuEntry.Item(resources.getString(R.string.action_place), { actions.placeOnShelf(row.owner, listOf(row.book)) }),
                         if (onShelf != null && row.book.shelf.isNotBlank()) {
                             MenuEntry.Item(resources.getString(R.string.action_shelf_books), { onShelf(row.owner, row.book.shelf) })
                         } else {

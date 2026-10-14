@@ -134,13 +134,19 @@ fun AppShell(
     initialForm: FormRequest? = null,
     /** For screenshots: the merge screen's file and target. */
     importPreview: Pair<com.hesaplarimdijital.kitapbulucu.ui.importing.PickedFile, Owner>? = null,
+    /** For screenshots: the shelf the Shelves screen opens on, and the add-books search text. */
+    initialShelf: ShelfTarget? = null,
+    initialShelfQuery: String? = null,
+    /** For screenshots: the "Rafa koy…" picker open for these books. */
+    initialPlace: Pair<Owner, List<com.hesaplarimdijital.kitapbulucu.model.Book>>? = null,
 ) {
     val spec = rememberAppSpec()
     val resources = LocalContext.current.resources
     // add or edit form over the current screen; it closes when another screen is chosen
     var form by remember { mutableStateOf(initialForm) }
-    var shelfTarget by remember { mutableStateOf<ShelfTarget?>(null) }
+    var shelfTarget by remember { mutableStateOf(initialShelf) }
     val actions = store?.let { rememberBookActions(it, settings) { owner, book -> form = FormRequest.Edit(owner, book) } }
+    LaunchedEffect(actions, initialPlace) { if (actions != null && initialPlace != null) actions.placeOnShelf(initialPlace.first, initialPlace.second) }
     LaunchedEffect(addFocus) { if (addFocus > 0) form = FormRequest.Add() }
     LaunchedEffect(mergeFocus) { if (mergeFocus > 0) form = FormRequest.Import }
     BackHandler(enabled = form != null) { form = null }
@@ -216,7 +222,7 @@ fun AppShell(
                         )
                     }
                     Routes.SHELVES -> if (store != null && actions != null) {
-                        ShelvesScreen(store, settings, actions, spec.item(route)?.label.orEmpty(), shelfTarget)
+                        ShelvesScreen(store, settings, actions, spec.item(route)?.label.orEmpty(), shelfTarget, initialAddQuery = initialShelfQuery)
                     } else {
                         MessageScreen(
                             title = stringResource(R.string.placeholder_shelves_title),

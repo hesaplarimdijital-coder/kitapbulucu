@@ -582,4 +582,73 @@ class LibraryStoreTest {
         store.undo()
         assertEquals(dadBooks.toList(), store.state(Owner.DAD).table!!.books)
     }
+
+    // ------------------------------------------------------------------ shelves (S-33, S-34)
+
+    @Test
+    fun renamingAShelfIsOneUndoableStepForTheBooksAndTheList() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        val onB2 = Book("Kar Tanesi", "Orhan Pamir", "B2")
+        val alsoB2 = Book("Sessiz Harita", "Leyla Umut", "b2")
+        documents.bytes[dadUri] = workbook(*dadBooks, onB2, alsoB2)
+        val store = store()
+        store.start()
+        store.shelfCatalog.add(Owner.DAD, "B2", "Salon")
+        store.shelfCatalog.add(Owner.DAD, "D1")
+        store.renameShelf(Owner.DAD, "B2", "B5", "Salon, üst", "B2 rafının adı B5 oldu")
+        assertEquals(dadBooks.toList() + onB2.copy(shelf = "B5") + alsoB2.copy(shelf = "B5"), fileBooks())
+        assertEquals(listOf("B5", "D1"), store.shelfCatalog.list(Owner.DAD).map { it.code })
+        assertEquals("Salon, üst", store.shelfCatalog.list(Owner.DAD).first().note)
+        assertEquals("B2 rafının adı B5 oldu", store.lastStep.value!!.label)
+
+        assertTrue(store.undo())
+        assertEquals(dadBooks.toList() + onB2 + alsoB2, fileBooks())
+        assertEquals(listOf("B2", "D1"), store.shelfCatalog.list(Owner.DAD).map { it.code })
+        assertEquals("Salon", store.shelfCatalog.list(Owner.DAD).first().note)
+        assertFalse(store.undo())
+    }
+
+    @Test
+    fun renamingAnEmptyShelfTouchesNoFile() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        val store = store()
+        store.start()
+        store.shelfCatalog.add(Owner.DAD, "D1")
+        store.renameShelf(Owner.DAD, "D1", "D2", "", "D1 rafının adı D2 oldu")
+        assertEquals(0, documents.writes)
+        assertEquals(listOf("D2"), store.shelfCatalog.list(Owner.DAD).map { it.code })
+        assertFalse(store.canUndo)
+        // a shelf only the books name joins the list when renamed
+        store.renameShelf(Owner.DAD, "A1", "A1", "Giriş", "A1")
+        assertEquals(listOf("D2", "A1"), store.shelfCatalog.list(Owner.DAD).map { it.code })
+        assertEquals(0, documents.writes)
+    }
+
+    @Test
+    fun placingBooksOnAShelfIsOneUndoableStep() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        val unshelved = Book("Sessiz Harita", "Leyla Umut")
+        documents.bytes[dadUri] = workbook(*dadBooks, unshelved)
+        val store = store()
+        store.start()
+        val books = store.state(Owner.DAD).table!!.books
+        val plan = ShelfPlacement.plan(Owner.DAD, listOf(books[1], books[2]), "D7")
+        assertEquals(listOf(dadBooks[1]), plan.moving)
+        store.submitAll(plan.changes, "2 kitap D7 rafına kondu")
+        assertEquals(listOf(dadBooks[0], dadBooks[1].copy(shelf = "D7"), unshelved.copy(shelf = "D7")), fileBooks())
+        assertTrue(store.undo())
+        assertEquals(dadBooks.toList() + unshelved, fileBooks())
+        assertFalse(store.undo())
+    }
+
+    @Test
+    fun theShelfListLivesNextToTheCacheNotInTheFile() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        store().apply { start() }.shelfCatalog.add(Owner.DAD, "Z9", "Bodrum")
+        assertEquals(0, documents.writes)
+        assertTrue(folder.root.resolve("library/shelves.json").isFile)
+        assertEquals(listOf("Z9"), store().shelfCatalog.list(Owner.DAD).map { it.code })
+    }
 }
