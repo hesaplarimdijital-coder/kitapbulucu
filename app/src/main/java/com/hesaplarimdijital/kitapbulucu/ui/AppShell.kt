@@ -34,6 +34,23 @@ import com.hesaplarimdijital.kitapbulucu.ui.library.LibraryScreen
 import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelfTarget
 import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelvesScreen
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.key
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Row
@@ -46,7 +63,6 @@ import com.hesaplarimdijital.kitapbulucu.ui.search.SearchScreen
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
 import desktopkit.components.SegmentedChoice
-import desktopkit.components.SettingRow
 import desktopkit.input.CommonShortcuts
 import desktopkit.screens.MessageScreen
 import desktopkit.screens.PageHeader
@@ -55,10 +71,12 @@ import desktopkit.settings.DeskPreferences
 import desktopkit.settings.InputSection
 import desktopkit.settings.SettingsSection
 import desktopkit.settings.ShortcutListSection
+import desktopkit.shell.CompactTopBar
 import desktopkit.shell.DesktopShell
 import desktopkit.shell.NavItem
 import desktopkit.shell.NavSection
 import desktopkit.shell.ShellSpec
+import desktopkit.shell.TopBarBackIcon
 import desktopkit.shell.WidthClass
 import desktopkit.theme.DeskTheme
 
@@ -150,118 +168,188 @@ fun AppShell(
     LaunchedEffect(addFocus) { if (addFocus > 0) form = FormRequest.Add() }
     LaunchedEffect(mergeFocus) { if (mergeFocus > 0) form = FormRequest.Import }
     BackHandler(enabled = form != null) { form = null }
-    DesktopShell(
-        spec = spec,
-        widthClass = widthClass,
-        navController = navController,
-        sidebarCollapsed = prefs.sidebarCollapsed,
-        onSidebarCollapsedChange = prefs::updateSidebarCollapsed,
-        menus = AppShortcuts.registry.menus(resources, perform = onShortcut),
-        onSearch = { onShortcut(CommonShortcuts.SEARCH) },
-    ) { route, navigator ->
-        DisposableEffect(route) { onDispose { form = null } }
-        Column(Modifier.fillMaxSize()) {
-            if (store != null && picker != null) LibraryNotices(store, picker, onMap)
-            Box(Modifier.weight(1f)) {
-                val currentForm = form
-                if (store != null && currentForm == FormRequest.Import) {
-                    ImportScreen(
-                        store,
-                        settings,
-                        onClose = { form = null },
-                        initialFile = importPreview?.first,
-                        initialTarget = importPreview?.second,
-                    )
-                    return@Box
-                }
-                if (store != null && currentForm != null) {
-                    AddBookScreen(
-                        store,
-                        settings,
-                        initialTitle = (currentForm as? FormRequest.Add)?.title.orEmpty(),
-                        focusKey = addFocus,
-                        editing = (currentForm as? FormRequest.Edit)?.let { EditTarget(it.owner, it.book) },
-                        actions = actions,
-                        onEdited = { form = null },
-                    )
-                    return@Box
-                }
-                when (route) {
-                    Routes.SEARCH -> if (store != null) {
-                        SearchScreen(
-                            store,
-                            initialQuery = initialSearch,
-                            focusKey = searchFocus,
-                            openFirst = initialSearchOpen,
-                            actions = actions,
-                            onAdd = { title -> form = FormRequest.Add(title) },
-                        )
-                    } else {
-                        MessageScreen(
-                            title = stringResource(R.string.placeholder_search_title),
-                            icon = DeskIcons.Search,
-                            pageTitle = spec.item(route)?.label,
-                            description = stringResource(R.string.placeholder_search_text),
-                        )
+    val phone = widthClass == WidthClass.Compact
+    PhoneProvider(phone) {
+        DesktopShell(
+            spec = spec,
+            widthClass = widthClass,
+            navController = navController,
+            sidebarCollapsed = prefs.sidebarCollapsed,
+            onSidebarCollapsedChange = prefs::updateSidebarCollapsed,
+            menus = AppShortcuts.registry.menus(resources, perform = onShortcut),
+            onSearch = { onShortcut(CommonShortcuts.SEARCH) },
+        ) { route, navigator ->
+            DisposableEffect(route) { onDispose { form = null } }
+            Column(Modifier.fillMaxSize()) {
+                if (store != null && picker != null) LibraryNotices(store, picker, onMap)
+                Box(Modifier.weight(1f)) {
+                    // the add, edit and merge forms open over the screen: slide up and fade on the phone, fade on DeX
+                    AnimatedContent(
+                        targetState = form,
+                        modifier = Modifier.fillMaxSize(),
+                        transitionSpec = { overlayTransition(phone) },
+                        contentKey = { it?.overlayKey() ?: 0 },
+                        label = "form overlay",
+                    ) { currentForm ->
+                        if (store != null && currentForm == FormRequest.Import) {
+                            OverlayPage(phone, stringResource(R.string.import_title), onClose = { form = null }) {
+                                ImportScreen(
+                                    store,
+                                    settings,
+                                    onClose = { form = null },
+                                    initialFile = importPreview?.first,
+                                    initialTarget = importPreview?.second,
+                                )
+                            }
+                        } else if (store != null && currentForm != null) {
+                            val editing = currentForm is FormRequest.Edit
+                            OverlayPage(phone, stringResource(if (editing) R.string.edit_title else R.string.add_title), onClose = { form = null }) {
+                                AddBookScreen(
+                                    store,
+                                    settings,
+                                    initialTitle = (currentForm as? FormRequest.Add)?.title.orEmpty(),
+                                    focusKey = addFocus,
+                                    editing = (currentForm as? FormRequest.Edit)?.let { EditTarget(it.owner, it.book) },
+                                    actions = actions,
+                                    onEdited = { form = null },
+                                )
+                            }
+                        } else {
+                            when (route) {
+                                Routes.SEARCH -> if (store != null) {
+                                    SearchScreen(
+                                        store,
+                                        initialQuery = initialSearch,
+                                        focusKey = searchFocus,
+                                        openFirst = initialSearchOpen,
+                                        actions = actions,
+                                        onAdd = { title -> form = FormRequest.Add(title) },
+                                    )
+                                } else {
+                                    MessageScreen(
+                                        title = stringResource(R.string.placeholder_search_title),
+                                        icon = DeskIcons.Search,
+                                        pageTitle = spec.item(route)?.label,
+                                        description = stringResource(R.string.placeholder_search_text),
+                                    )
+                                }
+                                Routes.LIBRARY -> if (store != null && actions != null) {
+                                    LibraryScreen(
+                                        store, settings, actions, spec.item(route)?.label.orEmpty(),
+                                        onAdd = { form = FormRequest.Add() },
+                                        onShelf = { owner, shelf ->
+                                            shelfTarget = ShelfTarget(owner, shelf)
+                                            navigator.navigate(Routes.SHELVES)
+                                        },
+                                    )
+                                } else {
+                                    MessageScreen(
+                                        title = stringResource(R.string.placeholder_library_title),
+                                        icon = AppIcons.Book,
+                                        pageTitle = spec.item(route)?.label,
+                                        description = stringResource(R.string.placeholder_library_text),
+                                    )
+                                }
+                                Routes.SHELVES -> if (store != null && actions != null) {
+                                    ShelvesScreen(store, settings, actions, spec.item(route)?.label.orEmpty(), shelfTarget, initialAddQuery = initialShelfQuery)
+                                } else {
+                                    MessageScreen(
+                                        title = stringResource(R.string.placeholder_shelves_title),
+                                        icon = AppIcons.Shelf,
+                                        pageTitle = spec.item(route)?.label,
+                                        description = stringResource(R.string.placeholder_shelves_text),
+                                    )
+                                }
+                                Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty(), store, settings, picker, onMerge = { form = FormRequest.Import })
+                            }
+                        }
                     }
-                    Routes.LIBRARY -> if (store != null && actions != null) {
-                        LibraryScreen(
-                            store, settings, actions, spec.item(route)?.label.orEmpty(),
-                            onAdd = { form = FormRequest.Add() },
-                            onShelf = { owner, shelf ->
-                                shelfTarget = ShelfTarget(owner, shelf)
-                                navigator.navigate(Routes.SHELVES)
-                            },
-                        )
-                    } else {
-                        MessageScreen(
-                            title = stringResource(R.string.placeholder_library_title),
-                            icon = AppIcons.Book,
-                            pageTitle = spec.item(route)?.label,
-                            description = stringResource(R.string.placeholder_library_text),
-                        )
-                    }
-                    Routes.SHELVES -> if (store != null && actions != null) {
-                        ShelvesScreen(store, settings, actions, spec.item(route)?.label.orEmpty(), shelfTarget, initialAddQuery = initialShelfQuery)
-                    } else {
-                        MessageScreen(
-                            title = stringResource(R.string.placeholder_shelves_title),
-                            icon = AppIcons.Shelf,
-                            pageTitle = spec.item(route)?.label,
-                            description = stringResource(R.string.placeholder_shelves_text),
-                        )
-                    }
-                    Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty(), store, settings, picker, onMerge = { form = FormRequest.Import })
                 }
+                if (store != null) UndoBar(store)
             }
-            if (store != null) UndoBar(store)
         }
+        actions?.Dialogs()
     }
-    actions?.Dialogs()
 }
 
-/** "“X” silindi · Geri al" for a few seconds after every change; Ctrl+Z works longer. */
+/** Which kind of form a request is: forms of one kind swap in place, a different kind fades through. */
+private fun FormRequest.overlayKey(): Int = when (this) {
+    is FormRequest.Add -> 1
+    is FormRequest.Edit -> 2
+    FormRequest.Import -> 3
+}
+
+/**
+ * Opening a form: the new page slides up a little and fades in over the screen (phone, about
+ * 220 ms) or just fades in (DeX, 150 ms). Closing: the form slides down and fades out over the
+ * screen that is already there.
+ */
+private fun AnimatedContentTransitionScope<FormRequest?>.overlayTransition(phone: Boolean): ContentTransform {
+    val opening = initialState == null && targetState != null
+    val closing = initialState != null && targetState == null
+    return when {
+        opening -> {
+            val enter = if (phone) slideInVertically(tween(220, easing = FastOutSlowInEasing)) { it / 10 } + fadeIn(tween(220)) else fadeIn(tween(150))
+            (enter togetherWith ExitTransition.None).apply { targetContentZIndex = 1f }
+        }
+        closing -> {
+            val exit = if (phone) slideOutVertically(tween(180, easing = FastOutSlowInEasing)) { it / 10 } + fadeOut(tween(180)) else fadeOut(tween(150))
+            (EnterTransition.None togetherWith exit).apply { targetContentZIndex = 0f }
+        }
+        else -> fadeIn(tween(150)) togetherWith fadeOut(tween(150))
+    }
+}
+
+/**
+ * A form page. On the phone it gets its own top bar (a close button and the form's title; the
+ * system back gesture closes it too) and an opaque background so the screen below never shows through.
+ */
+@Composable
+private fun OverlayPage(phone: Boolean, title: String, onClose: () -> Unit, content: @Composable () -> Unit) {
+    Column(Modifier.fillMaxSize().background(DeskTheme.colors.background)) {
+        if (phone) CompactTopBar(title = title, onBack = onClose, backIcon = TopBarBackIcon.Close, showSearch = false)
+        Box(Modifier.weight(1f)) { content() }
+    }
+}
+
+/**
+ * "“X” silindi · Geri al" for a few seconds after every change; Ctrl+Z works longer. It slides in
+ * from the bottom and out again; on the phone it is a rounded snackbar just above the bottom bar.
+ */
 @Composable
 private fun UndoBar(store: LibraryStore) {
     val step by store.lastStep.collectAsState()
-    val current = step ?: return
+    val phone = isPhone()
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
-    LaunchedEffect(current) {
-        kotlinx.coroutines.delay(UNDO_BAR_MILLIS)
-        store.dismissLastStep()
+    // the last step stays on screen while the bar slides out
+    val shown = remember { mutableStateOf(step) }
+    if (step != null) shown.value = step
+    LaunchedEffect(step) {
+        if (step != null) {
+            kotlinx.coroutines.delay(UNDO_BAR_MILLIS)
+            store.dismissLastStep()
+        }
     }
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = dimens.pagePadding, vertical = dimens.gapS)
-            .background(colors.surfaceRaised, androidx.compose.foundation.shape.RoundedCornerShape(dimens.radiusControl))
-            .border(1.dp, colors.borderStrong, androidx.compose.foundation.shape.RoundedCornerShape(dimens.radiusControl))
-            .padding(horizontal = dimens.gapM, vertical = dimens.gapS),
-        verticalAlignment = Alignment.CenterVertically,
+    AnimatedVisibility(
+        visible = step != null,
+        enter = expandVertically(tween(200), expandFrom = Alignment.Bottom) + slideInVertically(tween(200)) { it } + fadeIn(tween(200)),
+        exit = shrinkVertically(tween(150), shrinkTowards = Alignment.Bottom) + slideOutVertically(tween(150)) { it } + fadeOut(tween(150)),
     ) {
-        Text(current.label, style = DeskTheme.type.body, color = colors.text, modifier = Modifier.weight(1f), maxLines = 2)
-        DeskButton(stringResource(R.string.action_undo), { store.undo() }, icon = DeskIcons.Previous)
+        val current = shown.value ?: return@AnimatedVisibility
+        val shape = androidx.compose.foundation.shape.RoundedCornerShape(dimens.radiusControl)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = if (phone) dimens.gapM else dimens.pagePadding, vertical = dimens.gapS)
+                .background(colors.surfaceRaised, shape)
+                .border(1.dp, colors.borderStrong, shape)
+                .padding(start = dimens.gapM, end = if (phone) dimens.gapXs else dimens.gapM, top = if (phone) 0.dp else dimens.gapS, bottom = if (phone) 0.dp else dimens.gapS),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(current.label, style = DeskTheme.type.body, color = colors.text, modifier = Modifier.weight(1f).padding(vertical = if (phone) dimens.gapS else 0.dp), maxLines = 2)
+            AdaptiveButton(stringResource(R.string.action_undo), { store.undo() }, icon = DeskIcons.Previous, phoneAccent = true)
+        }
     }
 }
 
@@ -279,62 +367,80 @@ private fun LibraryNotices(store: LibraryStore, picker: FilePicker, onMap: (Owne
     val failed = Owner.entries.map { states.getValue(it) }.filter { it.status == LoadStatus.FAILED }
     val unwritten = Owner.entries.map { states.getValue(it) }.filter { it.writeFailure != null && it.pendingChanges > 0 }
     val stray = warning
-    if (failed.isEmpty() && unwritten.isEmpty() && stray == null && notices.isEmpty()) return
+    val any = failed.isNotEmpty() || unwritten.isNotEmpty() || stray != null || notices.isNotEmpty()
+    // a notice grows in when it appears and the space closes smoothly when it goes
     Column(
-        Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding, vertical = dimens.gapS),
+        Modifier
+            .fillMaxWidth()
+            .animateContentSize(tween(200))
+            .then(if (any) Modifier.padding(horizontal = dimens.pagePadding, vertical = dimens.gapS) else Modifier),
         verticalArrangement = Arrangement.spacedBy(dimens.gapS),
     ) {
         for (state in unwritten) {
-            NoticeCard(
-                title = stringResource(R.string.write_failed_title, LibraryTexts.listName(resources, state.owner), state.pendingChanges),
-                text = LibraryTexts.writeFailure(resources, state.writeFailure!!) + " " + stringResource(R.string.write_retry_note),
-                tone = colors.danger,
-            ) {
-                DeskButton(stringResource(R.string.action_retry), store::refresh, primary = true)
-                if (state.writeFailure == WriteFailure.NOT_XLSX || state.writeFailure == WriteFailure.NO_PERMISSION) {
-                    DeskButton(stringResource(R.string.action_choose_other_file), { picker.pick(state.owner) })
+            key("write-" + state.owner) {
+                Appear {
+                    NoticeCard(
+                        title = stringResource(R.string.write_failed_title, LibraryTexts.listName(resources, state.owner), state.pendingChanges),
+                        text = LibraryTexts.writeFailure(resources, state.writeFailure!!) + " " + stringResource(R.string.write_retry_note),
+                        tone = colors.danger,
+                    ) {
+                        AdaptiveButton(stringResource(R.string.action_retry), store::refresh, primary = true)
+                        if (state.writeFailure == WriteFailure.NOT_XLSX || state.writeFailure == WriteFailure.NO_PERMISSION) {
+                            AdaptiveButton(stringResource(R.string.action_choose_other_file), { picker.pick(state.owner) })
+                        }
+                    }
                 }
             }
         }
         for (notice in notices) {
-            when (notice) {
-                StoreNotice.FirstWrite -> NoticeCard(
-                    title = stringResource(R.string.notice_first_write_title),
-                    text = stringResource(R.string.notice_first_write_text),
-                ) { DeskButton(stringResource(R.string.action_understood), { store.dismiss(notice) }) }
-                is StoreNotice.OtherSheetsKept -> NoticeCard(
-                    title = stringResource(R.string.notice_other_sheets_title, LibraryTexts.listName(resources, notice.owner)),
-                    text = stringResource(R.string.notice_other_sheets_text, notice.names.joinToString(", ")),
-                    tone = colors.warning,
-                ) { DeskButton(stringResource(R.string.action_understood), { store.dismiss(notice) }) }
-                is StoreNotice.ChangesLanded -> NoticeCard(
-                    title = stringResource(R.string.notice_changes_landed_title),
-                    text = notice.notes.joinToString("\n") { LibraryTexts.landed(resources, it) },
-                    tone = colors.warning,
-                ) { DeskButton(stringResource(R.string.action_understood), { store.dismiss(notice) }) }
+            key(notice) {
+                Appear {
+                    when (notice) {
+                        StoreNotice.FirstWrite -> NoticeCard(
+                            title = stringResource(R.string.notice_first_write_title),
+                            text = stringResource(R.string.notice_first_write_text),
+                        ) { AdaptiveButton(stringResource(R.string.action_understood), { store.dismiss(notice) }, phoneAccent = true) }
+                        is StoreNotice.OtherSheetsKept -> NoticeCard(
+                            title = stringResource(R.string.notice_other_sheets_title, LibraryTexts.listName(resources, notice.owner)),
+                            text = stringResource(R.string.notice_other_sheets_text, notice.names.joinToString(", ")),
+                            tone = colors.warning,
+                        ) { AdaptiveButton(stringResource(R.string.action_understood), { store.dismiss(notice) }, phoneAccent = true) }
+                        is StoreNotice.ChangesLanded -> NoticeCard(
+                            title = stringResource(R.string.notice_changes_landed_title),
+                            text = notice.notes.joinToString("\n") { LibraryTexts.landed(resources, it) },
+                            tone = colors.warning,
+                        ) { AdaptiveButton(stringResource(R.string.action_understood), { store.dismiss(notice) }, phoneAccent = true) }
+                    }
+                }
             }
         }
         for (state in failed) {
-            NoticeCard(
-                title = LibraryTexts.listName(resources, state.owner),
-                text = LibraryTexts.failure(resources, state.failure ?: LoadFailure.IO),
-                tone = colors.danger,
-            ) {
-                if (state.failure == LoadFailure.NO_HEADER) {
-                    DeskButton(stringResource(R.string.setup_map_columns), { onMap(state.owner) }, primary = true)
-                } else {
-                    DeskButton(stringResource(R.string.action_retry), store::refresh)
+            key("failed-" + state.owner) {
+                Appear {
+                    NoticeCard(
+                        title = LibraryTexts.listName(resources, state.owner),
+                        text = LibraryTexts.failure(resources, state.failure ?: LoadFailure.IO),
+                        tone = colors.danger,
+                    ) {
+                        if (state.failure == LoadFailure.NO_HEADER) {
+                            AdaptiveButton(stringResource(R.string.setup_map_columns), { onMap(state.owner) }, primary = true)
+                        } else {
+                            AdaptiveButton(stringResource(R.string.action_retry), store::refresh, phoneAccent = true)
+                        }
+                        AdaptiveButton(stringResource(R.string.action_choose_other_file), { picker.pick(state.owner) })
+                    }
                 }
-                DeskButton(stringResource(R.string.action_choose_other_file), { picker.pick(state.owner) })
             }
         }
         if (stray != null) {
-            NoticeCard(
-                title = stringResource(R.string.stray_files_title),
-                text = stringResource(R.string.stray_files_text, stray.names.joinToString(", ")),
-                tone = colors.warning,
-            ) {
-                DeskButton(stringResource(R.string.action_understood), store::dismissWarning)
+            Appear {
+                NoticeCard(
+                    title = stringResource(R.string.stray_files_title),
+                    text = stringResource(R.string.stray_files_text, stray.names.joinToString(", ")),
+                    tone = colors.warning,
+                ) {
+                    AdaptiveButton(stringResource(R.string.action_understood), store::dismissWarning, phoneAccent = true)
+                }
             }
         }
     }
@@ -358,7 +464,7 @@ private fun LibrarySection(store: LibraryStore, settings: AppSettings, picker: F
     val states by store.states.collectAsState()
     val resources = LocalContext.current.resources
     SettingsSection(stringResource(R.string.settings_library)) {
-        SettingRow(stringResource(R.string.setup_who_title), subtitle = stringResource(R.string.setup_who_text)) {
+        SettingLine(stringResource(R.string.setup_who_title), subtitle = stringResource(R.string.setup_who_text)) {
             SegmentedChoice(
                 options = listOf<Pair<Owner?, String>>(Owner.DAD to stringResource(R.string.setup_who_dad), Owner.ME to stringResource(R.string.setup_who_me)),
                 selected = settings.me,
@@ -368,7 +474,7 @@ private fun LibrarySection(store: LibraryStore, settings: AppSettings, picker: F
         for (owner in Owner.entries) {
             val state = states.getValue(owner)
             val subtitle = listOfNotNull(state.displayName, LibraryTexts.status(resources, state)).joinToString(" · ")
-            SettingRow(LibraryTexts.listName(resources, owner), subtitle = subtitle) {
+            SettingLine(LibraryTexts.listName(resources, owner), subtitle = subtitle) {
                 DeskButton(
                     stringResource(if (state.isLinked) R.string.setup_change else R.string.setup_pick),
                     { picker.pick(owner) },
@@ -378,10 +484,10 @@ private fun LibrarySection(store: LibraryStore, settings: AppSettings, picker: F
         }
         val folderText = stringResource(R.string.settings_folder_text) +
             if (store.treeUri == null) " " + stringResource(R.string.settings_folder_none) + "." else ""
-        SettingRow(stringResource(R.string.settings_folder), subtitle = folderText) {
+        SettingLine(stringResource(R.string.settings_folder), subtitle = folderText) {
             DeskButton(stringResource(R.string.settings_folder_pick), picker::pickFolder, icon = DeskIcons.Folder)
         }
-        SettingRow(stringResource(R.string.setup_title)) {
+        SettingLine(stringResource(R.string.setup_title)) {
             DeskButton(stringResource(R.string.settings_reopen_setup), { settings.updateSetupDone(false) })
         }
     }

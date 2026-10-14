@@ -24,10 +24,12 @@ import com.hesaplarimdijital.kitapbulucu.store.LoadFailure
 import com.hesaplarimdijital.kitapbulucu.store.LoadStatus
 import com.hesaplarimdijital.kitapbulucu.ui.DropdownChoice
 import com.hesaplarimdijital.kitapbulucu.ui.FilePicker
+import com.hesaplarimdijital.kitapbulucu.ui.ButtonRow
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
+import com.hesaplarimdijital.kitapbulucu.ui.SettingLine
+import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
-import desktopkit.components.SettingRow
 import desktopkit.settings.SettingsSection
 import desktopkit.theme.DeskTheme
 
@@ -82,7 +84,7 @@ fun LibraryFileCard(
             Text(stringResource(R.string.setup_create_failed), style = type.body, color = colors.danger)
         }
         if (state.sheetNames.isNotEmpty() && selectedSheet != null) {
-            SettingRow(stringResource(R.string.setup_sheet)) {
+            SettingLine(stringResource(R.string.setup_sheet)) {
                 DropdownChoice(
                     options = state.sheetNames.map { it to it },
                     selected = selectedSheet,
@@ -92,7 +94,7 @@ fun LibraryFileCard(
             }
         }
         Spacer(Modifier.height(dimens.gapS))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.gapS), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
+        val buttons: @Composable () -> Unit = {
             if (failed && state.failure == LoadFailure.NO_HEADER) {
                 DeskButton(stringResource(R.string.setup_map_columns), onMap, primary = true)
             }
@@ -105,6 +107,12 @@ fun LibraryFileCard(
                 DeskButton(stringResource(R.string.setup_pick), { picker.pick(owner) }, icon = DeskIcons.Folder, primary = true)
             }
             DeskButton(stringResource(R.string.setup_create), { picker.create(owner) }, icon = DeskIcons.Plus)
+        }
+        if (isPhone()) {
+            // one line when the buttons fit, one under the other when they do not
+            ButtonRow(endAligned = false, reverseInRow = false, content = buttons)
+        } else {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.gapS), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) { buttons() }
         }
     }
 }

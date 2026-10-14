@@ -22,7 +22,11 @@ import com.hesaplarimdijital.kitapbulucu.model.Owner
 import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.store.LoadStatus
+import com.hesaplarimdijital.kitapbulucu.ui.BottomActionBar
+import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
 import com.hesaplarimdijital.kitapbulucu.ui.FilePicker
+import com.hesaplarimdijital.kitapbulucu.ui.PhoneHeader
+import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import desktopkit.components.DeskButton
 import desktopkit.components.SegmentedChoice
 import desktopkit.screens.PageHeader
@@ -47,8 +51,11 @@ fun SetupScreen(
     val type = DeskTheme.type
     val dimens = DeskTheme.dimens
     val me = settings.me
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        PageHeader(stringResource(R.string.setup_title))
+    val phone = isPhone()
+    val ownReady = me != null && states.getValue(me).status == LoadStatus.READY
+    val order = if (me == Owner.ME) listOf(Owner.ME, Owner.DAD) else listOf(Owner.DAD, Owner.ME)
+    val body: @Composable () -> Unit = {
+        if (phone) PhoneHeader(stringResource(R.string.setup_title)) else PageHeader(stringResource(R.string.setup_title))
         Text(
             stringResource(R.string.setup_intro),
             style = type.body,
@@ -65,7 +72,6 @@ fun SetupScreen(
                 onSelect = { owner -> if (owner != null) settings.updateMe(owner) },
             )
         }
-        val order = if (me == Owner.ME) listOf(Owner.ME, Owner.DAD) else listOf(Owner.DAD, Owner.ME)
         for (owner in order) {
             LibraryFileCard(
                 owner = owner,
@@ -78,17 +84,31 @@ fun SetupScreen(
                 onRetry = store::refresh,
             )
         }
-        val ownReady = me != null && states.getValue(me).status == LoadStatus.READY
+    }
+    val needText = stringResource(if (me == null) R.string.setup_need_who else R.string.setup_need_own)
+    if (phone) {
+        // phone: the cards scroll, "Bitir" stays at the bottom
+        Column(Modifier.fillMaxSize()) {
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                body()
+                Spacer(Modifier.height(dimens.gapL))
+            }
+            BottomActionBar {
+                if (!ownReady) Text(needText, style = type.body, color = colors.textSecondary)
+                BottomPrimaryButton(stringResource(R.string.setup_done), onDone, enabled = ownReady)
+                Text(stringResource(R.string.setup_later), style = type.labelSmall, color = colors.textTertiary)
+            }
+        }
+        return
+    }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        body()
         Column(
             Modifier.padding(horizontal = dimens.pagePadding, vertical = dimens.gapM).widthIn(max = 760.dp).fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(dimens.gapS),
         ) {
             if (!ownReady) {
-                Text(
-                    stringResource(if (me == null) R.string.setup_need_who else R.string.setup_need_own),
-                    style = type.body,
-                    color = colors.textSecondary,
-                )
+                Text(needText, style = type.body, color = colors.textSecondary)
             }
             DeskButton(stringResource(R.string.setup_done), onDone, primary = true, enabled = ownReady)
             Text(stringResource(R.string.setup_later), style = type.labelSmall, color = colors.textTertiary)

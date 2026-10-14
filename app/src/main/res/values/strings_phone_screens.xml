@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- phone layouts of search, forms, settings and setup -->
+    <string name="phone_screens_close">Close</string>
+    <string name="phone_screens_move">Move</string>
+    <string name="phone_screens_search_none_hint">Check the spelling, or add the book to a list.</string>
+</resources>

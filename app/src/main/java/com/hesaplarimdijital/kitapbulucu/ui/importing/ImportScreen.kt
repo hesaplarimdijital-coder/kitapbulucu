@@ -46,6 +46,11 @@ import com.hesaplarimdijital.kitapbulucu.store.DocumentException
 import com.hesaplarimdijital.kitapbulucu.store.DocumentFailure
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.store.LoadFailure
+import com.hesaplarimdijital.kitapbulucu.ui.AdaptiveButton
+import com.hesaplarimdijital.kitapbulucu.ui.BottomActionBar
+import com.hesaplarimdijital.kitapbulucu.ui.BottomActions
+import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
+import com.hesaplarimdijital.kitapbulucu.ui.ButtonRow
 import com.hesaplarimdijital.kitapbulucu.ui.CheckRow
 import com.hesaplarimdijital.kitapbulucu.ui.ConfirmDialog
 import com.hesaplarimdijital.kitapbulucu.ui.DialogAction
@@ -53,13 +58,15 @@ import com.hesaplarimdijital.kitapbulucu.ui.DropdownChoice
 import com.hesaplarimdijital.kitapbulucu.ui.FilePicker
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
 import com.hesaplarimdijital.kitapbulucu.ui.NoticeCard
+import com.hesaplarimdijital.kitapbulucu.ui.PhoneTextButton
+import com.hesaplarimdijital.kitapbulucu.ui.SettingLine
+import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import com.hesaplarimdijital.kitapbulucu.ui.setup.MappingEditor
 import com.hesaplarimdijital.kitapbulucu.xlsx.SpreadsheetException
 import com.hesaplarimdijital.kitapbulucu.xlsx.SpreadsheetReader
 import com.hesaplarimdijital.kitapbulucu.xlsx.Workbook
 import desktopkit.components.DeskButton
 import desktopkit.components.SegmentedChoice
-import desktopkit.components.SettingRow
 import desktopkit.screens.PageHeader
 import desktopkit.settings.SettingsSection
 import desktopkit.theme.DeskTheme
@@ -145,29 +152,29 @@ fun ImportScreen(
             val sheetNames = picked.workbook.filledSheets.map { it.name }.takeIf { it.size > 1 }.orEmpty()
             val parsed = remember(sheet, mapping) { BookTable.parse(sheet, mapping) }
             if (parsed == null || editingMapping) {
-                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                    PageHeader(title, subtitle = picked.name)
-                    Text(
-                        stringResource(R.string.import_mapping_intro),
-                        style = DeskTheme.type.body,
-                        color = DeskTheme.colors.textSecondary,
-                        modifier = Modifier.padding(horizontal = DeskTheme.dimens.pagePadding).widthIn(max = 760.dp),
-                    )
-                    MappingEditor(
-                        sheet = sheet,
-                        sheetNames = sheetNames,
-                        initial = mapping?.takeIf { it.fits(sheet, BookTable.detectHeaderRow(sheet)) } ?: ColumnMapping.guess(sheet),
-                        onChooseSheet = {
-                            sheetName = it
-                            mapping = null
-                        },
-                        onSave = {
-                            mapping = it
-                            editingMapping = false
-                        },
-                        onCancel = { if (parsed == null) onClose() else editingMapping = false },
-                    )
-                }
+                MappingEditor(
+                    sheet = sheet,
+                    sheetNames = sheetNames,
+                    initial = mapping?.takeIf { it.fits(sheet, BookTable.detectHeaderRow(sheet)) } ?: ColumnMapping.guess(sheet),
+                    onChooseSheet = {
+                        sheetName = it
+                        mapping = null
+                    },
+                    onSave = {
+                        mapping = it
+                        editingMapping = false
+                    },
+                    onCancel = { if (parsed == null) onClose() else editingMapping = false },
+                    header = {
+                        PageHeader(title, subtitle = picked.name)
+                        Text(
+                            stringResource(R.string.import_mapping_intro),
+                            style = DeskTheme.type.body,
+                            color = DeskTheme.colors.textSecondary,
+                            modifier = Modifier.padding(horizontal = DeskTheme.dimens.pagePadding).widthIn(max = 760.dp),
+                        )
+                    },
+                )
             } else {
                 Review(
                     store = store,
@@ -209,7 +216,8 @@ private fun Start(
     val dimens = DeskTheme.dimens
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+    val pickLabel = stringResource(if (reading) R.string.import_reading else R.string.import_pick)
+    val body: @Composable () -> Unit = {
         PageHeader(title)
         Text(
             stringResource(R.string.import_intro),
@@ -219,10 +227,38 @@ private fun Start(
         )
         Spacer(Modifier.height(dimens.gapS))
         SettingsSection(stringResource(R.string.import_target_section)) {
-            SettingRow(stringResource(R.string.import_target), subtitle = stringResource(R.string.import_target_text)) {
+            SettingLine(stringResource(R.string.import_target), subtitle = stringResource(R.string.import_target_text)) {
                 SegmentedChoice(Owner.entries.map { it to LibraryTexts.ownerLabel(resources, it) }, target, onTarget)
             }
         }
+    }
+    if (isPhone()) {
+        // phone: "Dosya seç…" is the main button at the bottom
+        Column(Modifier.fillMaxSize()) {
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                body()
+                if (failure != null) {
+                    NoticeCard(
+                        title = stringResource(R.string.import_failed),
+                        text = LibraryTexts.failure(resources, failure),
+                        modifier = Modifier.padding(horizontal = dimens.pagePadding, vertical = dimens.gapM),
+                        tone = colors.danger,
+                    ) {}
+                }
+            }
+            BottomActionBar {
+                BottomActions(
+                    primary = { modifier ->
+                        BottomPrimaryButton(pickLabel, onPick, modifier.focusRequester(focus), icon = desktopkit.components.DeskIcons.Folder, enabled = !reading)
+                    },
+                    secondary = { PhoneTextButton(stringResource(R.string.mapping_cancel), onClose) },
+                )
+            }
+        }
+        return
+    }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        body()
         Column(
             Modifier.padding(horizontal = dimens.pagePadding, vertical = dimens.gapM).widthIn(max = 760.dp),
             verticalArrangement = Arrangement.spacedBy(dimens.gapS),
@@ -232,7 +268,7 @@ private fun Start(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(dimens.gapS)) {
                 DeskButton(
-                    stringResource(if (reading) R.string.import_reading else R.string.import_pick),
+                    pickLabel,
                     onPick,
                     modifier = Modifier.focusRequester(focus),
                     icon = desktopkit.components.DeskIcons.Folder,
@@ -268,6 +304,7 @@ private fun Review(
     val colors = DeskTheme.colors
     val type = DeskTheme.type
     val dimens = DeskTheme.dimens
+    val phone = isPhone()
     var plan by remember { mutableStateOf<MergePlan.Plan?>(null) }
     // the plan is worked out once per file, sheet and list; a list that changes meanwhile is
     // picked up when the user returns, not while they are ticking rows
@@ -300,17 +337,24 @@ private fun Review(
             item {
                 PageHeader(title, subtitle = stringResource(R.string.import_from, fileName, LibraryTexts.listName(resources, target)))
                 SettingsSection(stringResource(R.string.import_file_section)) {
-                    SettingRow(stringResource(R.string.import_target), subtitle = stringResource(R.string.import_target_text)) {
+                    SettingLine(stringResource(R.string.import_target), subtitle = stringResource(R.string.import_target_text)) {
                         SegmentedChoice(Owner.entries.map { it to LibraryTexts.ownerLabel(resources, it) }, target, onTarget)
                     }
                     if (sheetNames.isNotEmpty()) {
-                        SettingRow(stringResource(R.string.setup_sheet)) {
+                        SettingLine(stringResource(R.string.setup_sheet)) {
                             DropdownChoice(sheetNames.map { it to it }, sheetName, onSheet, modifier = Modifier.widthIn(min = 200.dp))
                         }
                     }
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.gapS), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
-                        DeskButton(stringResource(R.string.import_map_columns), onMapping)
-                        DeskButton(stringResource(R.string.import_other_file), onOtherFile, icon = desktopkit.components.DeskIcons.Folder)
+                    if (phone) {
+                        ButtonRow(endAligned = false, reverseInRow = false) {
+                            PhoneTextButton(stringResource(R.string.import_map_columns), onMapping, primary = true)
+                            PhoneTextButton(stringResource(R.string.import_other_file), onOtherFile, icon = desktopkit.components.DeskIcons.Folder, primary = true)
+                        }
+                    } else {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.gapS), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
+                            DeskButton(stringResource(R.string.import_map_columns), onMapping)
+                            DeskButton(stringResource(R.string.import_other_file), onOtherFile, icon = desktopkit.components.DeskIcons.Folder)
+                        }
                     }
                 }
             }
@@ -384,25 +428,37 @@ private fun Review(
             }
         }
         // the decision stays in sight however long the lists are
-        Column(
-            Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding, vertical = dimens.gapS),
-            verticalArrangement = Arrangement.spacedBy(dimens.gapS),
-        ) {
-            val counts = outcome?.second
-            val line = when {
-                current == null || current.isEmpty -> null
-                counts == null -> stringResource(R.string.import_answer_first)
-                else -> ImportTexts.preview(resources, counts)
-            }
-            if (line != null) Text(line, style = type.body, color = if (counts == null) colors.warning else colors.textSecondary)
-            Row(horizontalArrangement = Arrangement.spacedBy(dimens.gapS), verticalAlignment = Alignment.CenterVertically) {
-                DeskButton(
-                    stringResource(R.string.import_apply),
-                    { if (me != null && target != me) confirmOther = true else applyPlan() },
-                    primary = true,
-                    enabled = outcome != null && outcome.first.isNotEmpty(),
+        val counts = outcome?.second
+        val line = when {
+            current == null || current.isEmpty -> null
+            counts == null -> stringResource(R.string.import_answer_first)
+            else -> ImportTexts.preview(resources, counts)
+        }
+        val applyClick = { if (me != null && target != me) confirmOther = true else applyPlan() }
+        val canApply = outcome != null && outcome.first.isNotEmpty()
+        if (phone) {
+            BottomActionBar {
+                if (line != null) Text(line, style = type.body, color = if (counts == null) colors.warning else colors.textSecondary)
+                BottomActions(
+                    primary = { modifier -> BottomPrimaryButton(stringResource(R.string.import_apply), applyClick, modifier, enabled = canApply) },
+                    secondary = { PhoneTextButton(stringResource(R.string.mapping_cancel), onClose) },
                 )
-                DeskButton(stringResource(R.string.mapping_cancel), onClose)
+            }
+        } else {
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding, vertical = dimens.gapS),
+                verticalArrangement = Arrangement.spacedBy(dimens.gapS),
+            ) {
+                if (line != null) Text(line, style = type.body, color = if (counts == null) colors.warning else colors.textSecondary)
+                Row(horizontalArrangement = Arrangement.spacedBy(dimens.gapS), verticalAlignment = Alignment.CenterVertically) {
+                    DeskButton(
+                        stringResource(R.string.import_apply),
+                        applyClick,
+                        primary = true,
+                        enabled = canApply,
+                    )
+                    DeskButton(stringResource(R.string.mapping_cancel), onClose)
+                }
             }
         }
     }
@@ -435,7 +491,7 @@ private fun LazyListScope.section(title: String, text: String?, trailing: (@Comp
 @Composable
 private fun SelectAll(selected: Int, total: Int, onSet: (Boolean) -> Unit) {
     val all = selected == total
-    DeskButton(stringResource(if (all) R.string.import_select_none else R.string.import_select_all), { onSet(!all) })
+    AdaptiveButton(stringResource(if (all) R.string.import_select_none else R.string.import_select_all), { onSet(!all) }, phoneAccent = true)
 }
 
 @Composable
@@ -476,11 +532,23 @@ private fun Done(title: String, result: MergePlan.Result, onClose: () -> Unit) {
     val dimens = DeskTheme.dimens
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    val texts: @Composable () -> Unit = {
+        Text(ImportTexts.result(resources, result), style = DeskTheme.type.title, color = DeskTheme.colors.text)
+        Text(stringResource(R.string.import_done_text), style = DeskTheme.type.body, color = DeskTheme.colors.textSecondary)
+    }
+    if (isPhone()) {
+        Column(Modifier.fillMaxSize()) {
+            Column(Modifier.weight(1f).padding(horizontal = dimens.pagePadding, vertical = dimens.gapM), verticalArrangement = Arrangement.spacedBy(dimens.gapM)) { texts() }
+            BottomActionBar {
+                BottomPrimaryButton(stringResource(R.string.import_close), onClose, Modifier.focusRequester(focus))
+            }
+        }
+        return
+    }
     Column(Modifier.fillMaxSize()) {
         PageHeader(title)
         Column(Modifier.padding(horizontal = dimens.pagePadding), verticalArrangement = Arrangement.spacedBy(dimens.gapM)) {
-            Text(ImportTexts.result(resources, result), style = DeskTheme.type.title, color = DeskTheme.colors.text)
-            Text(stringResource(R.string.import_done_text), style = DeskTheme.type.body, color = DeskTheme.colors.textSecondary)
+            texts()
             DeskButton(stringResource(R.string.import_close), onClose, modifier = Modifier.focusRequester(focus), primary = true)
         }
     }

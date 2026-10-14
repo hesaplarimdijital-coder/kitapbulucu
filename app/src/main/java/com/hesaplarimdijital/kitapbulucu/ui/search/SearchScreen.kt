@@ -1,5 +1,7 @@
 package com.hesaplarimdijital.kitapbulucu.ui.search
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,6 +23,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -46,6 +49,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
@@ -69,6 +73,10 @@ import com.hesaplarimdijital.kitapbulucu.search.SearchHit
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.text.TurkishText
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
+import com.hesaplarimdijital.kitapbulucu.ui.PhoneEmptyState
+import com.hesaplarimdijital.kitapbulucu.ui.PhoneIcons
+import com.hesaplarimdijital.kitapbulucu.ui.PhoneTextButton
+import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIconButton
@@ -93,6 +101,7 @@ private val ShelfSize = 20.sp
  * details (copies, signed, publisher, year, ISBN, note). The cursor stays in the field: arrow
  * keys move the selection, Enter opens and closes it, Esc closes it or clears the search.
  */
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
 fun SearchScreen(
     store: LibraryStore,
@@ -111,6 +120,8 @@ fun SearchScreen(
     val type = DeskTheme.type
     val resources = LocalContext.current.resources
     val pointer = DeskTheme.inputMode == InputMode.Pointer
+    val phone = isPhone()
+    val keyboard = LocalSoftwareKeyboardController.current
 
     val currentIndex = index
     val groups = remember(currentIndex, query, filter) {
@@ -126,6 +137,8 @@ fun SearchScreen(
     // the header items before the first result row
     val firstRowItem = if (groups.isEmpty() && suggestions.isNotEmpty()) 1 else 0
     LaunchedEffect(selected) { if (selected >= 0) list.animateScrollToItem((selected + firstRowItem).coerceAtLeast(0)) }
+    // on a phone, dragging the results puts the keyboard away so they can be read
+    if (phone) LaunchedEffect(list.isScrollInProgress) { if (list.isScrollInProgress) keyboard?.hide() }
 
     Column(Modifier.fillMaxSize()) {
         Column(
@@ -137,6 +150,7 @@ fun SearchScreen(
                     query = query,
                     focusKey = focusKey,
                     onQueryChange = { query = it },
+                    onSearchAction = { if (phone) keyboard?.hide() },
                     onKey = { key ->
                         when (key) {
                             Key.DirectionDown -> if (shown.isNotEmpty()) { selected = (selected + 1).coerceIn(0, shown.lastIndex); true } else false
@@ -192,15 +206,43 @@ fun SearchScreen(
                                 Owner.DAD -> stringResource(R.string.search_none_dad)
                                 Owner.ME -> stringResource(R.string.search_none_me)
                             }
-                            Column(rowModifier.padding(top = dimens.gapL), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
-                                Text(title, style = TextStyle(fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = colors.text)
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(dimens.gapS)) {
-                                    DeskButton(stringResource(R.string.search_add), { onAdd?.invoke(query) }, icon = DeskIcons.Plus, primary = true, enabled = onAdd != null)
+                            if (phone) {
+                                Column(rowModifier, horizontalAlignment = Alignment.CenterHorizontally) {
+                                    PhoneEmptyState(
+                                        icon = DeskIcons.Search,
+                                        title = title,
+                                        text = stringResource(R.string.phone_screens_search_none_hint),
+                                    ) {
+                                        DeskButton(
+                                            stringResource(R.string.search_add),
+                                            { onAdd?.invoke(query) },
+                                            modifier = Modifier.fillMaxWidth().widthIn(max = 420.dp).defaultMinSize(minHeight = 52.dp),
+                                            icon = DeskIcons.Plus,
+                                            primary = true,
+                                            enabled = onAdd != null,
+                                        )
+                                    }
                                     if (onAdd == null) Text(stringResource(R.string.search_add_later), style = type.labelSmall, color = colors.textTertiary)
+                                    if (suggestions.isNotEmpty()) {
+                                        Text(
+                                            stringResource(R.string.search_suggestions),
+                                            style = type.label,
+                                            color = colors.textSecondary,
+                                            modifier = Modifier.fillMaxWidth().padding(top = dimens.gapL, start = dimens.gapM),
+                                        )
+                                    }
                                 }
-                                if (suggestions.isNotEmpty()) {
-                                    Spacer(Modifier.height(dimens.gapS))
-                                    Text(stringResource(R.string.search_suggestions), style = type.label, color = colors.textSecondary)
+                            } else {
+                                Column(rowModifier.padding(top = dimens.gapL), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
+                                    Text(title, style = TextStyle(fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = colors.text)
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(dimens.gapS)) {
+                                        DeskButton(stringResource(R.string.search_add), { onAdd?.invoke(query) }, icon = DeskIcons.Plus, primary = true, enabled = onAdd != null)
+                                        if (onAdd == null) Text(stringResource(R.string.search_add_later), style = type.labelSmall, color = colors.textTertiary)
+                                    }
+                                    if (suggestions.isNotEmpty()) {
+                                        Spacer(Modifier.height(dimens.gapS))
+                                        Text(stringResource(R.string.search_suggestions), style = type.label, color = colors.textSecondary)
+                                    }
                                 }
                             }
                         }
@@ -227,7 +269,7 @@ fun SearchScreen(
 }
 
 @Composable
-private fun SearchField(query: String, focusKey: Int, onQueryChange: (String) -> Unit, onKey: (Key) -> Boolean) {
+private fun SearchField(query: String, focusKey: Int, onQueryChange: (String) -> Unit, onSearchAction: () -> Unit, onKey: (Key) -> Boolean) {
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
     val touch = DeskTheme.inputMode == InputMode.Touch
@@ -257,6 +299,7 @@ private fun SearchField(query: String, focusKey: Int, onQueryChange: (String) ->
                 textStyle = fieldStyle(touch).copy(color = colors.text),
                 cursorBrush = SolidColor(colors.accent),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { onSearchAction() }),
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focus)
@@ -298,6 +341,8 @@ private fun ResultRow(actions: com.hesaplarimdijital.kitapbulucu.ui.BookActions?
     }
     Column(
         modifier
+            // opening a row grows it in place
+            .animateContentSize(tween(180))
             .background(background, shape)
             .then(if (opened) Modifier.border(1.dp, colors.border, shape) else Modifier)
             // the cursor stays in the search field; the row is reached with the arrow keys
@@ -402,10 +447,20 @@ private fun Details(group: BookGroup, actions: com.hesaplarimdijital.kitapbulucu
                 }
                 if (actions != null) {
                     Spacer(Modifier.height(dimens.gapS))
-                    Row(horizontalArrangement = Arrangement.spacedBy(dimens.gapS)) {
-                        DeskButton(stringResource(R.string.action_edit), { actions.edit(hit.owner, book) }, modifier = Modifier.focusProperties { canFocus = false })
-                        DeskButton(stringResource(R.string.action_move), { actions.move(hit.owner, book) }, modifier = Modifier.focusProperties { canFocus = false })
-                        DeskButton(stringResource(R.string.action_delete), { actions.delete(hit.owner, book) }, modifier = Modifier.focusProperties { canFocus = false })
+                    if (isPhone()) {
+                        // one tidy line of flat buttons, never wrapped big ones
+                        Box(Modifier.fillMaxWidth().height(1.dp).background(colors.border))
+                        Row(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            PhoneTextButton(stringResource(R.string.action_edit), { actions.edit(hit.owner, book) }, Modifier.weight(1f), icon = PhoneIcons.Pencil, contentPadding = 4.dp)
+                            PhoneTextButton(stringResource(R.string.phone_screens_move), { actions.move(hit.owner, book) }, Modifier.weight(1f), icon = DeskIcons.Convert, contentPadding = 4.dp)
+                            PhoneTextButton(stringResource(R.string.action_delete), { actions.delete(hit.owner, book) }, Modifier.weight(1f), icon = DeskIcons.Delete, danger = true, contentPadding = 4.dp)
+                        }
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(dimens.gapS)) {
+                            DeskButton(stringResource(R.string.action_edit), { actions.edit(hit.owner, book) }, modifier = Modifier.focusProperties { canFocus = false })
+                            DeskButton(stringResource(R.string.action_move), { actions.move(hit.owner, book) }, modifier = Modifier.focusProperties { canFocus = false })
+                            DeskButton(stringResource(R.string.action_delete), { actions.delete(hit.owner, book) }, modifier = Modifier.focusProperties { canFocus = false })
+                        }
                     }
                 }
             }
@@ -446,6 +501,10 @@ private fun KeyHints(modifier: Modifier) {
 private fun Message(title: String, text: String?, modifier: Modifier) {
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
+    if (isPhone()) {
+        PhoneEmptyState(DeskIcons.Search, title, modifier, text)
+        return
+    }
     Column(modifier.padding(top = dimens.gapL * 2), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
         Text(title, style = TextStyle(fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = colors.text)
         if (text != null) Text(text, style = DeskTheme.type.body, color = colors.textSecondary, textAlign = TextAlign.Center)

@@ -2,6 +2,12 @@ package com.hesaplarimdijital.kitapbulucu.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -22,7 +28,6 @@ import com.hesaplarimdijital.kitapbulucu.store.Backups
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
-import desktopkit.components.SettingRow
 import desktopkit.settings.SettingsSection
 import desktopkit.theme.DeskTheme
 import java.text.DateFormat
@@ -46,10 +51,10 @@ fun DataSection(store: LibraryStore, onMerge: () -> Unit) {
     }
 
     SettingsSection(stringResource(R.string.settings_data)) {
-        SettingRow(stringResource(R.string.settings_merge_title), subtitle = stringResource(R.string.settings_merge_text)) {
+        SettingLine(stringResource(R.string.settings_merge_title), subtitle = stringResource(R.string.settings_merge_text)) {
             DeskButton(stringResource(R.string.settings_merge), onMerge, icon = AppIcons.Import)
         }
-        SettingRow(stringResource(R.string.settings_export_title), subtitle = stringResource(R.string.settings_export_text)) {
+        SettingLine(stringResource(R.string.settings_export_title), subtitle = stringResource(R.string.settings_export_text)) {
             DeskButton(stringResource(R.string.settings_export), { export.launch(resources.getString(R.string.export_file_name)) }, icon = AppIcons.Export)
         }
 
@@ -59,7 +64,7 @@ fun DataSection(store: LibraryStore, onMerge: () -> Unit) {
         } else {
             waiting.joinToString("\n") { resources.getString(R.string.settings_pending_count, LibraryTexts.listName(resources, it.owner), it.pendingChanges) }
         }
-        SettingRow(stringResource(R.string.settings_pending), subtitle = pendingText) {
+        SettingLine(stringResource(R.string.settings_pending), subtitle = pendingText) {
             DeskButton(stringResource(R.string.settings_pending_try), store::refresh, icon = DeskIcons.Resume, enabled = waiting.isNotEmpty())
         }
 
@@ -86,7 +91,7 @@ private fun BackupList(store: LibraryStore, owner: Owner, onMessage: (String) ->
     val counts = remember { mutableStateMapOf<String, Int?>() }
     val listName = LibraryTexts.listName(resources, owner)
     val subtitle = if (backups.isEmpty()) stringResource(R.string.settings_backups_none) else backupDate(backups.first().at)
-    SettingRow(listName, subtitle = subtitle) {
+    SettingLine(listName, subtitle = subtitle) {
         if (backups.isNotEmpty()) {
             DeskButton(
                 if (open) stringResource(R.string.settings_backups_hide) else stringResource(R.string.settings_backups_show, backups.size),
@@ -95,22 +100,30 @@ private fun BackupList(store: LibraryStore, owner: Owner, onMessage: (String) ->
             )
         }
     }
-    if (!open) return
-    LaunchedEffect(backups) {
-        for (backup in backups) {
-            if (backup.file.name !in counts) counts[backup.file.name] = store.backupBookCount(owner, backup.file) ?: -1
+    LaunchedEffect(open, backups) {
+        if (open) {
+            for (backup in backups) {
+                if (backup.file.name !in counts) counts[backup.file.name] = store.backupBookCount(owner, backup.file) ?: -1
+            }
         }
     }
-    Column(Modifier.padding(start = DeskTheme.dimens.gapL)) {
-        for (backup in backups) {
-            val count = counts[backup.file.name]
-            val detail = when {
-                count == null -> "…"
-                count < 0 -> stringResource(R.string.backup_row_unreadable)
-                else -> stringResource(R.string.backup_row_count, count)
-            }
-            SettingRow(backupDate(backup.at), subtitle = detail) {
-                DeskButton(stringResource(R.string.backup_restore), { asking = backup }, icon = DeskIcons.History)
+    // the list opens and closes with a short expand and fade
+    AnimatedVisibility(
+        visible = open,
+        enter = expandVertically(tween(200)) + fadeIn(tween(200)),
+        exit = shrinkVertically(tween(150)) + fadeOut(tween(150)),
+    ) {
+        Column(Modifier.padding(start = DeskTheme.dimens.gapL)) {
+            for (backup in backups) {
+                val count = counts[backup.file.name]
+                val detail = when {
+                    count == null -> "…"
+                    count < 0 -> stringResource(R.string.backup_row_unreadable)
+                    else -> stringResource(R.string.backup_row_count, count)
+                }
+                SettingLine(backupDate(backup.at), subtitle = detail) {
+                    DeskButton(stringResource(R.string.backup_restore), { asking = backup }, icon = DeskIcons.History)
+                }
             }
         }
     }

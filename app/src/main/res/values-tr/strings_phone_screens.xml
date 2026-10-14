@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- telefonda arama, form, ayarlar ve kurulum ekranları -->
+    <string name="phone_screens_close">Kapat</string>
+    <string name="phone_screens_move">Taşı</string>
+    <string name="phone_screens_search_none_hint">Yazımı kontrol edin ya da kitabı bir listeye ekleyin.</string>
+</resources>

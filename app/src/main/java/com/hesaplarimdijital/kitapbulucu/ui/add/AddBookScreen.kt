@@ -1,5 +1,11 @@
 package com.hesaplarimdijital.kitapbulucu.ui.add
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -38,7 +44,13 @@ import com.hesaplarimdijital.kitapbulucu.model.Shelves
 import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.Change
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
+import com.hesaplarimdijital.kitapbulucu.ui.AdaptiveButton
+import com.hesaplarimdijital.kitapbulucu.ui.BottomActionBar
+import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
+import com.hesaplarimdijital.kitapbulucu.ui.BottomActions
 import com.hesaplarimdijital.kitapbulucu.ui.FormField
+import com.hesaplarimdijital.kitapbulucu.ui.PhoneTextButton
+import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
 import com.hesaplarimdijital.kitapbulucu.ui.NoticeCard
 import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelfField
@@ -109,6 +121,114 @@ fun AddBookScreen(
         }
     }
 
+    val phone = isPhone()
+
+    /** The checks' answers: a missing title, a bad count, a book that is already there, the other person's list. */
+    val checkContent: @Composable () -> Unit = {
+        when (val current = check) {
+            AddBookForm.Check.NeedTitle -> Text(stringResource(R.string.add_need_title), style = type.body, color = colors.danger)
+            AddBookForm.Check.BadCopies -> Text(stringResource(R.string.add_bad_copies), style = type.body, color = colors.danger)
+            is AddBookForm.Check.Exists -> NoticeCard(
+                title = current.existing.title,
+                text = stringResource(
+                    R.string.add_exists,
+                    inList(resources, fields.owner),
+                    if (current.existing.shelf.isBlank()) stringResource(R.string.add_exists_no_shelf) else stringResource(R.string.add_exists_shelf, current.existing.shelf),
+                ),
+                tone = colors.warning,
+            ) {
+                AdaptiveButton(stringResource(R.string.add_one_more), { submit(confirmedDuplicate = true) }, primary = true)
+                AdaptiveButton(stringResource(R.string.add_cancel), { check = null })
+            }
+            is AddBookForm.Check.OtherList -> NoticeCard(
+                title = current.book.title,
+                text = stringResource(R.string.add_other_confirm, toList(resources, fields.owner)),
+                tone = colors.warning,
+            ) {
+                AdaptiveButton(stringResource(R.string.add_confirm), { submit(confirmedOther = true, confirmedDuplicate = true) }, primary = true)
+                AdaptiveButton(stringResource(R.string.add_cancel), { check = null })
+            }
+            else -> Unit
+        }
+    }
+    val clear = {
+        fields = AddBookFields(owner = fields.owner)
+        check = null
+        done = null
+        runCatching { titleFocus.requestFocus() }
+        Unit
+    }
+
+    if (phone) {
+        // phone: fields one under the other, the main button fixed at the bottom above the keyboard
+        Column(Modifier.fillMaxSize()) {
+            Column(
+                Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = dimens.pagePadding, vertical = dimens.gapM),
+                verticalArrangement = Arrangement.spacedBy(dimens.gapM),
+            ) {
+                done?.let { Text(it, style = type.body, color = colors.success) }
+                FormField(
+                    stringResource(R.string.add_field_title), fields.title, { fields = fields.copy(title = it); done = null },
+                    focusRequester = titleFocus, error = check == AddBookForm.Check.NeedTitle, onEnter = { submit() },
+                )
+                FormField(stringResource(R.string.add_field_author), fields.author, { fields = fields.copy(author = it) }, capitalization = KeyboardCapitalization.Words, onEnter = { submit() })
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.add_field_owner), style = type.label, color = colors.textSecondary)
+                    SegmentedChoice(
+                        options = listOf(Owner.DAD to LibraryTexts.ownerLabel(resources, Owner.DAD), Owner.ME to LibraryTexts.ownerLabel(resources, Owner.ME)),
+                        selected = fields.owner,
+                        onSelect = { fields = fields.copy(owner = it); check = null },
+                    )
+                }
+                ShelfField(
+                    stringResource(R.string.add_field_shelf), fields.shelf, { fields = fields.copy(shelf = it) },
+                    shelves = shelves,
+                    modifier = Modifier.fillMaxWidth(), onEnter = { submit() },
+                )
+                PhoneTextButton(
+                    stringResource(R.string.add_more),
+                    { showMore = !showMore },
+                    icon = if (showMore) DeskIcons.ChevronUp else DeskIcons.ChevronDown,
+                    primary = true,
+                )
+                AnimatedVisibility(showMore, enter = expandVertically(tween(200)) + fadeIn(tween(200)), exit = shrinkVertically(tween(150)) + fadeOut(tween(150))) {
+                    Column(verticalArrangement = Arrangement.spacedBy(dimens.gapM)) {
+                        FormField(
+                            stringResource(R.string.add_field_copies), fields.copies, { fields = fields.copy(copies = it.filter(Char::isDigit).take(4)) },
+                            keyboardType = KeyboardType.Number, error = check == AddBookForm.Check.BadCopies, onEnter = { submit() },
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(stringResource(R.string.add_field_signed), style = type.label, color = colors.textSecondary)
+                            SegmentedChoice(
+                                options = listOf(false to stringResource(R.string.add_no), true to stringResource(R.string.add_yes)),
+                                selected = fields.signed,
+                                onSelect = { fields = fields.copy(signed = it) },
+                            )
+                        }
+                        FormField(stringResource(R.string.add_field_publisher), fields.publisher, { fields = fields.copy(publisher = it) }, capitalization = KeyboardCapitalization.Words, onEnter = { submit() })
+                        FormField(stringResource(R.string.add_field_year), fields.year, { fields = fields.copy(year = it) }, keyboardType = KeyboardType.Number, onEnter = { submit() })
+                        FormField(stringResource(R.string.add_field_isbn), fields.isbn, { fields = fields.copy(isbn = it) }, keyboardType = KeyboardType.Number, monospace = true, onEnter = { submit() })
+                        FormField(stringResource(R.string.add_field_note), fields.note, { fields = fields.copy(note = it) }, onEnter = { submit() })
+                    }
+                }
+                checkContent()
+            }
+            BottomActionBar {
+                BottomActions(
+                    primary = { modifier -> BottomPrimaryButton(stringResource(R.string.add_save), { submit() }, modifier, icon = DeskIcons.Check) },
+                    secondary = {
+                        if (editing != null) {
+                            PhoneTextButton(stringResource(R.string.action_cancel), onEdited)
+                        } else {
+                            PhoneTextButton(stringResource(R.string.add_clear), clear)
+                        }
+                    },
+                )
+            }
+        }
+        return
+    }
+
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         PageHeader(stringResource(if (editing != null) R.string.edit_title else R.string.add_title))
         Column(
@@ -169,43 +289,14 @@ fun AddBookScreen(
                 }
             }
 
-            when (val current = check) {
-                AddBookForm.Check.NeedTitle -> Text(stringResource(R.string.add_need_title), style = type.body, color = colors.danger)
-                AddBookForm.Check.BadCopies -> Text(stringResource(R.string.add_bad_copies), style = type.body, color = colors.danger)
-                is AddBookForm.Check.Exists -> NoticeCard(
-                    title = current.existing.title,
-                    text = stringResource(
-                        R.string.add_exists,
-                        inList(resources, fields.owner),
-                        if (current.existing.shelf.isBlank()) stringResource(R.string.add_exists_no_shelf) else stringResource(R.string.add_exists_shelf, current.existing.shelf),
-                    ),
-                    tone = colors.warning,
-                ) {
-                    DeskButton(stringResource(R.string.add_one_more), { submit(confirmedDuplicate = true) }, primary = true)
-                    DeskButton(stringResource(R.string.add_cancel), { check = null })
-                }
-                is AddBookForm.Check.OtherList -> NoticeCard(
-                    title = current.book.title,
-                    text = stringResource(R.string.add_other_confirm, toList(resources, fields.owner)),
-                    tone = colors.warning,
-                ) {
-                    DeskButton(stringResource(R.string.add_confirm), { submit(confirmedOther = true, confirmedDuplicate = true) }, primary = true)
-                    DeskButton(stringResource(R.string.add_cancel), { check = null })
-                }
-                else -> Unit
-            }
+            checkContent()
 
             FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.gapS), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
                 DeskButton(stringResource(R.string.add_save), { submit() }, icon = DeskIcons.Check, primary = true)
                 if (editing != null) {
                     DeskButton(stringResource(R.string.action_cancel), onEdited)
                 } else {
-                    DeskButton(stringResource(R.string.add_clear), {
-                        fields = AddBookFields(owner = fields.owner)
-                        check = null
-                        done = null
-                        runCatching { titleFocus.requestFocus() }
-                    })
+                    DeskButton(stringResource(R.string.add_clear), clear)
                 }
             }
             if (DeskTheme.inputMode == InputMode.Pointer) {
