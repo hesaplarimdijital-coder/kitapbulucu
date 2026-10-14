@@ -15,6 +15,7 @@ Bir sprint bitince hikâyeleri `docs/DONE.md` dosyasına taşınır; burada spri
 | 4 | Sil, düzelt, kütüphane, raflar | S-18 … S-22 | 19 | O |
 | 5 | Dışarıdan gelen Excel; ayarlar | S-23 … S-26 | 18 | F, sonra O |
 | 6 | Cilalama ve 1.0.0 | S-27 … S-29 | 10 | F, sonra O |
+| 7 | Tablet ve telefon geri bildirimi: raflar, yazı boyu, klavye | K-02, S-31 … S-35 | 20 | F, sonra O |
 
 İlk önerilen plandan farkı: 4 yerine 6 kısa sprint (ilk planda 1. ve 3. sprint 27'şer puandı, bir oturuma sığmaz) ve arama öne alındı; böylece 2. sprintin sonunda tablette denenebilen bir sürüm olur. Her sprintin başında onay alınır.
 
@@ -232,6 +233,41 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [x] README (kurulum, Drive klasörü, babanın telefonu), CHANGELOG, sürüm 1.0.0.
 - [ ] 1.0.0 APK'sı önceki sürümlerin üstüne kurulur; ayarlar ve yedekler kalır.
 - [ ] Tablette ve babanın telefonunda baştan sona deneme listesi geçti.
+
+## Sprint 7: Tablet ve telefon geri bildirimi (14.10.2026)
+
+Kaynak: kullanıcının 1.0.0 denemesi.
+
+### K-02 Kit 0.1.2: yazı boyu ayarı, klavye açıkken alt çubuk, çoklu satır seçimi · 3 · [F] · bekliyor
+- [ ] Uygulama klavye-fare modundaki yazı boyunu kitten ayarlayabilir (kiti uygulamada yamamadan).
+- [ ] Telefonda ekran klavyesi açıkken alt gezinme çubuğu gizlenir.
+- [ ] `DenseTable` Ctrl ve Shift ile birden çok satır seçebilir.
+- [ ] Kit testleri, ekran görüntüleri, CHANGELOG; kullanıcı 0.1.2 Release'ini oluşturdu.
+
+### S-31 Telefonda klavye alt menüyü yukarı itmez · 2 · [O] · bekliyor
+- [ ] Ara ekranında (ve her metin kutusunda) klavye açılınca alt menü klavyenin üstüne çıkmaz, gizlenir; klavye kapanınca geri gelir.
+- [ ] Telefon ekran görüntüsü (klavye açık).
+
+### S-32 Klavye-fare modunda yazılar bir punto büyük · 2 · [F] · bekliyor
+- [ ] Klavye-fare modunda bütün yazılar 1 sp büyür; dokunmatik mod aynen kalır.
+- [ ] Tablolar, menüler ve düğmeler taşmaz; DeX açık ve koyu ekran görüntüleri.
+- [ ] Kontrast testi geçer.
+
+### S-33 Raf oluşturma · 5 · [F] · bekliyor
+- [ ] Raflar ekranında "Yeni raf" ile raf kodu (örnek: B3) ve isteğe bağlı açıklama girilir; kitabı olmayan raf da listede görünür.
+- [ ] Raf listesi kişinin Excel dosyasında saklanır (karar bekleniyor), öteki cihaza Drive ile ulaşır.
+- [ ] Raf adı değiştirilebilir (içindeki kitapların Raf alanı da değişir); boş raf silinebilir.
+- [ ] Testler: kaydet → oku, eski dosyada raf listesi yokken kitaplardaki raflar listeye alınır.
+
+### S-34 Rafa kitap ekleme (Raflar ekranından) · 3 · [O] · bekliyor
+- [ ] Açık rafta "Kitap ekle": arama kutusu; sonuca basınca ya da Enter'da kitap o rafa konur, kutu temizlenir. Birden çok sonuç tek adımda konabilir.
+- [ ] Başka rafta duran kitap için "B2'den B3'e taşınsın mı?" sorulur.
+- [ ] Rafı yazılmamış kitap sayısı görünür; her atama Ctrl+Z ile geri alınır. Eski "Raf doldur" bu akışın içine katılır.
+
+### S-35 Kütüphaneden rafa koyma · 3 · [O] · bekliyor
+- [ ] Kütüphane tablosunda bir ya da birden çok satır seçilir (Ctrl/Shift ile ya da dokunmatikte uzun basıp işaretleyerek); "Rafa koy…" raf listesinden seçtirir, "Yeni raf" da sunar.
+- [ ] Sağ tık menüsünde ve düzenleme formunda raf, raf listesinden seçilir (elle yazmak da serbest).
+- [ ] Ctrl+Z geri alır; DeX ve telefon ekran görüntüsü.
 
 ## Sıraya konmayı bekleyenler
 
