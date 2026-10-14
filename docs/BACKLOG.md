@@ -234,24 +234,24 @@ Gerçek listelere dokunmadan, uygulamanın kendi `Kitap Bulucu deneme.xlsx` dosy
 - [ ] 1.0.0 APK'sı önceki sürümlerin üstüne kurulur; ayarlar ve yedekler kalır.
 - [ ] Tablette ve babanın telefonunda baştan sona deneme listesi geçti.
 
-## Sprint 7: Tablet ve telefon geri bildirimi (14.10.2026)
+## Tablet ve telefon geri bildirimi (14–15.10.2026)
 
 Kaynak: kullanıcının 1.0.0 denemesi.
 
-### K-02 Kit 0.1.2: yazı boyu ayarı, klavye açıkken alt çubuk, çoklu satır seçimi · 3 · [F] · bekliyor
-- [ ] Uygulama klavye-fare modundaki yazı boyunu kitten ayarlayabilir (kiti uygulamada yamamadan).
-- [ ] Telefonda ekran klavyesi açıkken alt gezinme çubuğu gizlenir.
-- [ ] `DenseTable` Ctrl ve Shift ile birden çok satır seçebilir.
-- [ ] Kit testleri, ekran görüntüleri, CHANGELOG; kullanıcı 0.1.2 Release'ini oluşturdu.
+### K-02 Kit 0.1.2: yazı boyu ayarı, klavye açıkken alt çubuk, çoklu satır seçimi · 3 · [F] · bitti
+- [x] Uygulama klavye-fare modundaki yazı boyunu kitten ayarlayabilir (kiti uygulamada yamamadan).
+- [x] Telefonda ekran klavyesi açıkken alt gezinme çubuğu gizlenir.
+- [x] `DenseTable` Ctrl ve Shift ile birden çok satır seçebilir.
+- [x] Kit testleri, ekran görüntüleri, CHANGELOG; kullanıcı 0.1.2 Release'ini oluşturdu.
 
-### S-31 Telefonda klavye alt menüyü yukarı itmez · 2 · [O] · bekliyor
-- [ ] Ara ekranında (ve her metin kutusunda) klavye açılınca alt menü klavyenin üstüne çıkmaz, gizlenir; klavye kapanınca geri gelir.
-- [ ] Telefon ekran görüntüsü (klavye açık).
+### S-31 Telefonda klavye alt menüyü yukarı itmez · 2 · [O] · bitti
+- [x] Ara ekranında (ve her metin kutusunda) klavye açılınca alt menü klavyenin üstüne çıkmaz, gizlenir; klavye kapanınca geri gelir.
+- [x] Kitin testi ve ekran görüntüsü (klavye açık, alt çubuk gizli); telefonda denenecek.
 
-### S-32 Klavye-fare modunda yazılar bir punto büyük · 2 · [F] · bekliyor
-- [ ] Klavye-fare modunda bütün yazılar 1 sp büyür; dokunmatik mod aynen kalır.
-- [ ] Tablolar, menüler ve düğmeler taşmaz; DeX açık ve koyu ekran görüntüleri.
-- [ ] Kontrast testi geçer.
+### S-32 Klavye-fare modunda yazılar bir punto büyük · 2 · [F] · bitti
+- [x] Klavye-fare modunda bütün yazılar 1 sp büyür; dokunmatik mod aynen kalır.
+- [x] Tablolar, menüler ve düğmeler taşmaz; DeX açık ve koyu ekran görüntüleri.
+- [x] Kontrast testi geçer.
 
 ### S-33 Raf oluşturma · 5 · [F] · bitti
 - [x] Raflar ekranında "Yeni raf" ile raf kodu (örnek: B3) ve isteğe bağlı açıklama girilir; kitabı olmayan raf da listede görünür.
@@ -264,9 +264,9 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [x] Başka rafta duran kitap için "B2 rafından B3 rafına taşınsın mı?" sorulur.
 - [x] Rafı yazılmamış kitap sayısı görünür; her atama Ctrl+Z ile geri alınır. Eski "Raf doldur" bu akışın içine katıldı.
 
-### S-35 Kütüphaneden rafa koyma · 3 · [O] · bitti (çoklu seçim kitle gelecek)
+### S-35 Kütüphaneden rafa koyma · 3 · [O] · bitti
 - [x] Kütüphane tablosunda seçilen satır için "Rafa koy…" raf listesinden seçtirir (süzme, ↑↓, Enter), "Yeni raf" da sunar.
-- [ ] Birden çok satır seçimi (Ctrl/Shift ile ya da dokunmatikte uzun basıp işaretleyerek): kit 0.1.2 ile bağlanacak; "Rafa koy…" (`BookActions.placeOnShelf`) şimdiden birden çok kitabı alıyor.
+- [x] Birden çok satır seçimi: Ctrl/Shift ile tıklama, Ctrl+A; dokunmatikte "Seç" düğmesiyle dokunarak işaretleme. Seçim çubuğu "N kitap seçili · Rafa koy… · Seçimi kaldır".
 - [x] Sağ tık menüsünde ("Rafa koy…") ve düzenleme formunda raf, raf listesinden seçilir (elle yazmak da serbest).
 - [x] Ctrl+Z geri alır; DeX ve telefon ekran görüntüsü.
 

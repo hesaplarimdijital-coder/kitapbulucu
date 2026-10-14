@@ -1,6 +1,6 @@
 # Durum
 
-Son güncelleme: 14.10.2026, Sprint 6 ve K-01 bitti, sürüm 1.0.0.
+Son güncelleme: 15.10.2026, 1.0.0 geri bildirimi işlendi (raflar, yazı boyu, klavye); kit 0.1.2.
 
 ## Şu an
 
@@ -9,13 +9,16 @@ Son güncelleme: 14.10.2026, Sprint 6 ve K-01 bitti, sürüm 1.0.0.
 - Uygulama: kurulum, arama, kitap ekleme (Kütüphane'de "+" ve Ctrl+N), silme/düzenleme/taşıma, geri alma, kütüphane tablosu, raflar ve raf doldurma, Excel birleştirme (Ctrl+Shift+O, Ayarlar), yedekten geri yükleme, bekleyen değişiklikler, tek Excel olarak dışa aktarma, Ctrl+O.
 - APK: `ci/apk` dalında `kitapbulucu.apk`; `ornek/` altında örnek dosyalar. Ekran görüntüleri `ci/screenshots`; başvuru görüntüleri `app/src/test/screenshots/` (33 ekran).
 - Kod haritası: `xlsx/`, `model/`, `text/` (TurkishText, Fold, Cleaning), `search/`, `importing/MergePlan`, `store/` (… LibraryStore: restore, exportTo, backupBookCount, mergeDecisions), `ui/` (AppShell, AppShortcuts, Controls + CheckRow, DataSection, BookActions, FilePicker, LibraryTexts, setup/, search/, add/, library/, shelves/, importing/, theme/), `App.kt`.
-- K-01 bitti (14.10.2026): uygulama kit 0.1.1'de; `AppFonts.desk` = Plex + başlıklarda Literata; kütüphane tablosunda ad sütunu Literata.
+- K-01 bitti; K-02 bitti (kit 0.1.2: `type` kancası, klavye açıkken alt çubuk gizli, `DenseTable` çoklu seçim). Uygulama `AppFonts.type` ile klavye-fare modunda 1 sp büyük yazı kullanıyor.
+- Raflar (S-33…S-35): `store/ShelfCatalog` (cihazda `files/library/shelves.json`, kişi başına), Raflar ekranında Yeni raf / Adını değiştir / Rafı sil / Kitap ekle; Kütüphane'de "Rafa koy…" bir ya da birçok kitap (Ctrl/Shift, dokunmatikte "Seç").
+- Çalışma biçimi: sprint yok; Opus orkestratör, işler alt ajanlarla (CLAUDE.md).
 
 ## Kullanıcıdan beklenenler
 
 1. GitHub'a iki gizli değer: `KB_KEYSTORE_BASE64` ve `KB_KEYSTORE_PASSWORD` (12.10.2026'da dosya ve parola verildi). Eklenene kadar APK'lar her seferinde başka anahtarla imzalanır; yeni APK eskisinin üstüne kurulamaz (önce kaldır). S-29'un "üstüne kurulur" maddesi buna bağlı.
-2. Tablette ve babanın telefonunda baştan sona deneme (kontrol listesi son mesajda); S-06 kalanları (yeniden başlatma sonrası izin, dosyanın öteki cihazda görünmesi, değişikliğin ulaşma süresi).
-3. `ornek/Ortak.xlsx` ve dışa aktarılan `Kitaplar.xlsx` dosyasının Excel, Office NX ve Google E-Tablolar'da açılması.
+2. Telefonda "Rafa koy…" ve "Yeni raf" pencerelerine bakılmalı (test ortamında telefon görüntüsü çizilemedi).
+3. Tablette ve babanın telefonunda baştan sona deneme (kontrol listesi son mesajda); S-06 kalanları (yeniden başlatma sonrası izin, dosyanın öteki cihazda görünmesi, değişikliğin ulaşma süresi).
+4. `ornek/Ortak.xlsx` ve dışa aktarılan `Kitaplar.xlsx` dosyasının Excel, Office NX ve Google E-Tablolar'da açılması.
 
 ## Veri hakkında bilinenler
 
