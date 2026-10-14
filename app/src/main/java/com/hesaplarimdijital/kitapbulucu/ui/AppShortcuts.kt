@@ -12,13 +12,15 @@ import desktopkit.shell.ShellNavigator
 
 /**
  * Every keyboard shortcut of the app in one table: the menu bar, the Meta+/ list and the list in
- * Settings are all built from it. The kit's common ones (Ctrl+K, Ctrl+, Ctrl+B, Ctrl+/) plus the
- * app's own; more arrive with their screens.
+ * Settings are all built from it: the kit's common ones (Ctrl+K, Ctrl+, Ctrl+B, Ctrl+/) plus the
+ * app's own. Single keys (F2, Del) live in the table itself, never here.
  */
 object AppShortcuts {
     const val REFRESH = "kb.refresh"
     const val ADD = "kb.add"
     const val UNDO = "kb.undo"
+    const val OPEN = "kb.open"
+    const val MERGE = "kb.merge"
 
     val FileGroup = ShortcutGroup("file", R.string.menu_file)
     val EditGroup = ShortcutGroup("edit", R.string.menu_edit)
@@ -26,10 +28,12 @@ object AppShortcuts {
     val Refresh = Shortcut(REFRESH, CommonShortcuts.ViewGroup, R.string.shortcut_refresh, KeyChord(Key.F5))
     val Add = Shortcut(ADD, FileGroup, R.string.shortcut_add, KeyChord(Key.N, ctrl = true))
     val Undo = Shortcut(UNDO, EditGroup, R.string.shortcut_undo, KeyChord(Key.Z, ctrl = true))
+    val Open = Shortcut(OPEN, FileGroup, R.string.shortcut_open, KeyChord(Key.O, ctrl = true))
+    val Merge = Shortcut(MERGE, FileGroup, R.string.shortcut_merge, KeyChord(Key.O, ctrl = true, shift = true))
 
     val registry = ShortcutRegistry(
         groups = listOf(FileGroup, EditGroup, CommonShortcuts.ViewGroup, CommonShortcuts.HelpGroup),
-        shortcuts = listOf(Add, Undo, Refresh) + CommonShortcuts.all,
+        shortcuts = listOf(Add, Open, Merge, Undo, Refresh) + CommonShortcuts.all,
     )
 
     /** Runs the action of shortcut [id]; false when the id is unknown. */
@@ -41,6 +45,8 @@ object AppShortcuts {
         onSearch: () -> Unit = {},
         onAdd: () -> Unit = {},
         onUndo: () -> Unit = {},
+        onOpen: () -> Unit = {},
+        onMerge: () -> Unit = {},
     ): Boolean {
         when (id) {
             CommonShortcuts.SEARCH -> {
@@ -52,6 +58,8 @@ object AppShortcuts {
             REFRESH -> onRefresh()
             ADD -> onAdd()
             UNDO -> onUndo()
+            OPEN -> onOpen()
+            MERGE -> onMerge()
             else -> return false
         }
         return true

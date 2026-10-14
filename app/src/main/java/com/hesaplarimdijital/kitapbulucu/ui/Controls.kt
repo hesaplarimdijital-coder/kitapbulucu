@@ -247,3 +247,39 @@ fun ConfirmDialog(title: String, text: String, actions: List<DialogAction>, onDi
     }
     androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
 }
+
+/**
+ * A row with a check box in the kit's look: click, tap, Space or Enter toggles it. The kit has
+ * no check box of its own, and one row per book reads better than a switch.
+ */
+@Composable
+fun CheckRow(checked: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val colors = DeskTheme.colors
+    val dimens = DeskTheme.dimens
+    val interaction = remember { MutableInteractionSource() }
+    val state = interaction.collectState()
+    val shape = RoundedCornerShape(dimens.radiusControl)
+    Row(
+        modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(stateBackground(state))
+            .focusRing(state, shape)
+            .deskClickable(interaction, { onChange(!checked) }, role = Role.Checkbox)
+            .padding(horizontal = dimens.gapS, vertical = dimens.gapXs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val box = RoundedCornerShape(4.dp)
+        Box(
+            Modifier
+                .size(18.dp)
+                .background(if (checked) colors.accent else colors.surface, box)
+                .border(1.5.dp, if (checked) colors.accent else colors.borderStrong, box),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (checked) Icon(DeskIcons.Check, contentDescription = null, tint = colors.onAccent, modifier = Modifier.size(14.dp))
+        }
+        Spacer(Modifier.width(dimens.gapM))
+        Box(Modifier.weight(1f)) { content() }
+    }
+}

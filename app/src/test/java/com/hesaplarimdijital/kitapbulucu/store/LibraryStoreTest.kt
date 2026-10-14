@@ -528,4 +528,58 @@ class LibraryStoreTest {
         assertEquals(listOf(dadBooks[1]), fileBooks(meUri))
         assertEquals(listOf(dadBooks[0]), fileBooks(dadUri))
     }
+
+    @Test
+    fun aBackupIsPutBackAndTheCurrentFileIsBackedUpFirst() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        val store = store()
+        store.start()
+        now += 60_000
+        store.submit(Change.Add(Owner.DAD, Book("Kar Tanesi", "Orhan Pamir", "B4")))
+        assertEquals(3, store.state(Owner.DAD).bookCount)
+        val backup = store.backups(Owner.DAD).single()
+        assertEquals(2, kotlinx.coroutines.runBlocking { store.backupBookCount(Owner.DAD, backup.file) })
+
+        now += 60_000
+        var restored: Boolean? = null
+        store.restore(Owner.DAD, backup.file) { restored = it }
+        assertEquals(true, restored)
+        assertEquals(dadBooks.toList(), store.state(Owner.DAD).table!!.books)
+        assertEquals(2, store.backups(Owner.DAD).size) // the three-book file was kept too
+        assertEquals(3, kotlinx.coroutines.runBlocking { store.backupBookCount(Owner.DAD, store.backups(Owner.DAD).first().file) })
+    }
+
+    @Test
+    fun bothListsAreExportedAsOneWorkbook() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        links().set(Owner.ME, meUri, "Benim.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        documents.bytes[meUri] = workbook(Book("Kar Tanesi", "Orhan Pamir", "B4"), sheet = "Benim")
+        val store = store()
+        store.start()
+        val target = Uri.parse("content://test/Kitaplar.xlsx")
+        var ok: Boolean? = null
+        store.exportTo(target) { ok = it }
+        assertEquals(true, ok)
+        val sheets = com.hesaplarimdijital.kitapbulucu.xlsx.SpreadsheetReader.read(documents.bytes.getValue(target)).filledSheets
+        assertEquals(listOf("Babam", "Benim"), sheets.map { it.name })
+        assertEquals(dadBooks.toList(), BookTable.parse(sheets[0])!!.table.books)
+    }
+
+    @Test
+    fun aMergeIsOneUndoStep() {
+        links().set(Owner.DAD, dadUri, "Babam.xlsx")
+        documents.bytes[dadUri] = workbook(*dadBooks)
+        val store = store()
+        store.start()
+        val incoming = BookTable(List(300) { Book("Yeni $it", "Yazar") })
+        val plan = com.hesaplarimdijital.kitapbulucu.importing.MergePlan.plan(Owner.DAD, store.state(Owner.DAD).table!!.books, incoming)
+        val (changes, result) = com.hesaplarimdijital.kitapbulucu.importing.MergePlan.changes(plan, com.hesaplarimdijital.kitapbulucu.importing.MergePlan.Choices())!!
+        assertEquals(300, result.added)
+        store.submitAll(changes, "300 kitap eklendi")
+        assertEquals(302, store.state(Owner.DAD).bookCount)
+        store.undo()
+        assertEquals(dadBooks.toList(), store.state(Owner.DAD).table!!.books)
+    }
 }

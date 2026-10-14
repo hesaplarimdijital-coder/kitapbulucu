@@ -24,6 +24,14 @@ import com.hesaplarimdijital.kitapbulucu.store.FileLinks
 import com.hesaplarimdijital.kitapbulucu.store.LibraryCache
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.ui.AppShell
+import com.hesaplarimdijital.kitapbulucu.ui.DataSection
+import com.hesaplarimdijital.kitapbulucu.ui.FormRequest
+import com.hesaplarimdijital.kitapbulucu.ui.importing.PickedFile
+import com.hesaplarimdijital.kitapbulucu.xlsx.Sheet
+import com.hesaplarimdijital.kitapbulucu.xlsx.Workbook
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.hesaplarimdijital.kitapbulucu.ui.Routes
 import com.hesaplarimdijital.kitapbulucu.ui.rememberFilePicker
 import com.hesaplarimdijital.kitapbulucu.ui.setup.MappingScreen
@@ -118,13 +126,48 @@ class SetupScreenshotTest {
         capture(name, theme, input) { MappingScreen(Owner.ME, store, onClose = {}) }
     }
 
-    private fun shell(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, route: String, query: String = "", store: LibraryStore = sampleStore(), open: Boolean = false, addFocus: Int = 0) {
+    private fun shell(
+        name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, route: String, query: String = "", store: LibraryStore = sampleStore(),
+        open: Boolean = false, addFocus: Int = 0, form: FormRequest? = null, importPreview: Pair<PickedFile, Owner>? = null,
+    ) {
         val settings = sampleSettings()
         capture(name, theme, input) {
             val prefs = rememberDeskPreferences(accents = AppPalette.accents)
             val navController = rememberNavController()
             LaunchedEffect(route) { if (route != Routes.SEARCH) ShellNavigator(navController).navigate(route) }
-            AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store), initialSearch = query, initialSearchOpen = open, addFocus = addFocus)
+            AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store), initialSearch = query, initialSearchOpen = open, addFocus = addFocus, initialForm = form, importPreview = importPreview)
+        }
+    }
+
+    /** An old list to merge into mine: a moved book, a signed marker in the title, a second volume, two new books (one twice). */
+    private val oldList: PickedFile
+        get() = PickedFile(
+            "Eski liste.xlsx",
+            Workbook(
+                listOf(
+                    Sheet(
+                        "Liste",
+                        listOf(
+                            listOf("Kitap Adı", "Yazar", "Raf"),
+                            listOf("ÇATIDAKİ RASATHANE", "AYŞE İNCE", "2A"),
+                            listOf("Çatıdaki Kuşların Son Şarkısı - İMZALI", "Ferit Ağaoğlu", ""),
+                            listOf("Çatıdakiler 2", "Leyla Umut", ""),
+                            listOf("Rüzgârlı Kasaba", "Selim Toprak", "4D"),
+                            listOf("Mavi Defter", "Nur Akın", "4D"),
+                            listOf("Mavi Defter", "Nur Akın", "4D"),
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+    private fun merge(name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass) =
+        shell(name, theme, input, widthClass, Routes.SEARCH, store = sampleStore(myBooks), form = FormRequest.Import, importPreview = oldList to Owner.ME)
+
+    private fun data(name: String, theme: ThemeMode, input: InputMode) {
+        val store = sampleStore(myBooks)
+        capture(name, theme, input) {
+            Column(Modifier.verticalScroll(rememberScrollState())) { DataSection(store, onMerge = {}) }
         }
     }
 
@@ -199,4 +242,19 @@ class SetupScreenshotTest {
 
     @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
     fun shelvesPhoneDark() = shell("phone-dark-shelves", ThemeMode.Dark, InputMode.Touch, WidthClass.Compact, Routes.SHELVES, store = sampleStore(myBooks))
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun mergeDexLight() = merge("dex-light-merge", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge)
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun mergeDexDark() = merge("dex-dark-merge", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge)
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun mergePhoneLight() = merge("phone-light-merge", ThemeMode.Light, InputMode.Touch, WidthClass.Compact)
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun dataDexLight() = data("dex-light-settings-data", ThemeMode.Light, InputMode.Pointer)
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun dataDexDark() = data("dex-dark-settings-data", ThemeMode.Dark, InputMode.Pointer)
 }

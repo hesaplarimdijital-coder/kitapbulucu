@@ -68,6 +68,10 @@ object MergePlan {
     /** Counts for the result line: "47 kitap eklendi, 3 kitap güncellendi, 0 kitap silindi." */
     data class Result(val added: Int, val changed: Int, val removed: Int)
 
+    /** Incoming books shaped like [target]'s rows: its unknown columns, left empty. */
+    fun fitTo(incoming: BookTable, target: BookTable): BookTable =
+        BookTable(incoming.books.map { it.copy(extra = List(target.extraHeaders.size) { "" }) }, target.extraHeaders)
+
     // ------------------------------------------------------------------ cleaning
 
     /**

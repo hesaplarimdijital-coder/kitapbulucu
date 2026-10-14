@@ -17,7 +17,10 @@ class AppBasicsTest {
 
     @Test
     fun commonShortcutsAreRegistered() {
-        for (id in listOf(CommonShortcuts.SEARCH, CommonShortcuts.SETTINGS, CommonShortcuts.SHORTCUT_LIST)) {
+        for (id in listOf(
+            CommonShortcuts.SEARCH, CommonShortcuts.SETTINGS, CommonShortcuts.SHORTCUT_LIST,
+            AppShortcuts.ADD, AppShortcuts.OPEN, AppShortcuts.MERGE, AppShortcuts.UNDO, AppShortcuts.REFRESH,
+        )) {
             assertNotNull(id, AppShortcuts.registry.getOrNull(id))
         }
     }

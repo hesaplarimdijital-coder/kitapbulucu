@@ -29,6 +29,7 @@ import com.hesaplarimdijital.kitapbulucu.store.StoreNotice
 import com.hesaplarimdijital.kitapbulucu.store.WriteFailure
 import com.hesaplarimdijital.kitapbulucu.ui.add.AddBookScreen
 import com.hesaplarimdijital.kitapbulucu.ui.add.EditTarget
+import com.hesaplarimdijital.kitapbulucu.ui.importing.ImportScreen
 import com.hesaplarimdijital.kitapbulucu.ui.library.LibraryScreen
 import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelfTarget
 import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelvesScreen
@@ -73,6 +74,8 @@ object Routes {
 sealed class FormRequest {
     data class Add(val title: String = "") : FormRequest()
     data class Edit(val owner: Owner, val book: com.hesaplarimdijital.kitapbulucu.model.Book) : FormRequest()
+    /** "Excel birleştir" (Ctrl+Shift+O, or from Settings). */
+    object Import : FormRequest()
 }
 
 @Composable
@@ -125,14 +128,21 @@ fun AppShell(
     initialSearchOpen: Boolean = false,
     /** Changes on every Ctrl+N: the add form takes the cursor again. */
     addFocus: Int = 0,
+    /** Changes on every Ctrl+Shift+O: the merge screen opens. */
+    mergeFocus: Int = 0,
+    /** For screenshots: the form shown from the start. */
+    initialForm: FormRequest? = null,
+    /** For screenshots: the merge screen's file and target. */
+    importPreview: Pair<com.hesaplarimdijital.kitapbulucu.ui.importing.PickedFile, Owner>? = null,
 ) {
     val spec = rememberAppSpec()
     val resources = LocalContext.current.resources
     // add or edit form over the current screen; it closes when another screen is chosen
-    var form by remember { mutableStateOf<FormRequest?>(null) }
+    var form by remember { mutableStateOf(initialForm) }
     var shelfTarget by remember { mutableStateOf<ShelfTarget?>(null) }
     val actions = store?.let { rememberBookActions(it, settings) { owner, book -> form = FormRequest.Edit(owner, book) } }
     LaunchedEffect(addFocus) { if (addFocus > 0) form = FormRequest.Add() }
+    LaunchedEffect(mergeFocus) { if (mergeFocus > 0) form = FormRequest.Import }
     BackHandler(enabled = form != null) { form = null }
     DesktopShell(
         spec = spec,
@@ -148,6 +158,16 @@ fun AppShell(
             if (store != null && picker != null) LibraryNotices(store, picker, onMap)
             Box(Modifier.weight(1f)) {
                 val currentForm = form
+                if (store != null && currentForm == FormRequest.Import) {
+                    ImportScreen(
+                        store,
+                        settings,
+                        onClose = { form = null },
+                        initialFile = importPreview?.first,
+                        initialTarget = importPreview?.second,
+                    )
+                    return@Box
+                }
                 if (store != null && currentForm != null) {
                     AddBookScreen(
                         store,
@@ -205,7 +225,7 @@ fun AppShell(
                             description = stringResource(R.string.placeholder_shelves_text),
                         )
                     }
-                    Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty(), store, settings, picker)
+                    Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty(), store, settings, picker, onMerge = { form = FormRequest.Import })
                 }
             }
             if (store != null) UndoBar(store)
@@ -315,10 +335,11 @@ private fun LibraryNotices(store: LibraryStore, picker: FilePicker, onMap: (Owne
 }
 
 @Composable
-private fun SettingsScreen(prefs: DeskPreferences, title: String, store: LibraryStore?, settings: AppSettings?, picker: FilePicker?) {
+private fun SettingsScreen(prefs: DeskPreferences, title: String, store: LibraryStore?, settings: AppSettings?, picker: FilePicker?, onMerge: () -> Unit) {
     LazyColumn(Modifier.fillMaxSize()) {
         item { PageHeader(title) }
         if (store != null && settings != null && picker != null) item { LibrarySection(store, settings, picker) }
+        if (store != null) item { DataSection(store, onMerge) }
         item { AppearanceSection(prefs) }
         item { InputSection(prefs) }
         item { ShortcutListSection(AppShortcuts.registry) }

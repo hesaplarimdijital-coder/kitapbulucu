@@ -88,7 +88,7 @@ fun MappingScreen(owner: Owner, store: LibraryStore, onClose: () -> Unit) {
 }
 
 @Composable
-private fun MappingEditor(
+internal fun MappingEditor(
     sheet: Sheet,
     sheetNames: List<String>,
     initial: ColumnMapping,

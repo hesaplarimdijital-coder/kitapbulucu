@@ -107,4 +107,28 @@ class ChangeApplierTest {
         assert(ChangeApplier.identity(rasathane) != ChangeApplier.identity(signedRasathane))
         assert(ChangeApplier.identity(Book("Kar", "Orhan Pamir")) != ChangeApplier.identity(Book("Kar", "Leyla Umut")))
     }
+
+    @Test
+    fun aMergeOfThousandsOfBooksStaysQuick() {
+        val existing = BookTable(List(7_000) { Book("Kitap $it", "Yazar ${it % 300}", "R${it % 50}") })
+        val changes = List(7_000) { Change.Add(Owner.ME, Book("Yeni kitap $it", "Yazar ${it % 300}")) } +
+            List(500) { Change.Edit(Owner.ME, existing.books[it], existing.books[it].copy(shelf = "Z1")) } +
+            List(500) { Change.Remove(Owner.ME, existing.books[6_000 + it]) }
+        val started = System.nanoTime()
+        val result = ChangeApplier.apply(existing, changes)
+        val millis = (System.nanoTime() - started) / 1_000_000
+        println("7000 adds, 500 edits, 500 removes on 7000 rows: $millis ms")
+        assertEquals(13_500, result.table.books.size)
+        assertEquals(true, result.notes.all { it.outcome == Outcome.APPLIED })
+        assertEquals("Z1", result.table.books[0].shelf)
+        assertEquals(true, millis < 2_000)
+    }
+
+    @Test
+    fun theSameIdentityTwiceIsCountedRight() {
+        // two rows of one book (different shelves): removing one leaves the other findable
+        val twice = BookTable(listOf(sefil, sefil.copy(shelf = "B9")))
+        val result = ChangeApplier.apply(twice, listOf(Change.Remove(Owner.DAD, sefil), Change.Add(Owner.DAD, sefil.copy(copies = 1))))
+        assertEquals(listOf(sefil.copy(shelf = "B9", copies = 3)), result.table.books)
+    }
 }

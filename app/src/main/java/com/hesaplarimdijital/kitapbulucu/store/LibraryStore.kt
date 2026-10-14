@@ -119,9 +119,10 @@ class LibraryStore(
                 is Change.Remove -> change.copy(at = now)
             }
         }
+        val firstAdd = tidy.filterIsInstance<Change.Add>().groupBy { it.owner }.mapValues { it.value.first() }
         tidy = tidy.map { change ->
             if (change is Change.Remove && change.waitFor == null) {
-                val add = tidy.firstOrNull { it is Change.Add && it.owner != change.owner }
+                val add = firstAdd.entries.firstOrNull { it.key != change.owner }?.value
                 if (add != null) change.copy(waitFor = add.id) else change
             } else {
                 change
@@ -133,7 +134,7 @@ class LibraryStore(
             while (undoStack.size > UNDO_LIMIT) undoStack.removeFirst()
             _lastStep.value = LastStep(label, now)
         }
-        tidy.forEach(pending::add)
+        pending.addAll(tidy)
         if (!links.formatNoticeShown) {
             links.formatNoticeShown = true
             notice(StoreNotice.FirstWrite)
@@ -162,13 +163,13 @@ class LibraryStore(
 
     /** What undoes [changes], computed against what the screens show right now. */
     private fun inverses(changes: List<Change>): List<Change> {
-        val tables = HashMap<Owner, BookTable?>()
-        val result = ArrayList<Change>()
+        val tables = HashMap<Owner, ChangeApplier.Rows?>()
+        val result = ArrayList<Change>(changes.size)
         for (change in changes) {
-            val table = tables.getOrPut(change.owner) { state(change.owner).table }
+            val rows = tables.getOrPut(change.owner) { state(change.owner).table?.let { ChangeApplier.Rows(it.books) } }
             val inverse = when (change) {
                 is Change.Add -> {
-                    val existing = table?.books?.firstOrNull { ChangeApplier.identity(it) == ChangeApplier.identity(change.book) }
+                    val existing = rows?.loose(change.book)?.takeIf { it >= 0 }?.let { rows.books[it] }
                     if (existing != null) Change.Edit(change.owner, existing.copy(copies = existing.copies + change.book.copies), existing)
                     else Change.Remove(change.owner, change.book)
                 }
@@ -176,7 +177,7 @@ class LibraryStore(
                 is Change.Remove -> Change.Add(change.owner, change.before)
             }
             result.add(inverse)
-            tables[change.owner] = table?.let { ChangeApplier.apply(it, listOf(change)).table }
+            rows?.apply(change)
         }
         return result.reversed()
     }
@@ -307,6 +308,18 @@ class LibraryStore(
 
     /** Reads a document the user picked for merging; throws [DocumentException]. */
     suspend fun readDocument(uri: Uri): ByteArray = withContext(io) { documents.readBytes(uri) }
+
+    /** How many books a backup holds, read the way the list itself is read; null when unreadable. */
+    suspend fun backupBookCount(owner: Owner, backup: java.io.File): Int? = withContext(io) {
+        try {
+            (parse(owner, backup.readBytes(), backup.name) as? Parsed.Ok)?.table?.books?.size
+        } catch (e: java.io.IOException) {
+            null
+        }
+    }
+
+    /** The picked document's name ("Eski liste.xlsx"), when the provider tells it. */
+    suspend fun documentName(uri: Uri): String? = withContext(io) { documents.info(uri)?.displayName }
 
     /** Remembered answers to "is this the same book?" from earlier merges. */
     var mergeDecisions: Map<String, Boolean>

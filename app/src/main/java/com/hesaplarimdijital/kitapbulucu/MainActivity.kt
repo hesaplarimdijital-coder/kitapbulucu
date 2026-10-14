@@ -10,6 +10,7 @@ import android.view.Menu
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -52,14 +53,28 @@ class MainActivity : ComponentActivity() {
             // every Ctrl+K puts the cursor in the search field again, even when the search screen is already open
             var searchFocus by remember { mutableIntStateOf(0) }
             var addFocus by remember { mutableIntStateOf(0) }
-            perform = { id -> AppShortcuts.perform(id, navigator, prefs, onRefresh = store::refresh, onSearch = { searchFocus++ }, onAdd = { addFocus++ }, onUndo = { store.undo() }) }
+            var mergeFocus by remember { mutableIntStateOf(0) }
+            var openFile by remember { mutableIntStateOf(0) }
+            perform = { id ->
+                AppShortcuts.perform(
+                    id, navigator, prefs,
+                    onRefresh = store::refresh,
+                    onSearch = { searchFocus++ },
+                    onAdd = { addFocus++ },
+                    onUndo = { store.undo() },
+                    onOpen = { openFile++ },
+                    onMerge = { mergeFocus++ },
+                )
+            }
             DesktopKitRoot(prefs, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
                 val picker = rememberFilePicker(store)
+                // Ctrl+O: choose the file of this device's own list again
+                LaunchedEffect(openFile) { if (openFile > 0) picker.pick(settings.me ?: Owner.DAD) }
                 val mappingOwner = mapping
                 when {
                     mappingOwner != null -> MappingScreen(mappingOwner, store, onClose = { mapping = null })
                     !settings.setupDone -> SetupScreen(store, settings, picker, onMap = { mapping = it }, onDone = { settings.updateSetupDone(true) })
-                    else -> AppShell(prefs, widthClass, navController, store, settings, picker, onMap = { mapping = it }, onShortcut = { perform(it) }, searchFocus = searchFocus, addFocus = addFocus)
+                    else -> AppShell(prefs, widthClass, navController, store, settings, picker, onMap = { mapping = it }, onShortcut = { perform(it) }, searchFocus = searchFocus, addFocus = addFocus, mergeFocus = mergeFocus)
                 }
             }
         }

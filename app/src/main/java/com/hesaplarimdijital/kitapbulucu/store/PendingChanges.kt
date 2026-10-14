@@ -30,6 +30,14 @@ class PendingChanges(private val file: File) {
         save()
     }
 
+    /** Many changes with one save: a merge of thousands of books writes the file once. */
+    @Synchronized
+    fun addAll(added: Collection<Change>) {
+        ensureLoaded()
+        changes.addAll(added)
+        save()
+    }
+
     @Synchronized
     fun remove(ids: Collection<String>) {
         ensureLoaded()

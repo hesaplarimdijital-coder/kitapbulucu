@@ -24,4 +24,22 @@ object AppIcons {
             DeskIcons.stroke("M9.7 13.5 11.9 5l2 .55"),
         )
     }
+
+    /** An arrow going down into a tray: another file's books coming in. */
+    val Import: ImageVector by lazy {
+        DeskIcons.build(
+            "Import",
+            DeskIcons.stroke("M2.5 9.5v3a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-3"),
+            DeskIcons.stroke("M8 2.5v8M5.2 7.7 8 10.5l2.8-2.8"),
+        )
+    }
+
+    /** An arrow rising out of a tray: both lists going out as one file. */
+    val Export: ImageVector by lazy {
+        DeskIcons.build(
+            "Export",
+            DeskIcons.stroke("M2.5 9.5v3a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-3"),
+            DeskIcons.stroke("M8 10.5v-8M5.2 5.3 8 2.5l2.8 2.8"),
+        )
+    }
 }

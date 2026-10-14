@@ -28,61 +28,111 @@ object ChangeApplier {
     }
 
     fun apply(table: BookTable, changes: List<Change>): Result {
-        val books = ArrayList(table.books)
-        val notes = ArrayList<Note>()
-        for (change in changes) {
-            val outcome = when (change) {
-                is Change.Add -> add(books, change.book)
-                is Change.Edit -> edit(books, change.before, change.after)
-                is Change.Remove -> remove(books, change.before)
-            }
-            notes.add(Note(change, outcome))
-        }
-        return Result(BookTable(books, table.extraHeaders), notes)
+        val rows = Rows(table.books)
+        val notes = ArrayList<Note>(changes.size)
+        for (change in changes) notes.add(Note(change, rows.apply(change)))
+        return Result(BookTable(rows.books, table.extraHeaders), notes)
     }
 
     /** The result of applying [changes] as the screens should show it before the file is written. */
     fun preview(table: BookTable?, changes: List<Change>): BookTable? =
         if (table == null || changes.isEmpty()) table else apply(table, changes).table
 
-    private fun add(books: MutableList<Book>, book: Book): Outcome {
-        val index = books.indexOfFirst { identity(it) == identity(book) }
-        if (index < 0) {
+    /**
+     * The rows being changed, with every row's identity worked out once and counted, so that a
+     * merge of thousands of new books stays linear: a book whose identity is not there yet is
+     * appended without a search.
+     */
+    internal class Rows(source: List<Book>) {
+        val books = ArrayList(source)
+        private val ids = source.mapTo(ArrayList(source.size)) { identity(it) }
+        private val counts = HashMap<String, Int>().apply { ids.forEach { put(it, getOrDefault(it, 0) + 1) } }
+
+        private fun has(id: String) = counts.getOrDefault(id, 0) > 0
+
+        /** The first row with [book]'s identity, or -1. */
+        fun loose(book: Book): Int {
+            val id = identity(book)
+            return if (has(id)) ids.indexOf(id) else -1
+        }
+
+        /** The first row equal to [book] in every field, or -1. */
+        fun exact(book: Book): Int {
+            val id = identity(book)
+            if (!has(id)) return -1
+            for (i in ids.indices) if (ids[i] == id && books[i] == book) return i
+            return -1
+        }
+
+        fun apply(change: Change): Outcome = when (change) {
+            is Change.Add -> add(change.book)
+            is Change.Edit -> edit(change.before, change.after)
+            is Change.Remove -> remove(change.before)
+        }
+
+        private fun append(book: Book) {
+            val id = identity(book)
             books.add(book)
-            return Outcome.APPLIED
+            ids.add(id)
+            counts[id] = counts.getOrDefault(id, 0) + 1
         }
-        val existing = books[index]
-        books[index] = existing.copy(copies = existing.copies + book.copies)
-        return Outcome.MERGED_INTO_EXISTING
-    }
 
-    private fun edit(books: MutableList<Book>, before: Book, after: Book): Outcome {
-        val exact = books.indexOf(before)
-        if (exact >= 0) {
-            books[exact] = after
-            return Outcome.APPLIED
+        private fun set(index: Int, book: Book) {
+            val old = ids[index]
+            val id = identity(book)
+            books[index] = book
+            if (old != id) {
+                counts[old] = counts.getOrDefault(old, 1) - 1
+                ids[index] = id
+                counts[id] = counts.getOrDefault(id, 0) + 1
+            }
         }
-        val loose = books.indexOfFirst { identity(it) == identity(before) }
-        if (loose >= 0) {
-            books[loose] = changedFields(books[loose], before, after)
-            return Outcome.EDITED_LOOSE_MATCH
-        }
-        books.add(after)
-        return Outcome.ADDED_INSTEAD_OF_EDIT
-    }
 
-    private fun remove(books: MutableList<Book>, before: Book): Outcome {
-        val exact = books.indexOf(before)
-        if (exact >= 0) {
-            books.removeAt(exact)
-            return Outcome.APPLIED
+        private fun removeAt(index: Int) {
+            val old = ids.removeAt(index)
+            books.removeAt(index)
+            counts[old] = counts.getOrDefault(old, 1) - 1
         }
-        val loose = books.indexOfFirst { identity(it) == identity(before) }
-        if (loose >= 0) {
-            books.removeAt(loose)
-            return Outcome.APPLIED
+
+        private fun add(book: Book): Outcome {
+            val index = loose(book)
+            if (index < 0) {
+                append(book)
+                return Outcome.APPLIED
+            }
+            val existing = books[index]
+            set(index, existing.copy(copies = existing.copies + book.copies))
+            return Outcome.MERGED_INTO_EXISTING
         }
-        return Outcome.ALREADY_GONE
+
+        private fun edit(before: Book, after: Book): Outcome {
+            val exact = exact(before)
+            if (exact >= 0) {
+                set(exact, after)
+                return Outcome.APPLIED
+            }
+            val loose = loose(before)
+            if (loose >= 0) {
+                set(loose, changedFields(books[loose], before, after))
+                return Outcome.EDITED_LOOSE_MATCH
+            }
+            append(after)
+            return Outcome.ADDED_INSTEAD_OF_EDIT
+        }
+
+        private fun remove(before: Book): Outcome {
+            val exact = exact(before)
+            if (exact >= 0) {
+                removeAt(exact)
+                return Outcome.APPLIED
+            }
+            val loose = loose(before)
+            if (loose >= 0) {
+                removeAt(loose)
+                return Outcome.APPLIED
+            }
+            return Outcome.ALREADY_GONE
+        }
     }
 
     /** [current] with only the fields that differ between [before] and [after] replaced. */
