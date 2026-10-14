@@ -5,6 +5,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.hesaplarimdijital.kitapbulucu.R
 import desktopkit.theme.DeskFonts
+import desktopkit.theme.DeskType
+import desktopkit.theme.InputMode
 
 /**
  * Literata (SIL Open Font License, licenses/Literata-OFL.txt) for book titles, Draft A's serif.
@@ -19,4 +21,7 @@ object AppFonts {
 
     /** The kit's IBM Plex for the interface, Literata for page and section headings (Draft A). */
     val desk: DeskFonts = DeskFonts.Plex.copy(heading = Literata)
+
+    /** Keyboard and mouse: every style 1 sp larger than the kit's (the user found them small); touch as the kit has it. */
+    val type: (InputMode, DeskFonts) -> DeskType = { mode, fonts -> DeskType.forMode(mode, fonts, pointerStep = 1f) }
 }

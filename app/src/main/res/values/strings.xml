@@ -326,4 +326,9 @@
     <string name="backup_done">Backup restored.</string>
     <string name="backup_failed">The backup could not be restored. Check that the file opens and try again.</string>
     <string name="settings_data">Backups and transfer</string>
+    <string name="action_place_many">Put %d books on a shelf…</string>
+    <string name="select_start">Select</string>
+    <string name="select_done">Done selecting</string>
+    <string name="select_count">%d books selected</string>
+    <string name="select_clear">Clear selection</string>
 </resources>

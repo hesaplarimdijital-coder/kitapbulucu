@@ -325,4 +325,9 @@
     <string name="backup_done">Yedek geri yüklendi.</string>
     <string name="backup_failed">Yedek geri yüklenemedi. Dosyanın açılabildiğini kontrol edip tekrar deneyin.</string>
     <string name="settings_data">Yedek ve aktarma</string>
+    <string name="action_place_many">%d kitabı rafa koy…</string>
+    <string name="select_start">Seç</string>
+    <string name="select_done">Seçmeyi bitir</string>
+    <string name="select_count">%d kitap seçili</string>
+    <string name="select_clear">Seçimi kaldır</string>
 </resources>

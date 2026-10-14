@@ -49,7 +49,7 @@ class ShellScreenshotTest {
         // the test activity's theme has an action bar; the app's theme has none
         compose.runOnUiThread { compose.activity.actionBar?.hide() }
         compose.setContent {
-            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) {
                     val prefs = rememberDeskPreferences(accents = AppPalette.accents)
                     val navController = rememberNavController()

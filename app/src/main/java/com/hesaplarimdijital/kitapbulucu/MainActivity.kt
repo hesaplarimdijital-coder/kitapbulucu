@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
                     onMerge = { mergeFocus++ },
                 )
             }
-            DesktopKitRoot(prefs, fonts = AppFonts.desk, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
+            DesktopKitRoot(prefs, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
                 val picker = rememberFilePicker(store)
                 // Ctrl+O: choose the file of this device's own list again
                 LaunchedEffect(openFile) { if (openFile > 0) picker.pick(settings.me ?: Owner.DAD) }

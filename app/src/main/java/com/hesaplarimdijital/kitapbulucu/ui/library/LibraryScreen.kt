@@ -35,6 +35,8 @@ import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.ui.BookActions
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
+import com.hesaplarimdijital.kitapbulucu.ui.AppIcons
+import androidx.compose.runtime.LaunchedEffect
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
 import androidx.compose.ui.text.font.FontWeight
 import desktopkit.components.ColumnWidth
@@ -119,6 +121,14 @@ fun BookTable(rows: List<LibraryRow>, actions: BookActions, onShelf: ((Owner, St
     val clipboard = LocalClipboardManager.current
     var sort by remember { mutableStateOf<TableSort?>(null) }
     var selected by remember { mutableStateOf<Int?>(null) }
+    // several rows (Ctrl/Shift click, Ctrl+A; on touch the "Seç" mode) for "Rafa koy…"
+    var selection by remember { mutableStateOf<Set<Any>>(emptySet()) }
+    var picking by remember { mutableStateOf(false) }
+    LaunchedEffect(rows) {
+        selection = emptySet()
+        selected = null
+    }
+    val touch = DeskTheme.inputMode == InputMode.Touch
     val collator = remember { Collator.getInstance(Locale("tr", "TR")) }
     val columns = rememberColumns()
     BoxWithConstraints(modifier.fillMaxWidth()) {
@@ -134,6 +144,24 @@ fun BookTable(rows: List<LibraryRow>, actions: BookActions, onShelf: ((Owner, St
             if (current.ascending) rows.sortedWith(comparator) else rows.sortedWith(comparator.reversed())
         }
         val selectedRow = sorted.firstOrNull { it.position == selected }
+        val chosen = sorted.filter { rowKey(it) in selection }
+        Column(Modifier.fillMaxSize()) {
+        if (chosen.size > 1 || touch) {
+            SelectionBar(
+                count = chosen.size,
+                picking = picking,
+                showPick = touch,
+                onPick = {
+                    picking = !picking
+                    if (!picking) selection = emptySet()
+                },
+                onPlace = { chosen.groupBy { it.owner }.forEach { (owner, list) -> actions.placeOnShelf(owner, list.map { it.book }) } },
+                onClear = {
+                    selection = emptySet()
+                    picking = false
+                },
+            )
+        }
         Box(
             Modifier.fillMaxSize().onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown || selectedRow == null) return@onPreviewKeyEvent false
@@ -147,19 +175,29 @@ fun BookTable(rows: List<LibraryRow>, actions: BookActions, onShelf: ((Owner, St
             DenseTable(
                 columns = shown,
                 rows = sorted,
-                key = { "${it.owner.name}:${it.position}" },
+                key = ::rowKey,
                 onRowClick = { row, _ -> selected = row.position },
-                selectedKey = selectedRow?.let { "${it.owner.name}:${it.position}" },
+                selectedKeys = selection,
+                onSelectionChange = { keys ->
+                    selection = keys
+                    if (keys.size == 1) selected = sorted.firstOrNull { rowKey(it) in keys }?.position
+                },
+                toggleOnClick = picking,
                 sort = sort,
                 onSortChange = { sort = it },
                 rowMenu = { row, _ ->
                     selected = row.position
+                    // the kit keeps the selection when the menu opens on a selected row
+                    val many = sorted.filter { rowKey(it) in selection }.takeIf { rowKey(row) in selection && it.size > 1 }
                     listOfNotNull(
                         MenuEntry.Item(resources.getString(R.string.action_edit), { actions.edit(row.owner, row.book) }, shortcut = "F2"),
                         MenuEntry.Item(resources.getString(R.string.action_delete), { actions.delete(row.owner, row.book) }, shortcut = "Del", destructive = true),
                         MenuEntry.Item(resources.getString(R.string.action_move), { actions.move(row.owner, row.book) }),
-                        // one row for now; a multi-row selection (kit 0.1.2) passes every selected book
-                        MenuEntry.Item(resources.getString(R.string.action_place), { actions.placeOnShelf(row.owner, listOf(row.book)) }),
+                        if (many != null) {
+                            MenuEntry.Item(resources.getString(R.string.action_place_many, many.size), { many.groupBy { it.owner }.forEach { (owner, list) -> actions.placeOnShelf(owner, list.map { it.book }) } })
+                        } else {
+                            MenuEntry.Item(resources.getString(R.string.action_place), { actions.placeOnShelf(row.owner, listOf(row.book)) })
+                        },
                         if (onShelf != null && row.book.shelf.isNotBlank()) {
                             MenuEntry.Item(resources.getString(R.string.action_shelf_books), { onShelf(row.owner, row.book.shelf) })
                         } else {
@@ -170,6 +208,33 @@ fun BookTable(rows: List<LibraryRow>, actions: BookActions, onShelf: ((Owner, St
                     )
                 },
             )
+        }
+        }
+    }
+}
+
+private fun rowKey(row: LibraryRow): Any = "${row.owner.name}:${row.position}"
+
+/** "3 kitap seçili · Rafa koy… · Seçimi kaldır"; on touch also the "Seç" switch that makes taps tick rows. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun SelectionBar(count: Int, picking: Boolean, showPick: Boolean, onPick: () -> Unit, onPlace: () -> Unit, onClear: () -> Unit) {
+    val dimens = DeskTheme.dimens
+    androidx.compose.foundation.layout.FlowRow(
+        Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding, vertical = dimens.gapXs),
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(dimens.gapS),
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(dimens.gapXs),
+    ) {
+        if (showPick) DeskButton(stringResource(if (picking) R.string.select_done else R.string.select_start), onPick, icon = DeskIcons.Check, primary = picking)
+        if (count > 0) {
+            Text(
+                stringResource(R.string.select_count, count),
+                style = DeskTheme.type.body,
+                color = DeskTheme.colors.textSecondary,
+                modifier = Modifier.align(Alignment.CenterVertically),
+            )
+            DeskButton(stringResource(R.string.action_place), onPlace, icon = AppIcons.Shelf, primary = !showPick || !picking)
+            DeskButton(stringResource(R.string.select_clear), onClear)
         }
     }
 }

@@ -105,7 +105,7 @@ class SetupScreenshotTest {
     private fun capture(name: String, theme: ThemeMode, input: InputMode, dialogs: Boolean = false, content: @Composable () -> Unit) {
         compose.runOnUiThread { compose.activity.actionBar?.hide() }
         compose.setContent {
-            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) { content() }
             }
         }
