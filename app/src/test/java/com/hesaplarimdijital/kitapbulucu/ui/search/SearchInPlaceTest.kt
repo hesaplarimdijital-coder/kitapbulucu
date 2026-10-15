@@ -83,10 +83,9 @@ class SearchInPlaceTest {
         compose.onNodeWithText("Yıl", useUnmergedTree = true).assertExists()
         val after = compose.onNode(hasText(title) and hasClickAction()).fetchSemanticsNode()
         assertEquals("the opened row stays where it was", before, after.boundsInRoot.top, 1f)
-        assertTrue(
-            "the opened row grew: ${target.boundsInRoot.height} -> ${after.boundsInRoot.height}",
-            after.boundsInRoot.height > target.boundsInRoot.height,
-        )
+        // the clickable header keeps its size; the details open right under it, not at the top of the list
+        val details = compose.onNodeWithText("Yıl", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot.top
+        assertTrue("the details open under the row: row $before, details $details", details > before && details < before + 600f)
         val firstAfter = compose.onNode(hasText(rows[0].config[SemanticsProperties.Text].first().text) and hasClickAction()).fetchSemanticsNode()
         assertEquals("the rows above did not move", firstBefore, firstAfter.boundsInRoot.top, 1f)
     }
