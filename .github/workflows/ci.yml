@@ -43,7 +43,7 @@ jobs:
           curl -s --max-time 60 "$base/build.log" > jitpack.log || true
           tail -80 jitpack.log
           # job logs are not readable from the session: surface the important lines as annotations
-          grep -vE "dubious ownership|safe.directory|To add an exception" jitpack.log | grep -v "^\s*$" | tail -9 | while IFS= read -r line; do echo "::error::jitpack: ${line:0:300}"; done
+          { grep -A7 "What went wrong" jitpack.log; grep -E "^e: |error:" jitpack.log; } | grep -v "^\s*$" | head -9 | while IFS= read -r line; do echo "::error::jitpack: ${line:0:300}"; done
           exit 1
 
       - name: Signing key
