@@ -120,7 +120,7 @@ fun NoticeCard(
                 .background(colors.surface)
                 .border(1.dp, colors.border, shape),
         ) {
-            Box(Modifier.width(4.dp).matchParentSize().background(tone))
+            Box(Modifier.matchParentSize()) { Box(Modifier.width(4.dp).fillMaxHeight().background(tone)) }
             Column(Modifier.padding(start = dimens.gapM + 4.dp, end = dimens.gapM, top = dimens.gapM, bottom = dimens.gapS), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
                 Text(title, style = DeskTheme.type.title, color = colors.text)
                 Text(text, style = DeskTheme.type.body, color = colors.textSecondary)

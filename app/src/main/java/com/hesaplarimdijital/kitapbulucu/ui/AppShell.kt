@@ -217,6 +217,8 @@ fun AppShell(
                         } else {
                             when (route) {
                                 Routes.SEARCH -> if (store != null) {
+                                    // the search field is on the screen; the top bar's search button would only repeat it
+                                    if (phone) CompactTopBar(showSearch = false)
                                     SearchScreen(
                                         store,
                                         initialQuery = initialSearch,
