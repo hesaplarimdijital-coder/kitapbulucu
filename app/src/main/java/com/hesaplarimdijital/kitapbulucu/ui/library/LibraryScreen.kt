@@ -357,6 +357,8 @@ fun PhoneBookList(
     listState: LazyListState,
     modifier: Modifier = Modifier,
     header: (LazyListScope.() -> Unit)? = null,
+    /** False on an open shelf, where every row would repeat the shelf's code. */
+    showShelf: Boolean = true,
 ) {
     // a change of the list (a book put on a shelf, another list) ends the selection, as on DeX
     val first = remember { booleanArrayOf(true) }
@@ -372,6 +374,7 @@ fun PhoneBookList(
                 row,
                 selected = key in selection,
                 selecting = selection.active,
+                showShelf = showShelf,
                 onClick = { if (state.selection.active) state.selection = state.selection.toggle(key) else state.sheet = row },
                 onLongClick = { state.selection = state.selection.toggle(key) },
                 onEdit = { actions.edit(row.owner, row.book) },
@@ -389,6 +392,7 @@ private fun PhoneBookRow(
     row: LibraryRow,
     selected: Boolean,
     selecting: Boolean,
+    showShelf: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onEdit: () -> Unit,
@@ -479,10 +483,13 @@ private fun PhoneBookRow(
                     }
                 }
             }
-            Spacer(Modifier.width(dimens.gapM))
-            if (book.shelf.isBlank()) {
+            if (!showShelf) {
+                Unit
+            } else if (book.shelf.isBlank()) {
+                Spacer(Modifier.width(dimens.gapM))
                 Text(stringResource(R.string.touchlist_no_shelf), style = DeskTheme.type.labelSmall.copy(fontStyle = FontStyle.Italic), color = if (selected) colors.onSelection else colors.textTertiary, maxLines = 1)
             } else {
+                Spacer(Modifier.width(dimens.gapM))
                 Text(
                     book.shelf,
                     style = ShelfStyle,

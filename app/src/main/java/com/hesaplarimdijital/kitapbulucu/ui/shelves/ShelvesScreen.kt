@@ -544,7 +544,7 @@ private fun PhoneShelfDetail(
     val expanded by remember(listState) { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     Box(Modifier.fillMaxSize()) {
         PhoneBookList(
-            rows, list, actions, onShelf = null, listState = listState, modifier = Modifier.fillMaxSize(),
+            rows, list, actions, onShelf = null, listState = listState, modifier = Modifier.fillMaxSize(), showShelf = false,
             header = {
                 item(key = "header") {
                     Column(

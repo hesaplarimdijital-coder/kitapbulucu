@@ -261,8 +261,9 @@ fun ShelfPickerDialog(
 /**
  * The phone's "Rafa koy…": a bottom sheet with the filter on top, "Yeni raf" as the first row and
  * the shelves below as large rows; the list scrolls. The filter does not take the cursor on its own:
- * the keyboard would cover half of the shelves (and, under Robolectric, a text field focused in a
- * dialog window on the phone qualifiers kept the screenshot test from ever going idle).
+ * the keyboard would cover half of the shelves. The sheet's window does not use the platform's
+ * dialog width: a dialog sized by the platform whose content fills the width (the old frame on a
+ * phone) never settled under Robolectric ("Compose did not get idle"), with or without focus.
  */
 @Composable
 private fun PhonePicker(

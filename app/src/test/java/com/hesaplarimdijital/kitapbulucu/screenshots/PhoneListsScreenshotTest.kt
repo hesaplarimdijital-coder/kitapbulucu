@@ -8,18 +8,11 @@ import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -31,7 +24,6 @@ import com.hesaplarimdijital.kitapbulucu.store.FakeDocuments
 import com.hesaplarimdijital.kitapbulucu.store.FileLinks
 import com.hesaplarimdijital.kitapbulucu.store.LibraryCache
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
-import com.hesaplarimdijital.kitapbulucu.ui.FormField
 import com.hesaplarimdijital.kitapbulucu.ui.Routes
 import com.hesaplarimdijital.kitapbulucu.ui.library.LibraryScreen
 import com.hesaplarimdijital.kitapbulucu.ui.rememberAppSpec
@@ -233,50 +225,4 @@ class PhoneListsScreenshotTest {
 
     @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
     fun pickerDark() = phone("phone-dark-shelf-picker", ThemeMode.Dark, Routes.LIBRARY, place = { Owner.DAD to listOf(kurk(it)) }, dialogs = true)
-
-    // ---------------------------------------------------------------- idle probes (temporary)
-
-    /**
-     * Why the old phone picker never went idle: a text field with the cursor in it, inside or
-     * outside a dialog window, at phone and DeX sizes. Each probe writes what happened to
-     * probes/<name>.txt next to the screenshots and never fails.
-     */
-    private fun probe(name: String, dialog: Boolean, focus: Boolean, input: InputMode) {
-        val result = try {
-            compose.setContent {
-                DesktopKitTheme(themeMode = ThemeMode.Dark, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
-                    Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) {
-                        val requester = remember { FocusRequester() }
-                        val field = @Composable {
-                            Column(Modifier.fillMaxWidth().background(DeskTheme.colors.surfaceRaised).padding(16.dp)) {
-                                FormField("Filtre", "", {}, modifier = Modifier.fillMaxWidth(), focusRequester = requester)
-                            }
-                        }
-                        if (dialog) Dialog(onDismissRequest = {}) { field() } else field()
-                        LaunchedEffect(Unit) { if (focus) runCatching { requester.requestFocus() } }
-                    }
-                }
-            }
-            val started = System.currentTimeMillis()
-            compose.waitForIdle()
-            "idle after ${System.currentTimeMillis() - started} ms"
-        } catch (t: Throwable) {
-            "NOT IDLE: " + t.javaClass.name + ": " + t.message?.take(4000)
-        }
-        val dir = File(File(System.getProperty("kitapbulucu.screenshotDir") ?: "build/outputs/screenshots"), "probes")
-        dir.mkdirs()
-        File(dir, "$name.txt").writeText("dialog=$dialog focus=$focus input=$input\n$result\n")
-    }
-
-    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
-    fun probePhoneDialogFocus() = probe("phone-dialog-focus", dialog = true, focus = true, input = InputMode.Touch)
-
-    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
-    fun probePhoneDialogNoFocus() = probe("phone-dialog-nofocus", dialog = true, focus = false, input = InputMode.Touch)
-
-    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
-    fun probePhoneInlineFocus() = probe("phone-inline-focus", dialog = false, focus = true, input = InputMode.Touch)
-
-    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
-    fun probeDexDialogFocus() = probe("dex-dialog-focus", dialog = true, focus = true, input = InputMode.Pointer)
 }
