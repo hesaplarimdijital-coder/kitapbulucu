@@ -25,9 +25,11 @@ import com.hesaplarimdijital.kitapbulucu.store.FileLinks
 import com.hesaplarimdijital.kitapbulucu.store.LibraryCache
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.ui.Routes
+import com.hesaplarimdijital.kitapbulucu.ui.SheetHost
 import com.hesaplarimdijital.kitapbulucu.ui.library.LibraryScreen
 import com.hesaplarimdijital.kitapbulucu.ui.rememberAppSpec
 import com.hesaplarimdijital.kitapbulucu.ui.rememberBookActions
+import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelfFormDialog
 import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelfTarget
 import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelvesScreen
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
@@ -149,6 +151,7 @@ class PhoneListsScreenshotTest {
         shelfQuery: String? = null,
         place: ((LibraryStore) -> Pair<Owner, List<Book>>)? = null,
         dialogs: Boolean = false,
+        extra: @Composable () -> Unit = {},
     ) {
         val store = sampleStore()
         val settings = sampleSettings()
@@ -161,15 +164,19 @@ class PhoneListsScreenshotTest {
             val actions = rememberBookActions(store, settings) { _, _ -> }
             LaunchedEffect(route) { ShellNavigator(navController).navigate(route) }
             LaunchedEffect(placing) { placing?.let { actions.placeOnShelf(it.first, it.second) } }
-            DesktopShell(spec = spec, widthClass = WidthClass.Compact, navController = navController, onSearch = {}) { current, _ ->
-                val label = spec.item(current)?.label.orEmpty()
-                when (current) {
-                    Routes.LIBRARY -> LibraryScreen(store, settings, actions, label, onAdd = {}, onShelf = { _, _ -> }, previewSelected = selectedRows, previewSheet = sheetRow)
-                    Routes.SHELVES -> ShelvesScreen(store, settings, actions, label, shelf, initialAddQuery = shelfQuery)
-                    else -> Unit
+            // as in AppShell: the sheets are drawn in the app's window, over the shell
+            SheetHost {
+                DesktopShell(spec = spec, widthClass = WidthClass.Compact, navController = navController, onSearch = {}) { current, _ ->
+                    val label = spec.item(current)?.label.orEmpty()
+                    when (current) {
+                        Routes.LIBRARY -> LibraryScreen(store, settings, actions, label, onAdd = {}, onShelf = { _, _ -> }, previewSelected = selectedRows, previewSheet = sheetRow)
+                        Routes.SHELVES -> ShelvesScreen(store, settings, actions, label, shelf, initialAddQuery = shelfQuery)
+                        else -> Unit
+                    }
                 }
+                actions.Dialogs()
+                extra()
             }
-            actions.Dialogs()
         }
     }
 
@@ -200,7 +207,31 @@ class PhoneListsScreenshotTest {
     @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
     fun bookSheetDark() = phone("phone-dark-library-sheet", ThemeMode.Dark, Routes.LIBRARY, sheet = { dadPosition(it, "Kürk") }, dialogs = true)
 
+    /** A short window (a phone with a tall navigation bar, or split screen): every action, Sil too, is on the sheet. */
+    @Test @Config(qualifiers = "tr-w411dp-h640dp-hdpi")
+    fun bookSheetShortLight() = phone("phone-light-library-sheet-short", ThemeMode.Light, Routes.LIBRARY, sheet = { dadPosition(it, "Kürk") })
+
+    @Test @Config(qualifiers = "tr-w411dp-h640dp-hdpi")
+    fun bookSheetShortDark() = phone("phone-dark-library-sheet-short", ThemeMode.Dark, Routes.LIBRARY, sheet = { dadPosition(it, "Kürk") })
+
     // ---------------------------------------------------------------- shelves
+
+    /** "Yeni raf" from the FAB: the form sheet over the shelves (the cursor is left out: Robolectric would not go idle). */
+    private fun newShelf(name: String, theme: ThemeMode) = phone(name, theme, Routes.SHELVES) {
+        ShelfFormDialog(
+            title = "Yeni raf",
+            existing = listOf("B4", "C1"),
+            onSave = { _, _ -> },
+            onDismiss = {},
+            focusOnOpen = false,
+        )
+    }
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun newShelfLight() = newShelf("phone-light-shelf-new", ThemeMode.Light)
+
+    @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
+    fun newShelfDark() = newShelf("phone-dark-shelf-new", ThemeMode.Dark)
 
     @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
     fun shelvesLight() = phone("phone-light-shelves-list", ThemeMode.Light, Routes.SHELVES)

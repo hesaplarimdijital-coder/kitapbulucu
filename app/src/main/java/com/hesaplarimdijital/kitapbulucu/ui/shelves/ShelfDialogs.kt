@@ -112,6 +112,8 @@ fun ShelfFormDialog(
     initialCode: String = "",
     initialNote: String = "",
     renaming: String? = null,
+    /** False for screenshots: the code field does not take the cursor. */
+    focusOnOpen: Boolean = true,
 ) {
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
@@ -153,8 +155,10 @@ fun ShelfFormDialog(
                 FormField(stringResource(R.string.shelves_note), note, { note = it.take(MAX_NOTE) }, modifier = Modifier.fillMaxWidth(), onEnter = saveAndClose)
                 DeskButton(stringResource(R.string.shelves_save), saveAndClose, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), icon = DeskIcons.Check, primary = true)
             }
+            // here, not beside the sheet: the sheet's content is composed where the sheet is drawn,
+            // so the field exists only from now on; the keyboard opens and the sheet rises above it
+            if (focusOnOpen) LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
         }
-        LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
         return
     }
     ShelfDialogFrame(onDismiss) {
@@ -172,7 +176,7 @@ fun ShelfFormDialog(
             DeskButton(stringResource(R.string.action_cancel), onDismiss)
         }
     }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    if (focusOnOpen) LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 }
 
 @Composable

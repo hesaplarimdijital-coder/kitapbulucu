@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -48,6 +49,8 @@ import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.store.LoadFailure
 import com.hesaplarimdijital.kitapbulucu.ui.AdaptiveButton
 import com.hesaplarimdijital.kitapbulucu.ui.BottomActionBar
+import com.hesaplarimdijital.kitapbulucu.ui.PhoneForm
+import com.hesaplarimdijital.kitapbulucu.ui.isKeyboardOpen
 import com.hesaplarimdijital.kitapbulucu.ui.BottomActions
 import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
 import com.hesaplarimdijital.kitapbulucu.ui.ButtonRow
@@ -234,25 +237,24 @@ private fun Start(
     }
     if (isPhone()) {
         // phone: "Dosya seç…" is the main button at the bottom
-        Column(Modifier.fillMaxSize()) {
-            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
-                body()
-                if (failure != null) {
-                    NoticeCard(
-                        title = stringResource(R.string.import_failed),
-                        text = LibraryTexts.failure(resources, failure),
-                        modifier = Modifier.padding(horizontal = dimens.pagePadding, vertical = dimens.gapM),
-                        tone = colors.danger,
-                    ) {}
-                }
-            }
-            BottomActionBar {
+        PhoneForm(
+            bar = {
                 BottomActions(
                     primary = { modifier ->
                         BottomPrimaryButton(pickLabel, onPick, modifier.focusRequester(focus), icon = desktopkit.components.DeskIcons.Folder, enabled = !reading)
                     },
                     secondary = { PhoneTextButton(stringResource(R.string.mapping_cancel), onClose) },
                 )
+            },
+        ) {
+            body()
+            if (failure != null) {
+                NoticeCard(
+                    title = stringResource(R.string.import_failed),
+                    text = LibraryTexts.failure(resources, failure),
+                    modifier = Modifier.padding(horizontal = dimens.pagePadding, vertical = dimens.gapM),
+                    tone = colors.danger,
+                ) {}
             }
         }
         return
@@ -331,6 +333,25 @@ private fun Review(
         store.submitAll(changes, ImportTexts.result(resources, counts))
         onApplied(counts)
     }
+
+    // the decision stays in sight however long the lists are
+    val counts = outcome?.second
+    val line = when {
+        current == null || current.isEmpty -> null
+        counts == null -> stringResource(R.string.import_answer_first)
+        else -> ImportTexts.preview(resources, counts)
+    }
+    val applyClick = { if (me != null && target != me) confirmOther = true else applyPlan() }
+    val canApply = outcome != null && outcome.first.isNotEmpty()
+    val phoneBar: @Composable ColumnScope.() -> Unit = {
+        if (line != null) Text(line, style = type.body, color = if (counts == null) colors.warning else colors.textSecondary)
+        BottomActions(
+            primary = { modifier -> BottomPrimaryButton(stringResource(R.string.import_apply), applyClick, modifier, enabled = canApply) },
+            secondary = { PhoneTextButton(stringResource(R.string.mapping_cancel), onClose) },
+        )
+    }
+    // on the phone the bar is pinned at the bottom, or ends the list while the keyboard is open
+    val barInList = phone && isKeyboardOpen()
 
     Column(Modifier.fillMaxSize()) {
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
@@ -426,24 +447,10 @@ private fun Review(
                     item { Spacer(Modifier.height(dimens.gapL)) }
                 }
             }
+            if (barInList) item(key = "bar") { BottomActionBar(content = phoneBar) }
         }
-        // the decision stays in sight however long the lists are
-        val counts = outcome?.second
-        val line = when {
-            current == null || current.isEmpty -> null
-            counts == null -> stringResource(R.string.import_answer_first)
-            else -> ImportTexts.preview(resources, counts)
-        }
-        val applyClick = { if (me != null && target != me) confirmOther = true else applyPlan() }
-        val canApply = outcome != null && outcome.first.isNotEmpty()
         if (phone) {
-            BottomActionBar {
-                if (line != null) Text(line, style = type.body, color = if (counts == null) colors.warning else colors.textSecondary)
-                BottomActions(
-                    primary = { modifier -> BottomPrimaryButton(stringResource(R.string.import_apply), applyClick, modifier, enabled = canApply) },
-                    secondary = { PhoneTextButton(stringResource(R.string.mapping_cancel), onClose) },
-                )
-            }
+            if (!barInList) BottomActionBar(content = phoneBar)
         } else {
             Column(
                 Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding, vertical = dimens.gapS),
@@ -537,11 +544,8 @@ private fun Done(title: String, result: MergePlan.Result, onClose: () -> Unit) {
         Text(stringResource(R.string.import_done_text), style = DeskTheme.type.body, color = DeskTheme.colors.textSecondary)
     }
     if (isPhone()) {
-        Column(Modifier.fillMaxSize()) {
-            Column(Modifier.weight(1f).padding(horizontal = dimens.pagePadding, vertical = dimens.gapM), verticalArrangement = Arrangement.spacedBy(dimens.gapM)) { texts() }
-            BottomActionBar {
-                BottomPrimaryButton(stringResource(R.string.import_close), onClose, Modifier.focusRequester(focus))
-            }
+        PhoneForm(bar = { BottomPrimaryButton(stringResource(R.string.import_close), onClose, Modifier.focusRequester(focus)) }) {
+            Column(Modifier.padding(horizontal = dimens.pagePadding, vertical = dimens.gapM), verticalArrangement = Arrangement.spacedBy(dimens.gapM)) { texts() }
         }
         return
     }

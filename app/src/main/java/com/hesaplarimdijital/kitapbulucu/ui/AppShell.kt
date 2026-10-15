@@ -144,6 +144,8 @@ fun AppShell(
     searchFocus: Int = 0,
     /** For screenshots: the first result starts opened. */
     initialSearchOpen: Boolean = false,
+    /** For screenshots: this result row starts opened. */
+    initialSearchOpenAt: Int = -1,
     /** Changes on every Ctrl+N: the add form takes the cursor again. */
     addFocus: Int = 0,
     /** Changes on every Ctrl+Shift+O: the merge screen opens. */
@@ -169,108 +171,112 @@ fun AppShell(
     LaunchedEffect(mergeFocus) { if (mergeFocus > 0) form = FormRequest.Import }
     BackHandler(enabled = form != null) { form = null }
     val phone = widthClass == WidthClass.Compact
+    // phone sheets are drawn in the app's window, over the whole shell (SheetHost)
     PhoneProvider(phone) {
-        DesktopShell(
-            spec = spec,
-            widthClass = widthClass,
-            navController = navController,
-            sidebarCollapsed = prefs.sidebarCollapsed,
-            onSidebarCollapsedChange = prefs::updateSidebarCollapsed,
-            menus = AppShortcuts.registry.menus(resources, perform = onShortcut),
-            onSearch = { onShortcut(CommonShortcuts.SEARCH) },
-        ) { route, navigator ->
-            DisposableEffect(route) { onDispose { form = null } }
-            Column(Modifier.fillMaxSize()) {
-                if (store != null && picker != null) LibraryNotices(store, picker, onMap)
-                Box(Modifier.weight(1f)) {
-                    // the add, edit and merge forms open over the screen: slide up and fade on the phone, fade on DeX
-                    AnimatedContent(
-                        targetState = form,
-                        modifier = Modifier.fillMaxSize(),
-                        transitionSpec = { overlayTransition(phone) },
-                        contentKey = { it?.overlayKey() ?: 0 },
-                        label = "form overlay",
-                    ) { currentForm ->
-                        if (store != null && currentForm == FormRequest.Import) {
-                            OverlayPage(phone, stringResource(R.string.import_title), onClose = { form = null }) {
-                                ImportScreen(
-                                    store,
-                                    settings,
-                                    onClose = { form = null },
-                                    initialFile = importPreview?.first,
-                                    initialTarget = importPreview?.second,
-                                )
-                            }
-                        } else if (store != null && currentForm != null) {
-                            val editing = currentForm is FormRequest.Edit
-                            OverlayPage(phone, stringResource(if (editing) R.string.edit_title else R.string.add_title), onClose = { form = null }) {
-                                AddBookScreen(
-                                    store,
-                                    settings,
-                                    initialTitle = (currentForm as? FormRequest.Add)?.title.orEmpty(),
-                                    focusKey = addFocus,
-                                    editing = (currentForm as? FormRequest.Edit)?.let { EditTarget(it.owner, it.book) },
-                                    actions = actions,
-                                    onEdited = { form = null },
-                                )
-                            }
-                        } else {
-                            when (route) {
-                                Routes.SEARCH -> if (store != null) {
-                                    // the search field is on the screen; the top bar's search button would only repeat it
-                                    if (phone) CompactTopBar(showSearch = false)
-                                    SearchScreen(
+        SheetHost {
+            DesktopShell(
+                spec = spec,
+                widthClass = widthClass,
+                navController = navController,
+                sidebarCollapsed = prefs.sidebarCollapsed,
+                onSidebarCollapsedChange = prefs::updateSidebarCollapsed,
+                menus = AppShortcuts.registry.menus(resources, perform = onShortcut),
+                onSearch = { onShortcut(CommonShortcuts.SEARCH) },
+            ) { route, navigator ->
+                DisposableEffect(route) { onDispose { form = null } }
+                Column(Modifier.fillMaxSize()) {
+                    if (store != null && picker != null) LibraryNotices(store, picker, onMap)
+                    Box(Modifier.weight(1f)) {
+                        // the add, edit and merge forms open over the screen: slide up and fade on the phone, fade on DeX
+                        AnimatedContent(
+                            targetState = form,
+                            modifier = Modifier.fillMaxSize(),
+                            transitionSpec = { overlayTransition(phone) },
+                            contentKey = { it?.overlayKey() ?: 0 },
+                            label = "form overlay",
+                        ) { currentForm ->
+                            if (store != null && currentForm == FormRequest.Import) {
+                                OverlayPage(phone, stringResource(R.string.import_title), onClose = { form = null }) {
+                                    ImportScreen(
                                         store,
-                                        initialQuery = initialSearch,
-                                        focusKey = searchFocus,
-                                        openFirst = initialSearchOpen,
+                                        settings,
+                                        onClose = { form = null },
+                                        initialFile = importPreview?.first,
+                                        initialTarget = importPreview?.second,
+                                    )
+                                }
+                            } else if (store != null && currentForm != null) {
+                                val editing = currentForm is FormRequest.Edit
+                                OverlayPage(phone, stringResource(if (editing) R.string.edit_title else R.string.add_title), onClose = { form = null }) {
+                                    AddBookScreen(
+                                        store,
+                                        settings,
+                                        initialTitle = (currentForm as? FormRequest.Add)?.title.orEmpty(),
+                                        focusKey = addFocus,
+                                        editing = (currentForm as? FormRequest.Edit)?.let { EditTarget(it.owner, it.book) },
                                         actions = actions,
-                                        onAdd = { title -> form = FormRequest.Add(title) },
-                                    )
-                                } else {
-                                    MessageScreen(
-                                        title = stringResource(R.string.placeholder_search_title),
-                                        icon = DeskIcons.Search,
-                                        pageTitle = spec.item(route)?.label,
-                                        description = stringResource(R.string.placeholder_search_text),
+                                        onEdited = { form = null },
                                     )
                                 }
-                                Routes.LIBRARY -> if (store != null && actions != null) {
-                                    LibraryScreen(
-                                        store, settings, actions, spec.item(route)?.label.orEmpty(),
-                                        onAdd = { form = FormRequest.Add() },
-                                        onShelf = { owner, shelf ->
-                                            shelfTarget = ShelfTarget(owner, shelf)
-                                            navigator.navigate(Routes.SHELVES)
-                                        },
-                                    )
-                                } else {
-                                    MessageScreen(
-                                        title = stringResource(R.string.placeholder_library_title),
-                                        icon = AppIcons.Book,
-                                        pageTitle = spec.item(route)?.label,
-                                        description = stringResource(R.string.placeholder_library_text),
-                                    )
+                            } else {
+                                when (route) {
+                                    Routes.SEARCH -> if (store != null) {
+                                        // the search field is on the screen; the top bar's search button would only repeat it
+                                        if (phone) CompactTopBar(showSearch = false)
+                                        SearchScreen(
+                                            store,
+                                            initialQuery = initialSearch,
+                                            focusKey = searchFocus,
+                                            openFirst = initialSearchOpen,
+                                            openAt = initialSearchOpenAt,
+                                            actions = actions,
+                                            onAdd = { title -> form = FormRequest.Add(title) },
+                                        )
+                                    } else {
+                                        MessageScreen(
+                                            title = stringResource(R.string.placeholder_search_title),
+                                            icon = DeskIcons.Search,
+                                            pageTitle = spec.item(route)?.label,
+                                            description = stringResource(R.string.placeholder_search_text),
+                                        )
+                                    }
+                                    Routes.LIBRARY -> if (store != null && actions != null) {
+                                        LibraryScreen(
+                                            store, settings, actions, spec.item(route)?.label.orEmpty(),
+                                            onAdd = { form = FormRequest.Add() },
+                                            onShelf = { owner, shelf ->
+                                                shelfTarget = ShelfTarget(owner, shelf)
+                                                navigator.navigate(Routes.SHELVES)
+                                            },
+                                        )
+                                    } else {
+                                        MessageScreen(
+                                            title = stringResource(R.string.placeholder_library_title),
+                                            icon = AppIcons.Book,
+                                            pageTitle = spec.item(route)?.label,
+                                            description = stringResource(R.string.placeholder_library_text),
+                                        )
+                                    }
+                                    Routes.SHELVES -> if (store != null && actions != null) {
+                                        ShelvesScreen(store, settings, actions, spec.item(route)?.label.orEmpty(), shelfTarget, initialAddQuery = initialShelfQuery)
+                                    } else {
+                                        MessageScreen(
+                                            title = stringResource(R.string.placeholder_shelves_title),
+                                            icon = AppIcons.Shelf,
+                                            pageTitle = spec.item(route)?.label,
+                                            description = stringResource(R.string.placeholder_shelves_text),
+                                        )
+                                    }
+                                    Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty(), store, settings, picker, onMerge = { form = FormRequest.Import })
                                 }
-                                Routes.SHELVES -> if (store != null && actions != null) {
-                                    ShelvesScreen(store, settings, actions, spec.item(route)?.label.orEmpty(), shelfTarget, initialAddQuery = initialShelfQuery)
-                                } else {
-                                    MessageScreen(
-                                        title = stringResource(R.string.placeholder_shelves_title),
-                                        icon = AppIcons.Shelf,
-                                        pageTitle = spec.item(route)?.label,
-                                        description = stringResource(R.string.placeholder_shelves_text),
-                                    )
-                                }
-                                Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty(), store, settings, picker, onMerge = { form = FormRequest.Import })
                             }
                         }
                     }
+                    if (store != null) UndoBar(store)
                 }
-                if (store != null) UndoBar(store)
             }
+            actions?.Dialogs()
         }
-        actions?.Dialogs()
     }
 }
 

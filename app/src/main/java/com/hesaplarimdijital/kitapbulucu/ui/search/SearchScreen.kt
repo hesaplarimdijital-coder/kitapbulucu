@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -88,12 +90,56 @@ import desktopkit.components.stateBackground
 import desktopkit.shell.KeyCap
 import desktopkit.theme.DeskTheme
 import desktopkit.theme.InputMode
+import kotlinx.coroutines.delay
 
 /** Literata for book titles (Draft A). */
 private val Serif = AppFonts.Literata
 
 /** The shelf code in a result: bold, accent, large enough to read at a glance (S-30: 20 sp). */
 private val ShelfSize = 20.sp
+
+/** How long a result row takes to open or close. */
+private const val OPEN_MILLIS = 180
+
+/**
+ * How far a list must scroll (positive: down) so that an item from [start] to [end] is whole in
+ * the viewport from [viewStart] to [viewEnd]: nothing when it already is; the least that shows it
+ * otherwise; an item taller than the viewport is shown from its top.
+ */
+internal fun revealDelta(start: Int, end: Int, viewStart: Int, viewEnd: Int): Int = when {
+    start < viewStart -> start - viewStart
+    end > viewEnd -> minOf(end - viewEnd, start - viewStart)
+    else -> 0
+}
+
+/**
+ * Scrolls the least that shows item [index] whole, without moving it to the top. An item just
+ * past the edge (one arrow press) is brought in from that edge; one far away is jumped to.
+ */
+internal suspend fun LazyListState.reveal(index: Int) {
+    repeat(3) {
+        val info = layoutInfo
+        val visible = info.visibleItemsInfo
+        if (visible.isEmpty()) return
+        val item = visible.firstOrNull { it.index == index }
+        if (item != null) {
+            val delta = revealDelta(item.offset, item.offset + item.size, info.viewportStartOffset, info.viewportEndOffset)
+            if (delta != 0) animateScrollBy(delta.toFloat())
+            return
+        }
+        val first = visible.first().index
+        val last = visible.last().index
+        val step = visible.sumOf { it.size } / visible.size
+        when {
+            index < first - 3 || index > last + 3 -> {
+                scrollToItem(index)
+                return
+            }
+            index < first -> animateScrollBy(-(step * (first - index)).toFloat())
+            else -> animateScrollBy((step * (index - last)).toFloat())
+        }
+    }
+}
 
 /**
  * Type, see whose shelf the book is on: a search field, the All / Babam / Benim filter and one
@@ -108,6 +154,8 @@ fun SearchScreen(
     initialQuery: String = "",
     focusKey: Int = 0,
     openFirst: Boolean = false,
+    /** For screenshots: this result row starts opened. */
+    openAt: Int = -1,
     actions: com.hesaplarimdijital.kitapbulucu.ui.BookActions? = null,
     onAdd: ((String) -> Unit)? = null,
 ) {
@@ -131,12 +179,22 @@ fun SearchScreen(
         if (currentIndex == null || query.isBlank() || groups.isNotEmpty()) emptyList() else BookGroups.group(currentIndex.suggest(query, filter)).take(3)
     }
     val shown = if (groups.isNotEmpty()) groups else suggestions
-    var selected by remember(shown) { mutableIntStateOf(if (pointer && shown.isNotEmpty()) 0 else -1) }
-    var opened by remember(shown) { mutableIntStateOf(if (openFirst && shown.isNotEmpty()) 0 else -1) }
+    // for screenshots a row can start opened (and highlighted)
+    val startOpen = if (openAt >= 0) openAt else if (openFirst) 0 else -1
+    var selected by remember(shown) { mutableIntStateOf(if (startOpen in shown.indices) startOpen else if (pointer && shown.isNotEmpty()) 0 else -1) }
+    var opened by remember(shown) { mutableIntStateOf(if (startOpen in shown.indices) startOpen else -1) }
     val list = rememberLazyListState()
     // the header items before the first result row
     val firstRowItem = if (groups.isEmpty() && suggestions.isNotEmpty()) 1 else 0
-    LaunchedEffect(selected) { if (selected >= 0) list.animateScrollToItem((selected + firstRowItem).coerceAtLeast(0)) }
+    // A row opens where it is: the list never jumps to put it on top. It scrolls only as far as
+    // needed to show the highlighted row whole, and once an opened row has grown, all of it.
+    LaunchedEffect(selected) { if (selected >= 0) list.reveal(selected + firstRowItem) }
+    LaunchedEffect(opened) {
+        if (opened >= 0) {
+            delay(OPEN_MILLIS + 40L)
+            list.reveal(opened + firstRowItem)
+        }
+    }
     // on a phone, dragging the results puts the keyboard away so they can be read
     if (phone) LaunchedEffect(list.isScrollInProgress) { if (list.isScrollInProgress) keyboard?.hide() }
 
@@ -342,7 +400,7 @@ private fun ResultRow(actions: com.hesaplarimdijital.kitapbulucu.ui.BookActions?
     Column(
         modifier
             // opening a row grows it in place
-            .animateContentSize(tween(180))
+            .animateContentSize(tween(OPEN_MILLIS))
             .background(background, shape)
             .then(if (opened) Modifier.border(1.dp, colors.border, shape) else Modifier)
             // the cursor stays in the search field; the row is reached with the arrow keys

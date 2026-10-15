@@ -159,7 +159,7 @@ class SetupScreenshotTest {
     private fun shell(
         name: String, theme: ThemeMode, input: InputMode, widthClass: WidthClass, route: String, query: String = "", store: LibraryStore = sampleStore(),
         open: Boolean = false, addFocus: Int = 0, form: FormRequest? = null, importPreview: Pair<PickedFile, Owner>? = null,
-        shelf: ShelfTarget? = null, shelfQuery: String? = null, place: Pair<Owner, List<Book>>? = null,
+        shelf: ShelfTarget? = null, shelfQuery: String? = null, place: Pair<Owner, List<Book>>? = null, openAt: Int = -1,
     ) {
         val settings = sampleSettings()
         capture(name, theme, input, dialogs = place != null) {
@@ -169,6 +169,7 @@ class SetupScreenshotTest {
             AppShell(
                 prefs, widthClass, navController, store, settings, rememberFilePicker(store), initialSearch = query, initialSearchOpen = open, addFocus = addFocus,
                 initialForm = form, importPreview = importPreview, initialShelf = shelf, initialShelfQuery = shelfQuery, initialPlace = place,
+                initialSearchOpenAt = openAt,
             )
         }
     }
@@ -255,6 +256,30 @@ class SetupScreenshotTest {
 
     @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
     fun searchOpenedDexDark() = search("dex-dark-search-open", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge, "çatıdaki", open = true)
+
+    /** Twenty made-up notebooks of mine, so that an opened result sits in the middle of a long list. */
+    private val manyBooks: ByteArray
+        get() = XlsxWriter.write(
+            listOf(
+                BookTable(
+                    listOf("Mavi", "Kırmızı", "Yeşil", "Sarı", "Mor", "Turuncu", "Gri", "Lacivert", "Pembe", "Kahverengi", "Beyaz", "Siyah", "Bordo", "Bej", "Altın", "Gümüş", "Turkuaz", "Haki", "Lila", "Krem")
+                        .mapIndexed { i, colour ->
+                            Book("$colour Defter", "Nur Akın", "${'A' + i % 4}${i % 5 + 1}", copies = 1 + i % 2, publisher = "Kuyu & Kalem", year = (1990 + i).toString(), signed = i == 5)
+                        },
+                ).toSheetSpec("Benim"),
+            ),
+        )
+
+    /** A result in the middle of the list opened with a click: it opens where it is, the rows above stay. */
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun searchOpenedMiddleDexLight() = shell(
+        "dex-light-search-open-middle", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge, Routes.SEARCH, "defter", sampleStore(manyBooks), openAt = 5,
+    )
+
+    @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
+    fun searchOpenedMiddleDexDark() = shell(
+        "dex-dark-search-open-middle", ThemeMode.Dark, InputMode.Pointer, WidthClass.ExtraLarge, Routes.SEARCH, "defter", sampleStore(manyBooks), openAt = 5,
+    )
 
     @Test @Config(qualifiers = "tr-w1920dp-h1080dp-mdpi")
     fun addDexLight() = shell("dex-light-add", ThemeMode.Light, InputMode.Pointer, WidthClass.ExtraLarge, Routes.SEARCH, store = sampleStore(myBooks), addFocus = 1)

@@ -7,19 +7,27 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -27,12 +35,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -196,7 +207,44 @@ fun ButtonRow(
     }
 }
 
-/** The strip at the bottom of a phone form: it stays above the keyboard (the root pads for it). */
+/**
+ * True while the on-screen keyboard is open and takes space. [WindowInsets.isImeVisible] alone
+ * reads true until the first insets arrive, so the keyboard must also have a height (as the
+ * kit's shell does for its bottom navigation).
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun isKeyboardOpen(): Boolean {
+    val visible = WindowInsets.isImeVisible
+    val ime = WindowInsets.ime
+    val density = LocalDensity.current
+    val takesSpace by remember(ime, density) { derivedStateOf { ime.getBottom(density) > 0 } }
+    return visible && takesSpace
+}
+
+/**
+ * A phone form: [content] scrolls and [bar] (the contents of a [BottomActionBar]) is pinned at the
+ * bottom while the keyboard is closed. While the keyboard is open the bar is not lifted onto it:
+ * it becomes the last part of the scrolling content, reached by scrolling down.
+ */
+@Composable
+fun PhoneForm(
+    modifier: Modifier = Modifier,
+    scroll: ScrollState = rememberScrollState(),
+    bar: @Composable ColumnScope.() -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val keyboard = isKeyboardOpen()
+    Column(modifier.fillMaxSize()) {
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(scroll)) {
+            content()
+            if (keyboard) BottomActionBar(content = bar)
+        }
+        if (!keyboard) BottomActionBar(content = bar)
+    }
+}
+
+/** The strip at the bottom of a phone form; [PhoneForm] decides where it goes while the keyboard is open. */
 @Composable
 fun BottomActionBar(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     val colors = DeskTheme.colors

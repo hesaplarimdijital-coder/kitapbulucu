@@ -22,7 +22,7 @@ import com.hesaplarimdijital.kitapbulucu.model.Owner
 import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.store.LoadStatus
-import com.hesaplarimdijital.kitapbulucu.ui.BottomActionBar
+import com.hesaplarimdijital.kitapbulucu.ui.PhoneForm
 import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
 import com.hesaplarimdijital.kitapbulucu.ui.FilePicker
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneHeader
@@ -87,17 +87,16 @@ fun SetupScreen(
     }
     val needText = stringResource(if (me == null) R.string.setup_need_who else R.string.setup_need_own)
     if (phone) {
-        // phone: the cards scroll, "Bitir" stays at the bottom
-        Column(Modifier.fillMaxSize()) {
-            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
-                body()
-                Spacer(Modifier.height(dimens.gapL))
-            }
-            BottomActionBar {
+        // phone: the cards scroll, "Bitir" stays at the bottom (in the scroll while the keyboard is open)
+        PhoneForm(
+            bar = {
                 if (!ownReady) Text(needText, style = type.body, color = colors.textSecondary)
                 BottomPrimaryButton(stringResource(R.string.setup_done), onDone, enabled = ownReady)
                 Text(stringResource(R.string.setup_later), style = type.labelSmall, color = colors.textTertiary)
-            }
+            },
+        ) {
+            body()
+            Spacer(Modifier.height(dimens.gapL))
         }
         return
     }

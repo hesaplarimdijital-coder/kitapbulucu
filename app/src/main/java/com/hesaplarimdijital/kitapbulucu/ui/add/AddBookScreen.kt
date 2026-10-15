@@ -45,7 +45,7 @@ import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.Change
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.ui.AdaptiveButton
-import com.hesaplarimdijital.kitapbulucu.ui.BottomActionBar
+import com.hesaplarimdijital.kitapbulucu.ui.PhoneForm
 import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
 import com.hesaplarimdijital.kitapbulucu.ui.BottomActions
 import com.hesaplarimdijital.kitapbulucu.ui.FormField
@@ -160,10 +160,24 @@ fun AddBookScreen(
     }
 
     if (phone) {
-        // phone: fields one under the other, the main button fixed at the bottom above the keyboard
-        Column(Modifier.fillMaxSize()) {
+        // phone: fields one under the other; Kaydet is pinned at the bottom, and while the keyboard
+        // is open it ends the scrolling form instead of riding on the keyboard
+        PhoneForm(
+            bar = {
+                BottomActions(
+                    primary = { modifier -> BottomPrimaryButton(stringResource(R.string.add_save), { submit() }, modifier, icon = DeskIcons.Check) },
+                    secondary = {
+                        if (editing != null) {
+                            PhoneTextButton(stringResource(R.string.action_cancel), onEdited)
+                        } else {
+                            PhoneTextButton(stringResource(R.string.add_clear), clear)
+                        }
+                    },
+                )
+            },
+        ) {
             Column(
-                Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = dimens.pagePadding, vertical = dimens.gapM),
+                Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding, vertical = dimens.gapM),
                 verticalArrangement = Arrangement.spacedBy(dimens.gapM),
             ) {
                 done?.let { Text(it, style = type.body, color = colors.success) }
@@ -212,18 +226,6 @@ fun AddBookScreen(
                     }
                 }
                 checkContent()
-            }
-            BottomActionBar {
-                BottomActions(
-                    primary = { modifier -> BottomPrimaryButton(stringResource(R.string.add_save), { submit() }, modifier, icon = DeskIcons.Check) },
-                    secondary = {
-                        if (editing != null) {
-                            PhoneTextButton(stringResource(R.string.action_cancel), onEdited)
-                        } else {
-                            PhoneTextButton(stringResource(R.string.add_clear), clear)
-                        }
-                    },
-                )
             }
         }
         return

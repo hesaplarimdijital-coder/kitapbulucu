@@ -288,6 +288,12 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [x] Onay pencereleri, geri al çubuğu ve uyarılar animasyonlu; açılır panellerde ve listelerde geçişler.
 - [x] DeX ekran görüntüleri değişmedi.
 
+### S-38 Telefon geri bildirimi: alt sayfalar, klavye, Ara'da yerinde açılma · 3 · [O] · bitti (telefonda denenecek)
+- [x] Alt sayfalar (kitap, sıralama, raf penceresi, raf seçici) uygulamanın kendi penceresinde çiziliyor: alt gezinme çubuğunun üstünde biter, "Sil" dahil her eylem görünür; sayfa uzunsa kayar.
+- [x] "Yeni raf" ve "Ad değiştir" sayfası klavyenin üstünde açılır, imleç kod alanında.
+- [x] Ekle/Düzenle, kurulum, eşleme ve birleştirmede alt düğme çubuğu klavye kapalıyken altta sabit; klavye açıkken klavyeye yapışmaz, formun sonunda kalır (aşağı kaydırınca görünür). Yüzen düğme klavye açıkken gizlenir.
+- [x] Tablet/DeX Ara: tıklanan satır olduğu yerde açılır, liste zıplamaz; ↑↓, Enter ve Esc aynı.
+
 ## Sıraya konmayı bekleyenler
 
 Bir sonraki sprint planlanırken sıraya konur.

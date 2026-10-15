@@ -14,11 +14,12 @@ Son güncelleme: 15.10.2026, telefon arayüzü yenilendi ve geçişlere animasyo
 - Çalışma biçimi: sprint yok; Opus orkestratör, işler alt ajanlarla (CLAUDE.md). Aynı depoda paralel ajanlar ayrı klonlarda çalışır (`git clone /home/claude/kitapbulucu …`), yeni metinler ayrı `strings_*.xml` dosyalarına yazılır.
 - Kit 0.1.3: ekran geçişleri, `CompactTopBar`, `currentWidthClass()`. JitPack 0.1.3 etiketini derleyemedi (Maven indirme hatası, önbellekte kaldı); uygulama `desktopKit = "ce87c9ae8e"` (aynı kod). Sonraki kit sürümünde etikete dönülür.
 - Telefon arayüzü (S-36, S-37): `ui/TouchControls.kt` (liste, FAB, alt sayfa, seçim) ve `ui/PhoneLayout.kt` (alt eylem çubuğu, telefon başlığı, boş durumlar). İki dosyada telefon algılama ayrı (`isCompactLayout()` ve `isPhone()`); ileride birleştirilebilir. DeX görüntüleri değişmedi.
+- S-38 (telefon geri bildirimi 2): alt sayfalar `SheetHost` ile uygulamanın penceresinde çizilir (AppShell sarar; kökün safeDrawing boşluğu sayesinde gezinme çubuğu ve klavyenin üstünde); `ShelfFormDialog` imleci sayfa içeriğinde ister. `PhoneForm` + `isKeyboardOpen()`: alt düğme çubuğu klavye açıkken formun sonuna geçer. Ara'da satır yerinde açılır (`LazyListState.reveal`, `revealDelta`: en az kaydırma, başa taşımaz).
 
 ## Kullanıcıdan beklenenler
 
 1. GitHub'a iki gizli değer: `KB_KEYSTORE_BASE64` ve `KB_KEYSTORE_PASSWORD` (12.10.2026'da dosya ve parola verildi). Eklenene kadar APK'lar her seferinde başka anahtarla imzalanır; yeni APK eskisinin üstüne kurulamaz (önce kaldır). S-29'un "üstüne kurulur" maddesi buna bağlı.
-2. Telefonda "Rafa koy…" ve "Yeni raf" pencerelerine bakılmalı (test ortamında telefon görüntüsü çizilemedi).
+2. Telefonda S-38 denemesi: kitap sayfasında "Sil" görünüyor mu, "Yeni raf" klavyenin üstünde mi, Ekle/Düzenle'de klavye açıkken alt çubuk klavyeye yapışmıyor mu (yalnızca gerçek telefonda görülebilir).
 3. Tablette ve babanın telefonunda baştan sona deneme (kontrol listesi son mesajda); S-06 kalanları (yeniden başlatma sonrası izin, dosyanın öteki cihazda görünmesi, değişikliğin ulaşma süresi).
 4. `ornek/Ortak.xlsx` ve dışa aktarılan `Kitaplar.xlsx` dosyasının Excel, Office NX ve Google E-Tablolar'da açılması.
 

@@ -34,7 +34,7 @@ import com.hesaplarimdijital.kitapbulucu.model.ColumnMapping
 import com.hesaplarimdijital.kitapbulucu.model.Owner
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.text.TurkishText
-import com.hesaplarimdijital.kitapbulucu.ui.BottomActionBar
+import com.hesaplarimdijital.kitapbulucu.ui.PhoneForm
 import com.hesaplarimdijital.kitapbulucu.ui.BottomActions
 import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
 import com.hesaplarimdijital.kitapbulucu.ui.DropdownChoice
@@ -177,20 +177,19 @@ internal fun MappingEditor(
     }
 
     if (phone) {
-        // phone: the sections scroll, Kaydet / Vazgeç stay at the bottom
-        Column(Modifier.fillMaxSize()) {
-            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
-                header()
-                sections()
-                Spacer(Modifier.height(dimens.gapL))
-            }
-            BottomActionBar {
+        // phone: the sections scroll, Kaydet / Vazgeç stay at the bottom (in the scroll while the keyboard is open)
+        PhoneForm(
+            bar = {
                 if (!hasTitle) Text(stringResource(R.string.mapping_need_title), style = type.body, color = colors.danger)
                 BottomActions(
                     primary = { modifier -> BottomPrimaryButton(stringResource(R.string.mapping_save), save, modifier, enabled = hasTitle) },
                     secondary = { PhoneTextButton(stringResource(R.string.mapping_cancel), onCancel) },
                 )
-            }
+            },
+        ) {
+            header()
+            sections()
+            Spacer(Modifier.height(dimens.gapL))
         }
         return
     }

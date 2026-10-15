@@ -71,6 +71,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.currentCompositionLocalContext
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import com.hesaplarimdijital.kitapbulucu.R
 import desktopkit.components.DeskIconButton
 import desktopkit.components.DeskIcons
@@ -202,11 +218,14 @@ fun AppFab(label: String, icon: ImageVector, onClick: () -> Unit, expanded: Bool
     }
 }
 
-/** A FAB that appears with a small scale and fade, and leaves the same way. */
+/**
+ * A FAB that appears with a small scale and fade, and leaves the same way. It also steps aside
+ * while the on-screen keyboard is open instead of riding on top of it.
+ */
 @Composable
 fun AnimatedFab(visible: Boolean, label: String, icon: ImageVector, onClick: () -> Unit, expanded: Boolean, modifier: Modifier = Modifier) {
     AnimatedVisibility(
-        visible,
+        visible && !isKeyboardOpen(),
         modifier = modifier,
         enter = fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.8f),
         exit = fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.8f),
@@ -261,18 +280,57 @@ fun <T> WideSegmentedChoice(options: List<Pair<T, String>>, selected: T, onSelec
 typealias SheetClose = (after: () -> Unit) -> Unit
 
 /**
- * A modal bottom sheet in the kit's look: it slides up over a dimmed screen, a tap above it or
- * Back closes it, and it never takes more than nine tenths of the height (the content scrolls).
+ * Where [AppSheet]s are drawn: over [content], inside the app's own window. The app's root pads
+ * that window for the system bars and the on-screen keyboard (`WindowInsets.safeDrawing`), so a
+ * sheet drawn here always ends above the navigation bar and moves up with the keyboard. A dialog
+ * window of its own did neither on a real phone (Samsung, gesture or button navigation).
+ */
+@Composable
+fun SheetHost(content: @Composable () -> Unit) {
+    val host = remember { SheetHostState() }
+    Box(Modifier.fillMaxSize()) {
+        CompositionLocalProvider(LocalSheetHost provides host, content = content)
+        SheetLayer(host)
+    }
+}
+
+/** The open sheets, in a scope of their own: a sheet that changes does not recompose the app under it. */
+@Composable
+private fun SheetLayer(host: SheetHostState) {
+    for (entry in host.sheets) {
+        key(entry) {
+            val sheet = entry.content
+            sheet()
+        }
+    }
+}
+
+/** The sheets open in a [SheetHost], in the order they were opened. */
+class SheetHostState {
+    internal val sheets = mutableStateListOf<SheetEntry>()
+}
+
+internal class SheetEntry {
+    var content: @Composable () -> Unit by mutableStateOf<@Composable () -> Unit>({})
+}
+
+/** The [SheetHost] around this composition, if any; without one a sheet opens a dialog window. */
+val LocalSheetHost = staticCompositionLocalOf<SheetHostState?> { null }
+
+/**
+ * A modal bottom sheet in the kit's look: it slides up over a dimmed screen, a tap above it, Back
+ * or Esc closes it, and it never takes more than nine tenths of the height (the content scrolls).
  * [title] adds a heading with a close button. [content] gets a [SheetClose] so that an action
- * runs after the sheet has gone. With [overlay] the sheet is drawn inside the current window
- * (over its parent box) instead of a window of its own.
+ * runs after the sheet has gone. Inside a [SheetHost] (the app shell) the sheet is drawn in the
+ * app's window, above the navigation bar and the keyboard; elsewhere it opens a dialog window.
+ * The content is composed where the sheet is drawn: a focus request for a field in it belongs
+ * inside [content].
  */
 @Composable
 fun AppSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     title: String? = null,
-    overlay: Boolean = false,
     content: @Composable ColumnScope.(close: SheetClose) -> Unit,
 ) {
     val visible = remember { MutableTransitionState(false).apply { targetState = true } }
@@ -291,9 +349,21 @@ fun AppSheet(
             after?.invoke()
         }
     }
-    if (overlay) {
-        BackHandler { close {} }
-        SheetFrame(visible, close, title, modifier, dim = true, content = content)
+    val host = LocalSheetHost.current
+    if (host != null) {
+        // drawn by the host, with this place's composition locals (theme, phone layout, …)
+        val locals = currentCompositionLocalContext
+        val entry = remember { SheetEntry() }
+        entry.content = {
+            CompositionLocalProvider(locals) {
+                BackHandler { close {} }
+                SheetFrame(visible, close, title, modifier, inWindow = true, content = content)
+            }
+        }
+        DisposableEffect(host, entry) {
+            host.sheets += entry
+            onDispose { host.sheets -= entry }
+        }
     } else {
         Dialog(
             onDismissRequest = { close {} },
@@ -305,7 +375,7 @@ fun AppSheet(
                 @Suppress("DEPRECATION")
                 window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             }
-            SheetFrame(visible, close, title, modifier, dim = false, content = content)
+            SheetFrame(visible, close, title, modifier, inWindow = false, content = content)
         }
     }
 }
@@ -316,21 +386,50 @@ private fun SheetFrame(
     close: SheetClose,
     title: String?,
     modifier: Modifier,
-    dim: Boolean,
+    inWindow: Boolean,
     content: @Composable ColumnScope.(close: SheetClose) -> Unit,
 ) {
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
-    // a window of its own (dim = false) reaches under the system bars; the app's window is padded already
-    val insets = if (dim) Modifier else Modifier.windowInsetsPadding(WindowInsets.statusBars)
+    // In the app's window the root has already padded for the system bars and the keyboard; the
+    // dimmed area and the sheet's surface are drawn on into that padding (nothing clips them), so
+    // the status bar is dimmed too and the sheet seems to run on under the navigation bar while
+    // its rows stay above it. A dialog window of its own reaches under the bars and pads itself.
+    val safe = WindowInsets.safeDrawing
+    val frameInsets = if (inWindow) Modifier else Modifier.windowInsetsPadding(WindowInsets.statusBars)
+    val sheetInsets = if (inWindow) Modifier else Modifier.windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
     // one transition for the whole frame: the dimmed area fades, the sheet also slides
     AnimatedVisibility(visible, enter = fadeIn(tween(200)), exit = fadeOut(tween(150))) {
-        BoxWithConstraints(Modifier.fillMaxSize().then(insets)) {
+        BoxWithConstraints(
+            Modifier
+                .fillMaxSize()
+                .then(frameInsets)
+                .onPreviewKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown && event.key == Key.Escape) {
+                        close {}
+                        true
+                    } else {
+                        false
+                    }
+                },
+        ) {
             val maxSheet = maxHeight * 0.9f
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(if (dim) colors.scrim else Color.Transparent)
+                    .then(
+                        if (inWindow) {
+                            Modifier.drawBehind {
+                                val left = safe.getLeft(this, layoutDirection).toFloat()
+                                val top = safe.getTop(this).toFloat()
+                                val right = safe.getRight(this, layoutDirection).toFloat()
+                                val bottom = safe.getBottom(this).toFloat()
+                                drawRect(colors.scrim, topLeft = Offset(-left, -top), size = Size(size.width + left + right, size.height + top + bottom))
+                            }
+                        } else {
+                            Modifier
+                        },
+                    )
                     .pointerInput(Unit) { detectTapGestures { close {} } },
             )
             val shape = RoundedCornerShape(topStart = dimens.radiusCard + 8.dp, topEnd = dimens.radiusCard + 8.dp)
@@ -344,11 +443,23 @@ private fun SheetFrame(
                     .widthIn(max = 640.dp)
                     .fillMaxWidth()
                     .heightIn(max = maxSheet)
+                    .then(
+                        if (inWindow) {
+                            // the surface goes on under the navigation bar (or the keyboard), over the bottom border line
+                            Modifier.drawWithContent {
+                                drawContent()
+                                val below = safe.getBottom(this).toFloat()
+                                if (below > 0f) drawRect(colors.surfaceRaised, topLeft = Offset(0f, size.height - 1.dp.toPx()), size = Size(size.width, below + 1.dp.toPx()))
+                            }
+                        } else {
+                            Modifier
+                        },
+                    )
                     .background(colors.surfaceRaised, shape)
                     .border(1.dp, colors.border, shape)
                     // taps on the sheet itself do not reach the dimmed area behind it
                     .pointerInput(Unit) { detectTapGestures { } }
-                    .then(if (dim) Modifier else Modifier.windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)))
+                    .then(sheetInsets)
                     .padding(bottom = dimens.gapS),
             ) {
                 Box(

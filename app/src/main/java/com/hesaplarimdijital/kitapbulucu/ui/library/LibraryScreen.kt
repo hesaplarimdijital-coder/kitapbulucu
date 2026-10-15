@@ -293,8 +293,11 @@ private fun PhoneLibrary(
     }
     if (sorting) {
         AppSheet(onDismiss = { sorting = false }, title = stringResource(R.string.touchlist_sort)) { close ->
-            PhoneSort.entries.forEach { option ->
-                SheetChoice(sortLabel(option), selected = option == sort) { close { sortName = option.name } }
+            // scrolls when the window is short (landscape, split screen)
+            Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+                PhoneSort.entries.forEach { option ->
+                    SheetChoice(sortLabel(option), selected = option == sort) { close { sortName = option.name } }
+                }
             }
         }
     }
