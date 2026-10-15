@@ -40,7 +40,10 @@ jobs:
             sleep 15
           done
           echo "::error::desktop-kit $version is not available on JitPack; its build log follows"
-          curl -s --max-time 60 "$base/build.log" | tail -80
+          curl -s --max-time 60 "$base/build.log" > jitpack.log || true
+          tail -80 jitpack.log
+          # job logs are not readable from the session: surface the important lines as annotations
+          grep -iE "what went wrong|error|exception|failed|> Could not|BUILD" jitpack.log | head -9 | while IFS= read -r line; do echo "::error::jitpack: ${line:0:300}"; done
           exit 1
 
       - name: Signing key
