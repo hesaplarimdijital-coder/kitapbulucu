@@ -73,7 +73,9 @@ class SearchInPlaceTest {
         assertTrue("expected a screenful of results, got ${rows.size}", rows.size >= 6)
         val target = rows[4]
         val title = target.config[SemanticsProperties.Text].first().text
+        // a SemanticsNode reads the live layout: keep the numbers from before the click
         val before = target.boundsInRoot.top
+        val heightBefore = target.boundsInRoot.height
         val firstBefore = rows[0].boundsInRoot.top
 
         compose.onNode(hasText(title) and hasClickAction()).performClick()
