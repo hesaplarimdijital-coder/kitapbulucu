@@ -1,6 +1,6 @@
 # Durum
 
-Son güncelleme: 15.10.2026, 1.0.0 geri bildirimi işlendi (raflar, yazı boyu, klavye); kit 0.1.2.
+Son güncelleme: 15.10.2026, telefon arayüzü yenilendi ve geçişlere animasyon eklendi; kit 0.1.3.
 
 ## Şu an
 
@@ -11,7 +11,9 @@ Son güncelleme: 15.10.2026, 1.0.0 geri bildirimi işlendi (raflar, yazı boyu, 
 - Kod haritası: `xlsx/`, `model/`, `text/` (TurkishText, Fold, Cleaning), `search/`, `importing/MergePlan`, `store/` (… LibraryStore: restore, exportTo, backupBookCount, mergeDecisions), `ui/` (AppShell, AppShortcuts, Controls + CheckRow, DataSection, BookActions, FilePicker, LibraryTexts, setup/, search/, add/, library/, shelves/, importing/, theme/), `App.kt`.
 - K-01 bitti; K-02 bitti (kit 0.1.2: `type` kancası, klavye açıkken alt çubuk gizli, `DenseTable` çoklu seçim). Uygulama `AppFonts.type` ile klavye-fare modunda 1 sp büyük yazı kullanıyor.
 - Raflar (S-33…S-35): `store/ShelfCatalog` (cihazda `files/library/shelves.json`, kişi başına), Raflar ekranında Yeni raf / Adını değiştir / Rafı sil / Kitap ekle; Kütüphane'de "Rafa koy…" bir ya da birçok kitap (Ctrl/Shift, dokunmatikte "Seç").
-- Çalışma biçimi: sprint yok; Opus orkestratör, işler alt ajanlarla (CLAUDE.md).
+- Çalışma biçimi: sprint yok; Opus orkestratör, işler alt ajanlarla (CLAUDE.md). Aynı depoda paralel ajanlar ayrı klonlarda çalışır (`git clone /home/claude/kitapbulucu …`), yeni metinler ayrı `strings_*.xml` dosyalarına yazılır.
+- Kit 0.1.3: ekran geçişleri, `CompactTopBar`, `currentWidthClass()`. JitPack 0.1.3 etiketini derleyemedi (Maven indirme hatası, önbellekte kaldı); uygulama `desktopKit = "ce87c9ae8e"` (aynı kod). Sonraki kit sürümünde etikete dönülür.
+- Telefon arayüzü (S-36, S-37): `ui/TouchControls.kt` (liste, FAB, alt sayfa, seçim) ve `ui/PhoneLayout.kt` (alt eylem çubuğu, telefon başlığı, boş durumlar). İki dosyada telefon algılama ayrı (`isCompactLayout()` ve `isPhone()`); ileride birleştirilebilir. DeX görüntüleri değişmedi.
 
 ## Kullanıcıdan beklenenler
 

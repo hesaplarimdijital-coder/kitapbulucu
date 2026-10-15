@@ -270,6 +270,24 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [x] Sağ tık menüsünde ("Rafa koy…") ve düzenleme formunda raf, raf listesinden seçilir (elle yazmak da serbest).
 - [x] Ctrl+Z geri alır; DeX ve telefon ekran görüntüsü.
 
+### K-03 Kit 0.1.3: ekran geçişleri ve telefon üst çubuğu · 3 · [F] · bitti
+- [x] Telefonda sekme geçişleri solma + hafif büyüme, DeX'te kısa geçiş; gezinme seçimi renk geçişli.
+- [x] `CompactTopBar`: ekranlar telefonda üst çubuğa geri/kapat, başlık ve eylem simgeleri koyabilir; sistem geri hareketi çalışır; DeX'te etkisiz.
+- [x] Release 0.1.3 oluşturuldu; JitPack etiketi derleyemedi (Maven indirme hatası), uygulama aynı kodu commit sürümüyle (`ce87c9ae8e`) kullanıyor.
+
+### S-36 Telefonda Kütüphane ve Raflar · 5 · [O] · bitti (telefonda denenecek)
+- [x] Kütüphane: iki satırlı tam genişlik liste, "Kitap ekle" yüzen düğme, satıra dokununca alttan açılan ayrıntı ve eylem sayfası, uzun basınca çoklu seçim (üst çubuk "N seçili"), sıralama üst çubukta.
+- [x] Raflar: tam genişlik satırlar, "Yeni raf" yüzen düğme; açık rafta üst çubukta geri, ad değiştir, sil; "Kitap ekle" tam boy panel.
+- [x] Raf penceresi ve raf seçici telefonda alttan açılan sayfa; telefon ekran görüntüsü artık çiziliyor.
+- [x] DeX ekran görüntüleri değişmedi.
+
+### S-37 Telefonda öteki ekranlar ve animasyonlar · 5 · [O] · bitti (telefonda denenecek)
+- [x] Ara: tam genişlik satırlar, yerinde animasyonla açılma, düğmeler tek satır; sonuç yok ekranı düzenli.
+- [x] Ekle/Düzenle ve Excel birleştirme: üstte kapat ve başlık, altta sabit ana düğme; alanlar alt alta.
+- [x] Ayarlar, kurulum, eşleme: düğmeler yazının altında; ana düğme altta.
+- [x] Onay pencereleri, geri al çubuğu ve uyarılar animasyonlu; açılır panellerde ve listelerde geçişler.
+- [x] DeX ekran görüntüleri değişmedi.
+
 ## Sıraya konmayı bekleyenler
 
 Bir sonraki sprint planlanırken sıraya konur.
