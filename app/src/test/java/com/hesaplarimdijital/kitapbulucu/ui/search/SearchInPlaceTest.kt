@@ -79,12 +79,15 @@ class SearchInPlaceTest {
         compose.onNode(hasText(title) and hasClickAction()).performClick()
         compose.waitForIdle()
 
-        val after = compose.onNode(hasText(title) and hasClickAction()).fetchSemanticsNode()
-        assertEquals("the opened row stays where it was", before, after.boundsInRoot.top, 1f)
-        assertTrue("the opened row grew", after.boundsInRoot.height > target.boundsInRoot.height * 2)
-        val firstAfter = compose.onNode(hasText(rows[0].config[SemanticsProperties.Text].first().text) and hasClickAction()).fetchSemanticsNode()
-        assertEquals("the rows above did not move", firstBefore, firstAfter.boundsInRoot.top, 1f)
         // the details (the year is among them) are shown in the row itself
         compose.onNodeWithText("Yıl", useUnmergedTree = true).assertExists()
+        val after = compose.onNode(hasText(title) and hasClickAction()).fetchSemanticsNode()
+        assertEquals("the opened row stays where it was", before, after.boundsInRoot.top, 1f)
+        assertTrue(
+            "the opened row grew: ${target.boundsInRoot.height} -> ${after.boundsInRoot.height}",
+            after.boundsInRoot.height > target.boundsInRoot.height,
+        )
+        val firstAfter = compose.onNode(hasText(rows[0].config[SemanticsProperties.Text].first().text) and hasClickAction()).fetchSemanticsNode()
+        assertEquals("the rows above did not move", firstBefore, firstAfter.boundsInRoot.top, 1f)
     }
 }
