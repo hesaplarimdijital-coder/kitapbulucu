@@ -25,12 +25,12 @@ class LibraryTextsTest {
     @Test
     fun saysWhenEachListWasUpdated() {
         val ready = LibraryState(Owner.DAD, LoadStatus.READY, table, readAt = now, updatedAt = now - 3 * 60_000)
-        assertEquals("Babam'ın listesi 3 dk önce güncellendi", LibraryTexts.updated(resources, Owner.DAD, ready, now))
-        assertEquals("Benim listem az önce güncellendi", LibraryTexts.updated(resources, Owner.ME, ready.copy(owner = Owner.ME, updatedAt = now), now))
-        assertEquals("Benim listem dün güncellendi", LibraryTexts.updated(resources, Owner.ME, ready.copy(updatedAt = now - 30 * 3_600_000), now))
-        assertEquals("Babam'ın listesi 2 sa önce güncellendi", LibraryTexts.updated(resources, Owner.DAD, ready.copy(updatedAt = now - 2 * 3_600_000), now))
-        assertEquals("Babam'ın listesi henüz okunmadı", LibraryTexts.updated(resources, Owner.DAD, LibraryState.notLinked(Owner.DAD), now))
-        assertEquals("Babam'ın listesi az önce güncellendi", LibraryTexts.updated(resources, Owner.DAD, ready.copy(updatedAt = null), now)) // falls back to the read time
+        assertEquals("MKE'nin listesi 3 dk önce güncellendi", LibraryTexts.updated(resources, Owner.DAD, ready, now))
+        assertEquals("Barış'ın listesi az önce güncellendi", LibraryTexts.updated(resources, Owner.ME, ready.copy(owner = Owner.ME, updatedAt = now), now))
+        assertEquals("Barış'ın listesi dün güncellendi", LibraryTexts.updated(resources, Owner.ME, ready.copy(updatedAt = now - 30 * 3_600_000), now))
+        assertEquals("MKE'nin listesi 2 sa önce güncellendi", LibraryTexts.updated(resources, Owner.DAD, ready.copy(updatedAt = now - 2 * 3_600_000), now))
+        assertEquals("MKE'nin listesi henüz okunmadı", LibraryTexts.updated(resources, Owner.DAD, LibraryState.notLinked(Owner.DAD), now))
+        assertEquals("MKE'nin listesi az önce güncellendi", LibraryTexts.updated(resources, Owner.DAD, ready.copy(updatedAt = null), now)) // falls back to the read time
     }
 
     @Test

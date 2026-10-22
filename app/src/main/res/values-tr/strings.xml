@@ -9,16 +9,16 @@
     <string name="placeholder_search_title">Burada kitap arayacaksın</string>
     <string name="placeholder_search_text">Kitap adının ya da yazarın bir kısmını yazınca kimin rafında olduğunu göreceksin. Sonraki sürümde geliyor.</string>
     <string name="placeholder_library_title">Bütün kitaplar burada listelenecek</string>
-    <string name="placeholder_library_text">Babam ve Benim listeleri iki sekmede. İleriki bir sürümde geliyor.</string>
+    <string name="placeholder_library_text">MKE ve Barış listeleri iki sekmede. İleriki bir sürümde geliyor.</string>
     <string name="placeholder_shelves_title">Raflar burada listelenecek</string>
     <string name="placeholder_shelves_text">Her raf ve üzerindeki kitap sayısı. İleriki bir sürümde geliyor.</string>
 
 
     <!-- kütüphane durumu (S-12) -->
-    <string name="owner_dad">Babam</string>
-    <string name="owner_me">Benim</string>
-    <string name="list_of_dad">Babam\'ın listesi</string>
-    <string name="list_of_me">Benim listem</string>
+    <string name="owner_dad">MKE</string>
+    <string name="owner_me">Barış</string>
+    <string name="list_of_dad">MKE\'nin listesi</string>
+    <string name="list_of_me">Barış\'ın listesi</string>
     <string name="updated_just_now">%1$s az önce güncellendi</string>
     <string name="updated_minutes_ago">%1$s %2$d dk önce güncellendi</string>
     <string name="updated_hours_ago">%1$s %2$d sa önce güncellendi</string>
@@ -50,8 +50,8 @@
     <string name="setup_intro">İki kütüphanenin listesi Google Drive\'daki iki Excel dosyasında durur. Dosyaları bir kez gösterin; uygulama sonra hep onları okur.</string>
     <string name="setup_who_title">Bu cihaz kimin?</string>
     <string name="setup_who_text">Değişiklikler bu kişinin dosyasına yazılır; iki liste de okunur.</string>
-    <string name="setup_who_dad">Babam</string>
-    <string name="setup_who_me">Ben</string>
+    <string name="setup_who_dad">MKE</string>
+    <string name="setup_who_me">Barış</string>
     <string name="setup_own_list">Bu cihaz bu listeye yazar</string>
     <string name="setup_other_list">Bu liste yalnızca okunur</string>
     <string name="setup_pick">Dosya seç</string>
@@ -103,8 +103,8 @@
     <string name="search_empty_title">Hangi kitabı arıyorsunuz?</string>
     <string name="search_empty_text">Kitap adının ya da yazarın bir kısmını yazın. Sözcük sırası ve Türkçe harfler önemli değil.</string>
     <string name="search_none_both">Bu kitap iki kütüphanede de yok</string>
-    <string name="search_none_dad">Babam\'ın listesinde yok</string>
-    <string name="search_none_me">Benim listemde yok</string>
+    <string name="search_none_dad">MKE\'nin listesinde yok</string>
+    <string name="search_none_me">Barış\'ın listesinde yok</string>
     <string name="search_suggestions">Bunlardan biri olabilir mi?</string>
     <string name="search_add">Kitap ekle</string>
     <string name="search_add_later">Kitap ekleme bir sonraki sürümde geliyor.</string>
@@ -154,10 +154,10 @@
     <string name="add_clear">Temizle</string>
     <string name="add_need_title">Kitap adını yazın.</string>
     <string name="add_bad_copies">Adet 1 ya da daha büyük bir sayı olmalı.</string>
-    <string name="list_in_dad">Babam\'ın listesinde</string>
-    <string name="list_in_me">Benim listemde</string>
-    <string name="list_to_dad">Babam\'ın listesine</string>
-    <string name="list_to_me">Benim listeme</string>
+    <string name="list_in_dad">MKE\'nin listesinde</string>
+    <string name="list_in_me">Barış\'ın listesinde</string>
+    <string name="list_to_dad">MKE\'nin listesine</string>
+    <string name="list_to_me">Barış\'ın listesine</string>
     <string name="add_exists">Bu kitap zaten %1$s: %2$s.</string>
     <string name="add_exists_shelf">Raf %1$s</string>
     <string name="add_exists_no_shelf">raf yazılmamış</string>
@@ -182,12 +182,12 @@
     <string name="delete_one_copy">Bir kopyayı sil (%1$d kalır)</string>
     <string name="delete_all">%1$d kopyanın hepsini sil</string>
     <string name="delete_confirm">Sil</string>
-    <string name="other_list_warning">Bu öteki kişinin listesi (%1$s). Yine de değiştirilsin mi?</string>
+    <string name="other_list_warning">Bu %1$s, yine de değiştirilsin mi?</string>
     <string name="move_title">“%1$s” taşınsın mı?</string>
     <string name="move_text">Kitap %1$s geçer, %2$s çıkar. Önce yeni dosyaya yazılır; iki dosyadan birden hiçbir anda eksik kalmaz.</string>
     <string name="move_confirm">Taşı</string>
-    <string name="from_dad">Babam\'ın listesinden</string>
-    <string name="from_me">Benim listemden</string>
+    <string name="from_dad">MKE\'nin listesinden</string>
+    <string name="from_me">Barış\'ın listesinden</string>
     <string name="undo_deleted">“%1$s” silindi</string>
     <string name="undo_one_copy">“%1$s” kitabının bir kopyası silindi</string>
     <string name="undo_edited">“%1$s” değiştirildi</string>
@@ -303,7 +303,7 @@
     <string name="settings_merge_text">Başka bir Excel ya da CSV dosyasındaki kitapları bir listeye ekler.</string>
     <string name="settings_merge">Birleştir…</string>
     <string name="settings_export_title">Tek Excel olarak dışa aktar</string>
-    <string name="settings_export_text">İki liste, Babam ve Benim sayfalarıyla tek dosyada. Uygulama bu dosyayı okumaz.</string>
+    <string name="settings_export_text">İki liste, MKE ve Barış sayfalarıyla tek dosyada. Uygulama bu dosyayı okumaz.</string>
     <string name="settings_export">Dışa aktar…</string>
     <string name="export_file_name">Kitaplar.xlsx</string>
     <string name="export_done">Dışa aktarıldı.</string>

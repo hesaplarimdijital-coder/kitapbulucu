@@ -118,7 +118,7 @@ import java.util.Locale
 class LibraryRow(val owner: Owner, val position: Int, val book: Book)
 
 /**
- * Every book of one list (S-20): Babam / Benim tabs and the + button for a new book.
+ * Every book of one list (S-20): MKE / Barış tabs and the + button for a new book.
  *
  * DeX and tablets: a dense table with sortable columns in Turkish order, a context menu per row
  * (edit, delete, move, put on a shelf, other books on the shelf, copy), F2 and Del on the

@@ -141,9 +141,9 @@ class BookTableTest {
     fun theSharedFileHoldsBothLibraries() {
         val dad = BookTable(listOf(Book("Sefil Fenerciler", "Halit Oruç", "A1", 2)))
         val me = BookTable(listOf(Book("Çatıdaki Rasathane", "Ayşe İnce", "C2")))
-        val bytes = XlsxWriter.write(listOf(dad.toSheetSpec(Owner.DAD.label), me.toSheetSpec(Owner.ME.label)))
+        val bytes = XlsxWriter.write(listOf(dad.toSheetSpec(Owner.DAD.exportSheet), me.toSheetSpec(Owner.ME.exportSheet)))
         val workbook = XlsxReader.read(bytes.inputStream())
-        assertEquals(listOf("Babam", "Benim"), workbook.sheets.map { it.name })
+        assertEquals(listOf("MKE", "Barış"), workbook.sheets.map { it.name })
         assertEquals(dad.books, BookTable.parse(workbook.sheets[0])!!.table.books)
         assertEquals(me.books, BookTable.parse(workbook.sheets[1])!!.table.books)
     }

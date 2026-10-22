@@ -59,7 +59,7 @@ import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
 /**
- * Setup, column mapping and the library settings, over made-up files: Babam's list reads
+ * Setup, column mapping and the library settings, over made-up files: MKE's list reads
  * (ornek-kutuphane.xlsx), my list is the old header-less layout (ornek-eski-bicim.xlsx) and
  * asks for a mapping.
  */
@@ -296,7 +296,7 @@ class SetupScreenshotTest {
     @Test @Config(qualifiers = "tr-w411dp-h891dp-hdpi")
     fun libraryPhoneLight() = shell("phone-light-library", ThemeMode.Light, InputMode.Touch, WidthClass.Compact, Routes.LIBRARY, store = sampleStore(myBooks))
 
-    /** The sample lists plus shelves created on the device: two empty ones in Babam's list, a description for my 3C. */
+    /** The sample lists plus shelves created on the device: two empty ones in MKE's list, a description for my 3C. */
     private fun shelfStore(): LibraryStore = sampleStore(myBooks).also {
         it.shelfCatalog.add(Owner.DAD, "B4", "Salon, sağ dolap")
         it.shelfCatalog.add(Owner.DAD, "C1", "Çalışma odası")

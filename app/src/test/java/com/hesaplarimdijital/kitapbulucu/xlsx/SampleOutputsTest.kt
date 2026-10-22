@@ -32,10 +32,10 @@ class SampleOutputsTest {
         )
         File(dir, Owner.DAD.fileName).writeBytes(XlsxWriter.write(listOf(dad.toSheetSpec(Owner.DAD.label))))
         File(dir, Owner.ME.fileName).writeBytes(XlsxWriter.write(listOf(me.toSheetSpec(Owner.ME.label))))
-        File(dir, "Ortak.xlsx").writeBytes(XlsxWriter.write(listOf(dad.toSheetSpec(Owner.DAD.label), me.toSheetSpec(Owner.ME.label))))
+        File(dir, "Ortak.xlsx").writeBytes(XlsxWriter.write(listOf(dad.toSheetSpec(Owner.DAD.exportSheet), me.toSheetSpec(Owner.ME.exportSheet))))
 
         val readBack = XlsxReader.read(File(dir, "Ortak.xlsx").inputStream())
-        assertEquals(listOf("Babam", "Benim"), readBack.sheets.map { it.name })
+        assertEquals(listOf("MKE", "Barış"), readBack.sheets.map { it.name })
         assertEquals(dad.books, BookTable.parse(readBack.sheets[0])!!.table.books)
         assertEquals(me.books, BookTable.parse(readBack.sheets[1])!!.table.books)
     }

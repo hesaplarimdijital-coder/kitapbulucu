@@ -27,7 +27,7 @@ object LibraryTexts {
         Owner.ME -> resources.getString(R.string.list_of_me)
     }
 
-    /** "Babam'ın listesi 3 dk önce güncellendi". */
+    /** "MKE'nin listesi 3 dk önce güncellendi". */
     fun updated(resources: Resources, owner: Owner, state: LibraryState, now: Long): String {
         val list = listName(resources, owner)
         val at = state.updatedAt ?: state.readAt ?: return resources.getString(R.string.read_never, list)

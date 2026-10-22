@@ -262,7 +262,7 @@ class PhoneScreensScreenshotTest {
         val store = sampleStore(myBooks)
         capture(name, theme, InputMode.Touch, dialogs = true) {
             SearchScreen(store, initialQuery = "çatıdaki")
-            ConfirmDialog("“Çatıdaki Rasathane” silinsin mi?", "Kitap Benim listesinden çıkar. Geri al düğmesiyle döndürebilirsiniz.", actions, onDismiss = {})
+            ConfirmDialog("“Çatıdaki Rasathane” silinsin mi?", "Kitap Barış'ın listesinden çıkar. Geri al düğmesiyle döndürebilirsiniz.", actions, onDismiss = {})
         }
     }
 

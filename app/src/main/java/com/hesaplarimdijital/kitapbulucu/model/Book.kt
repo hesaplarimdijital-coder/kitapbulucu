@@ -1,9 +1,13 @@
 package com.hesaplarimdijital.kitapbulucu.model
 
-/** Whose library a book belongs to; the label is what the screens show. */
-enum class Owner(val label: String, val fileName: String) {
-    DAD("Babam", "Babam.xlsx"),
-    ME("Benim", "Benim.xlsx"),
+/**
+ * Whose library a book belongs to. [label] and [fileName] are internal identities (the sheet name the app
+ * writes into each person's own file, the default file name) and never change. The screens show the names
+ * from the string resources (MKE, Barış); [exportSheet] is the sheet name in the shared export file.
+ */
+enum class Owner(val label: String, val fileName: String, val exportSheet: String) {
+    DAD("Babam", "Babam.xlsx", "MKE"),
+    ME("Benim", "Benim.xlsx", "Barış"),
 }
 
 /**

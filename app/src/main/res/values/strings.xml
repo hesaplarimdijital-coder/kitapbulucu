@@ -10,16 +10,16 @@
     <string name="placeholder_search_title">Search for a book here</string>
     <string name="placeholder_search_text">Type part of a title or an author to see whose shelf it is on. Coming in the next version.</string>
     <string name="placeholder_library_title">All books will be listed here</string>
-    <string name="placeholder_library_text">The Babam and Benim lists in two tabs. Coming in a later version.</string>
+    <string name="placeholder_library_text">The MKE and Barış lists in two tabs. Coming in a later version.</string>
     <string name="placeholder_shelves_title">Shelves will be listed here</string>
     <string name="placeholder_shelves_text">Every shelf with the number of books on it. Coming in a later version.</string>
 
 
     <!-- library status (S-12) -->
-    <string name="owner_dad">Babam</string>
-    <string name="owner_me">Benim</string>
-    <string name="list_of_dad">Babam\'s list</string>
-    <string name="list_of_me">My list</string>
+    <string name="owner_dad">MKE</string>
+    <string name="owner_me">Barış</string>
+    <string name="list_of_dad">MKE\'s list</string>
+    <string name="list_of_me">Barış\'s list</string>
     <string name="updated_just_now">%1$s updated just now</string>
     <string name="updated_minutes_ago">%1$s updated %2$d min ago</string>
     <string name="updated_hours_ago">%1$s updated %2$d h ago</string>
@@ -51,8 +51,8 @@
     <string name="setup_intro">The two libraries are kept in two Excel files in Google Drive. Show the app those files once; it reads them from then on.</string>
     <string name="setup_who_title">Whose device is this?</string>
     <string name="setup_who_text">Changes are written to this person\'s file; both lists are read.</string>
-    <string name="setup_who_dad">Babam</string>
-    <string name="setup_who_me">Me</string>
+    <string name="setup_who_dad">MKE</string>
+    <string name="setup_who_me">Barış</string>
     <string name="setup_own_list">This device writes to this list</string>
     <string name="setup_other_list">This list is read only</string>
     <string name="setup_pick">Choose file</string>
@@ -104,8 +104,8 @@
     <string name="search_empty_title">Which book are you looking for?</string>
     <string name="search_empty_text">Type part of the title or the author. Word order and Turkish letters do not matter.</string>
     <string name="search_none_both">This book is in neither library</string>
-    <string name="search_none_dad">Not in Babam\'s list</string>
-    <string name="search_none_me">Not in my list</string>
+    <string name="search_none_dad">Not in MKE\'s list</string>
+    <string name="search_none_me">Not in Barış\'s list</string>
     <string name="search_suggestions">Did you mean one of these?</string>
     <string name="search_add">Add book</string>
     <string name="search_add_later">Adding books arrives in the next version.</string>
@@ -155,10 +155,10 @@
     <string name="add_clear">Clear</string>
     <string name="add_need_title">Write the title.</string>
     <string name="add_bad_copies">Copies must be a number of 1 or more.</string>
-    <string name="list_in_dad">in Babam\'s list</string>
-    <string name="list_in_me">in my list</string>
-    <string name="list_to_dad">to Babam\'s list</string>
-    <string name="list_to_me">to my list</string>
+    <string name="list_in_dad">in MKE\'s list</string>
+    <string name="list_in_me">in Barış\'s list</string>
+    <string name="list_to_dad">to MKE\'s list</string>
+    <string name="list_to_me">to Barış\'s list</string>
     <string name="add_exists">This book is already %1$s: %2$s.</string>
     <string name="add_exists_shelf">shelf %1$s</string>
     <string name="add_exists_no_shelf">shelf not written</string>
@@ -183,12 +183,12 @@
     <string name="delete_one_copy">Delete one copy (%1$d left)</string>
     <string name="delete_all">Delete all %1$d copies</string>
     <string name="delete_confirm">Delete</string>
-    <string name="other_list_warning">This is the other person\'s list (%1$s). Change it anyway?</string>
+    <string name="other_list_warning">This is %1$s. Change it anyway?</string>
     <string name="move_title">Move “%1$s”?</string>
     <string name="move_text">It goes %1$s and leaves %2$s. It is written to the new file first, so it is never missing from both.</string>
     <string name="move_confirm">Move</string>
-    <string name="from_dad">Babam\'s list</string>
-    <string name="from_me">my list</string>
+    <string name="from_dad">MKE\'s list</string>
+    <string name="from_me">Barış\'s list</string>
     <string name="undo_deleted">“%1$s” deleted</string>
     <string name="undo_one_copy">One copy of “%1$s” deleted</string>
     <string name="undo_edited">“%1$s” changed</string>
@@ -304,7 +304,7 @@
     <string name="settings_merge_text">Adds the books of another Excel or CSV file to a list.</string>
     <string name="settings_merge">Merge…</string>
     <string name="settings_export_title">Export as one Excel file</string>
-    <string name="settings_export_text">Both lists in one file, with Babam and Benim sheets. The app never reads this file.</string>
+    <string name="settings_export_text">Both lists in one file, with MKE and Barış sheets. The app never reads this file.</string>
     <string name="settings_export">Export…</string>
     <string name="export_file_name">Kitaplar.xlsx</string>
     <string name="export_done">Exported.</string>

@@ -142,7 +142,7 @@ internal suspend fun LazyListState.reveal(index: Int) {
 }
 
 /**
- * Type, see whose shelf the book is on: a search field, the All / Babam / Benim filter and one
+ * Type, see whose shelf the book is on: a search field, the All / MKE / Barış filter and one
  * row per book, with the library above the shelf on the right. A row opens in place to show the
  * details (copies, signed, publisher, year, ISBN, note). The cursor stays in the field: arrow
  * keys move the selection, Enter opens and closes it, Esc closes it or clears the search.
@@ -439,7 +439,7 @@ private fun ResultRow(actions: com.hesaplarimdijital.kitapbulucu.ui.BookActions?
     }
 }
 
-/** "Babam" (with "İmzalı" beside it) over "Raf C2" or "Raf yazılmamış". */
+/** "MKE" (with "İmzalı" beside it) over "Raf C2" or "Raf yazılmamış". */
 @Composable
 private fun HoldingSummary(hit: SearchHit) {
     val colors = DeskTheme.colors

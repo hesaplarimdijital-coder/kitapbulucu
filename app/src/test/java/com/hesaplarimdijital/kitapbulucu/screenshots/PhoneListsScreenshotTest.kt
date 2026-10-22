@@ -80,7 +80,7 @@ class PhoneListsScreenshotTest {
             ),
         )
 
-    /** Babam's list is the sample workbook; mine the three books above; shelves created on the device. */
+    /** MKE's list is the sample workbook; mine the three books above; shelves created on the device. */
     private fun sampleStore(): LibraryStore {
         val documents = FakeDocuments()
         val dad = Uri.parse("content://test/Babam.xlsx")

@@ -1,9 +1,9 @@
 # Kitap Bulucu
 
-İki kütüphanenin (Babam, Benim) kitaplarını Google Drive'daki iki Excel dosyasında tutan ve "bu kitap var mı, kimde, hangi rafta" sorusunu yanıtlayan Android uygulaması.
+İki kütüphanenin (MKE, Barış) kitaplarını Google Drive'daki iki Excel dosyasında tutan ve "bu kitap var mı, kimde, hangi rafta" sorusunu yanıtlayan Android uygulaması.
 
 - İnternet izni yok; hesap, reklam, analitik yok. Dosyaları buluta Google Drive uygulaması taşır.
-- Asıl kaynak Drive'daki `Babam.xlsx` ve `Benim.xlsx`. Herkes kendi dosyasına yazar, ikisini de okur.
+- Asıl kaynak Drive'daki `Babam.xlsx` (uygulamada MKE) ve `Benim.xlsx` (uygulamada Barış); dosya adları değişmez. Herkes kendi dosyasına yazar, ikisini de okur.
 - Her yazmadan önce dosya yeniden okunur ve yedeği alınır (son 10 yedek saklanır).
 - Tablet (Samsung DeX, klavye ve fare) ve telefon için tasarlandı.
 
@@ -11,7 +11,7 @@
 
 1. APK'yı indirin: [kitapbulucu.apk](https://github.com/hesaplarimdijital-coder/kitapbulucu/raw/ci/apk/kitapbulucu.apk).
 2. Tablette ya da telefonda dosyayı açın. "Bilinmeyen uygulamalar" izni sorulursa o kez izin verin.
-3. Uygulama açılınca "Ben kimim?" sorusunu yanıtlayın (Babam ya da Ben).
+3. Uygulama açılınca "Bu cihaz kimin?" sorusunu yanıtlayın (MKE ya da Barış).
 4. İki dosyayı tek tek seçin: önce `Babam.xlsx`, sonra `Benim.xlsx`. Dosya yoksa "Oluştur" boş, başlıklı bir dosya açar.
 5. Sütun adları farklıysa uygulama bir kez hangi sütunda ne olduğunu sorar.
 
@@ -27,7 +27,7 @@ Yeni sürüm aynı yoldan kurulur; ayarlar, dosya bağlantıları ve yedekler ka
 ## Babanın telefonu
 
 1. Telefona Google Drive uygulaması kurulu ve babanızın hesabı açık olsun; paylaşılan klasör "Benimle paylaşılanlar" altında görünür.
-2. APK'yı kurun, "Ben kimim?" sorusuna "Babam" deyin.
+2. APK'yı kurun, "Bu cihaz kimin?" sorusuna "MKE" deyin.
 3. İki dosyayı Drive'dan seçin. Telefon yalnızca dikey kullanılır.
 4. Babanız kendi listesine yazar; sizin listenize bir şey eklemek isterse uygulama önce sorar.
 
