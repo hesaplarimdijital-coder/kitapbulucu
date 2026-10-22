@@ -342,7 +342,7 @@ class LibraryStore(
 
     /** Both lists in one workbook with Babam and Benim sheets (S-25); the app never reads it back. */
     fun exportTo(uri: Uri, onResult: (Boolean) -> Unit = {}) {
-        val sheets = Owner.entries.map { owner -> (state(owner).table ?: BookTable(emptyList())).toSheetSpec(owner.label) }
+        val sheets = Owner.entries.map { owner -> (state(owner).table ?: BookTable(emptyList())).toSheetSpec(owner.exportSheet) }
         scope.launch {
             val ok = withContext(io) {
                 try {

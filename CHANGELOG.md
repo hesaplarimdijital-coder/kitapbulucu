@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 1.1.0 — 22.10.2026
+
+- **Adlar**: listeler artık "MKE" ve "Barış" olarak görünüyor (Drive'daki dosya adları ve ayarlar değişmedi). Dışa aktarılan Excel'in sayfaları da MKE ve Barış.
+- **Otomatik güncelleme**: uygulama açılınca, öne gelince, DeX'te pencereye dönünce ve açık kaldıkça dakikada bir iki dosyayı yeniden okur; dışarıda değişen liste için "… listesi güncellendi" notu çıkar.
+- **Raflar**: raflar cihazda oluşturulur ("Yeni raf"), rafa arayarak kitap eklenir, Kütüphane'den bir ya da birçok kitap "Rafa koy…" ile rafa konur; raf adı değiştirilir, boş raf silinir.
+- **Telefon**: iki satırlı listeler, yüzen "Kitap ekle"/"Yeni raf" düğmeleri, alttan açılan ayrıntı sayfaları, uzun basarak çoklu seçim, üst çubukta geri ve eylemler; formlarda düğmeler klavyeye yapışmaz; klavye açıkken alt menü gizlenir.
+- **Animasyonlar**: ekran geçişleri, açılan paneller, pencereler, geri al çubuğu ve seçimler yumuşak geçişli.
+- **DeX**: klavye-fare modunda yazılar 1 punto büyük; aramada satır olduğu yerde açılır; Ctrl/Shift ile çoklu seçim.
+
 ## 1.0.0 — 14.10.2026
 
 İlk tam sürüm.

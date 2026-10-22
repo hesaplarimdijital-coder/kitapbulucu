@@ -2,7 +2,7 @@
 
 Karar (22.10.2026): arayüzde listeler MKE ve Barış adıyla görünür; dosyalar (`Babam.xlsx`, `Benim.xlsx`), sayfa adı ve iç adlar Babam/Benim olarak kalır.
 
-Son güncelleme: 15.10.2026, telefon arayüzü yenilendi ve geçişlere animasyon eklendi; kit 0.1.3.
+Son güncelleme: 22.10.2026, sürüm 1.1.0 (son sürüm): MKE/Barış adları, otomatik yeniden okuma; telefon testleri kullanıcıda tamam.
 
 ## Şu an
 

@@ -294,6 +294,11 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [x] Ekle/Düzenle, kurulum, eşleme ve birleştirmede alt düğme çubuğu klavye kapalıyken altta sabit; klavye açıkken klavyeye yapışmaz, formun sonunda kalır (aşağı kaydırınca görünür). Yüzen düğme klavye açıkken gizlenir.
 - [x] Tablet/DeX Ara: tıklanan satır olduğu yerde açılır, liste zıplamaz; ↑↓, Enter ve Esc aynı.
 
+### S-39 Son sürüm 1.1.0 (22.10.2026) · 3 · [O] · bitti
+- [x] Arayüzde listelerin adı MKE (babanın) ve Barış (kullanıcının); dosya adları, sayfa adları ve ayarlar değişmedi; dışa aktarılan Excel'in sayfaları MKE ve Barış.
+- [x] Dosyalar açılışta, öne gelişte, pencere odağında (en az 10 sn arayla) ve uygulama öndeyken dakikada bir yeniden okunur; dışarıdan değişen liste için kısa not.
+- [x] Sürüm 1.1.0, CHANGELOG; telefon testleri kullanıcıda tamam.
+
 ## Sıraya konmayı bekleyenler
 
 Bir sonraki sprint planlanırken sıraya konur.
