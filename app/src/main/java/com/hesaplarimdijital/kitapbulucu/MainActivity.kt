@@ -4,6 +4,7 @@ import android.content.pm.ActivityInfo
 import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.KeyboardShortcutGroup
 import android.view.Menu
@@ -17,8 +18,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.hesaplarimdijital.kitapbulucu.model.Owner
+import com.hesaplarimdijital.kitapbulucu.store.AutoRefresh
 import com.hesaplarimdijital.kitapbulucu.ui.AppShell
 import com.hesaplarimdijital.kitapbulucu.ui.rememberFilePicker
 import com.hesaplarimdijital.kitapbulucu.ui.setup.MappingScreen
@@ -29,14 +34,23 @@ import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppPalette
 import desktopkit.settings.rememberDeskPreferences
 import desktopkit.shell.ShellNavigator
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
     /** Set by the composition; runs a shortcut's action. */
     private var perform: (String) -> Boolean = { false }
 
+    /** Reads both files again on start, on window focus and every minute (ARCHITECTURE 7). */
+    private val autoRefresh by lazy {
+        val store = App.store(this)
+        AutoRefresh(store::refresh, store::refreshInBackground, SystemClock::elapsedRealtime)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // the timer runs only while the activity is resumed and stops on its own when it is not
+        lifecycleScope.launch { repeatOnLifecycle(Lifecycle.State.RESUMED) { autoRefresh.whileResumed() } }
         // Phones are used upright only; tablets and DeX windows stay free.
         val screen = screenSizePx()
         if (isPhoneSized(screen.x, screen.y, resources.displayMetrics.density)) {
@@ -84,7 +98,13 @@ class MainActivity : ComponentActivity() {
     /** Every return to the foreground reads both files again (ARCHITECTURE 7). */
     override fun onStart() {
         super.onStart()
-        App.store(this).refresh()
+        autoRefresh.onStart()
+    }
+
+    /** On DeX and in split screen the activity stays started while other windows are used: focus reads again too. */
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) autoRefresh.onFocusGained()
     }
 
     /** Ctrl/Alt/Meta chords and F keys only: plain keys must keep typing into text fields. */

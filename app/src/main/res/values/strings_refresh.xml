@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- A quiet note for a few seconds when a re-read finds a list changed outside the app -->
+    <string name="refresh_updated_dad">MKE\'s list was updated</string>
+    <string name="refresh_updated_me">Barış\'s list was updated</string>
+    <string name="refresh_updated_both">Both lists were updated</string>
+</resources>

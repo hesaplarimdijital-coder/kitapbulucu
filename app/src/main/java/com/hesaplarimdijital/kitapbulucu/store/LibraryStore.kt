@@ -29,7 +29,8 @@ import kotlinx.coroutines.withContext
 /**
  * The two libraries as the screens see them (ARCHITECTURE 7, 8). [start] shows the cached
  * copies at once and then reads the files; [refresh] reads them again (on every return to the
- * foreground and on F5) and writes whatever changes are still pending. A read that finds the
+ * foreground and on F5; [refreshInBackground] on window focus and every minute, see
+ * [AutoRefresh]) and writes whatever changes are still pending. A read that finds the
  * same bytes changes nothing on screen; a read that fails keeps the last good list and says
  * why. The table a screen sees is the file's table with the pending changes already applied.
  * State changes happen on [scope]'s thread.
@@ -79,8 +80,22 @@ class LibraryStore(
 
     private val _lastStep = MutableStateFlow<LastStep?>(null)
     val lastStep: StateFlow<LastStep?> = _lastStep.asStateFlow()
+
+    /** Lists whose file was changed outside the app, seen by a read at [at]; for a short quiet note. */
+    data class ListsUpdated(val owners: Set<Owner>, val at: Long)
+
+    private val _updated = MutableStateFlow<ListsUpdated?>(null)
+    /**
+     * Set when a read finds new content in a file this store had already read (or had a cached
+     * copy of); never on the first read after linking, choosing a sheet or mapping columns, and
+     * never for the app's own writes. Lists updated before [dismissUpdated] are gathered in one.
+     */
+    val updated: StateFlow<ListsUpdated?> = _updated.asStateFlow()
+
     private var refreshing = false
     private var refreshAgain = false
+    /** The running pass was asked for in the background only: lists already shown do not say "reading". */
+    private var quietPass = false
 
     fun state(owner: Owner): LibraryState = _states.value.getValue(owner)
 
@@ -95,6 +110,20 @@ class LibraryStore(
     /** Reads both files again and writes pending changes; calls while a pass runs are folded into one more pass. */
     fun refresh() {
         scope.launch { refreshNow() }
+    }
+
+    /**
+     * The same reading and writing as [refresh], asked for by a timer or by the window getting
+     * focus: dropped when a pass is already running (it is reading the files right now), and a
+     * list already on screen does not switch to "reading" for it.
+     */
+    fun refreshInBackground() {
+        scope.launch { if (!refreshing) refreshNow(quiet = true) }
+    }
+
+    /** Forgets the "list updated" note. */
+    fun dismissUpdated() {
+        _updated.value = null
     }
 
     // ------------------------------------------------------------------ changes
@@ -390,12 +419,14 @@ class LibraryStore(
         rebuildIndex()
     }
 
-    private suspend fun refreshNow() {
+    private suspend fun refreshNow(quiet: Boolean = false) {
         if (refreshing) {
             refreshAgain = true
+            if (!quiet) quietPass = false
             return
         }
         refreshing = true
+        quietPass = quiet
         try {
             do {
                 refreshAgain = false
@@ -411,6 +442,7 @@ class LibraryStore(
             } while (refreshAgain)
         } finally {
             refreshing = false
+            quietPass = false
         }
     }
 
@@ -423,7 +455,7 @@ class LibraryStore(
             return
         }
         val before = state(owner)
-        update(before.copy(status = LoadStatus.LOADING, displayName = before.displayName ?: link.displayName))
+        if (!quietPass || before.table == null) update(before.copy(status = LoadStatus.LOADING, displayName = before.displayName ?: link.displayName))
         val knownHash = hashes[owner]
         val outcome = withContext(io) { fetch(owner, link, knownHash) }
         val now = clock()
@@ -449,6 +481,10 @@ class LibraryStore(
                     hashes[owner] = outcome.hash
                     if (displayName != link.displayName && displayName != null) links.set(owner, link.uri, displayName)
                     withContext(io) { cache.save(owner, outcome.bytes, LibraryCache.Meta(outcome.hash, now, changedAt, outcome.info?.lastModified, displayName)) }
+                    // new bytes that hold the same books (saved again unchanged) are not worth a note
+                    val previous = baseTables[owner]
+                    val sameBooks = previous != null && previous.books == parsed.table.books && previous.extraHeaders == parsed.table.extraHeaders
+                    if (knownHash != null && !sameBooks) announceUpdate(owner, now)
                     setBase(owner, parsed.table)
                     update(
                         LibraryState(
@@ -619,9 +655,10 @@ class LibraryStore(
         val bytes = XlsxWriter.write(sheets)
         if (!readsBackAs(bytes, parsed.sheetName, applied.table)) return Written.Failed(WriteFailure.VERIFY)
         val otherSheets = parsed.workbook.sheets.filter { it.name != parsed.sheetName && !it.isEmpty }.map { it.name }
-        // 4. the old bytes are kept
+        // 4. the old bytes are kept; a write retried on every refresh (timer, focus) keeps one copy, not ten
         try {
-            backups.save(owner, original, now)
+            val newest = backups.list(owner).firstOrNull()?.file
+            if (newest == null || !newest.readBytes().contentEquals(original)) backups.save(owner, original, now)
         } catch (e: Exception) {
             return Written.Failed(WriteFailure.BACKUP)
         }
@@ -637,11 +674,12 @@ class LibraryStore(
         } catch (e: DocumentException) {
             return Written.Failed(WriteFailure.READ_BACK)
         }
-        val hash = LibraryCache.hashOf(bytes)
-        if (LibraryCache.hashOf(readBack) != hash && !readsBackAs(readBack, parsed.sheetName, applied.table)) {
+        val readBackHash = LibraryCache.hashOf(readBack)
+        if (readBackHash != LibraryCache.hashOf(bytes) && !readsBackAs(readBack, parsed.sheetName, applied.table)) {
             return Written.Failed(WriteFailure.READ_BACK)
         }
-        return Written.Ok(bytes, hash, parsed, info, applied, otherSheets)
+        // what the document holds is what the next read compares with, so the app's own write is never "updated"
+        return Written.Ok(readBack, readBackHash, parsed, info, applied, otherSheets)
     }
 
     /** True when [bytes] hold [table] on sheet [sheetName] the way the app's own reader sees them. */
@@ -686,6 +724,10 @@ class LibraryStore(
     private fun refreshShown(owner: Owner) {
         val current = state(owner)
         update(current.copy(table = shown(owner) ?: current.table, pendingChanges = pending.forOwner(owner).size))
+    }
+
+    private fun announceUpdate(owner: Owner, at: Long) {
+        _updated.value = ListsUpdated(_updated.value?.owners.orEmpty() + owner, at)
     }
 
     private fun notice(notice: StoreNotice) {

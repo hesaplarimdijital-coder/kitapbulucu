@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- A quiet note for a few seconds when a re-read finds a list changed outside the app -->
+    <string name="refresh_updated_dad">MKE\'nin listesi güncellendi</string>
+    <string name="refresh_updated_me">Barış\'ın listesi güncellendi</string>
+    <string name="refresh_updated_both">İki liste de güncellendi</string>
+</resources>

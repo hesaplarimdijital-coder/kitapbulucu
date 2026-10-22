@@ -58,6 +58,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.hesaplarimdijital.kitapbulucu.ui.search.SearchScreen
 import desktopkit.components.DeskButton
@@ -272,6 +275,7 @@ fun AppShell(
                             }
                         }
                     }
+                    if (store != null) RefreshBar(store)
                     if (store != null) UndoBar(store)
                 }
             }
@@ -362,6 +366,58 @@ private fun UndoBar(store: LibraryStore) {
 }
 
 private const val UNDO_BAR_MILLIS = 8_000L
+
+/**
+ * "MKE'nin listesi güncellendi" for a few seconds when a re-read finds a list changed outside
+ * the app (LibraryStore.updated). Quiet: no button, nothing to answer, it slides in and out like
+ * the undo bar; on the phone it sits just above the bottom bar.
+ */
+@Composable
+private fun RefreshBar(store: LibraryStore) {
+    val updated by store.updated.collectAsState()
+    val phone = isPhone()
+    val colors = DeskTheme.colors
+    val dimens = DeskTheme.dimens
+    // the text stays on screen while the bar slides out
+    val shown = remember { mutableStateOf(updated) }
+    if (updated != null) shown.value = updated
+    LaunchedEffect(updated) {
+        if (updated != null) {
+            kotlinx.coroutines.delay(REFRESH_BAR_MILLIS)
+            store.dismissUpdated()
+        }
+    }
+    AnimatedVisibility(
+        visible = updated != null,
+        enter = expandVertically(tween(200), expandFrom = Alignment.Bottom) + slideInVertically(tween(200)) { it } + fadeIn(tween(200)),
+        exit = shrinkVertically(tween(150), shrinkTowards = Alignment.Bottom) + slideOutVertically(tween(150)) { it } + fadeOut(tween(150)),
+    ) {
+        val current = shown.value ?: return@AnimatedVisibility
+        val text = stringResource(
+            when {
+                current.owners.size > 1 -> R.string.refresh_updated_both
+                Owner.DAD in current.owners -> R.string.refresh_updated_dad
+                else -> R.string.refresh_updated_me
+            },
+        )
+        val shape = androidx.compose.foundation.shape.RoundedCornerShape(dimens.radiusControl)
+        Text(
+            text,
+            style = DeskTheme.type.body,
+            color = colors.text,
+            maxLines = 2,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = if (phone) dimens.gapM else dimens.pagePadding, vertical = dimens.gapS)
+                .background(colors.surfaceRaised, shape)
+                .border(1.dp, colors.border, shape)
+                .padding(horizontal = dimens.gapM, vertical = dimens.gapS)
+                .semantics { liveRegion = LiveRegionMode.Polite },
+        )
+    }
+}
+
+private const val REFRESH_BAR_MILLIS = 5_000L
 
 /** A list that could not be read and stray files next to the lists, above every screen. */
 @Composable
