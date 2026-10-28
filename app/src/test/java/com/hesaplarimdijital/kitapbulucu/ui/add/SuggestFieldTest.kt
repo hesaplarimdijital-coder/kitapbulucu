@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasSetTextAction
@@ -36,6 +37,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /** Typing in Yazar and Yayınevi offers what the lists already hold; choosing fills the field. */
+@OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class SuggestFieldTest {
@@ -50,7 +52,7 @@ class SuggestFieldTest {
         val store = SuggestFixtures.store(context, "suggest-ui")
         val settings = SuggestFixtures.settings(context, "suggest-ui")
         compose.setContent {
-            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) { AddBookScreen(store, settings) }
             }
         }
