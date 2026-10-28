@@ -52,7 +52,7 @@ class SuggestFieldTest {
         val store = SuggestFixtures.store(context, "suggest-ui")
         val settings = SuggestFixtures.settings(context, "suggest-ui")
         compose.setContent {
-            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) { AddBookScreen(store, settings) }
             }
         }

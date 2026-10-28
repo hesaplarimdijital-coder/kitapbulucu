@@ -50,7 +50,7 @@ class SuggestScreenshotTest {
         val settings = SuggestFixtures.settings(context, "suggest-shot")
         compose.runOnUiThread { compose.activity.actionBar?.hide() }
         compose.setContent {
-            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) { AddBookScreen(store, settings) }
             }
         }
