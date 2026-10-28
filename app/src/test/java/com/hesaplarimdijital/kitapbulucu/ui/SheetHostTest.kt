@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertFalse
 import androidx.compose.runtime.getValue

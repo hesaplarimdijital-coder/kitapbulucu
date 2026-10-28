@@ -10,6 +10,8 @@ import com.hesaplarimdijital.kitapbulucu.R
 import desktopkit.shell.WidthClass
 import desktopkit.theme.DeskFonts
 import desktopkit.theme.DeskTheme
+import desktopkit.theme.DeskType
+import desktopkit.theme.InputMode
 import desktopkit.theme.LocalDeskType
 import desktopkit.theme.grow
 
@@ -31,6 +33,12 @@ object AppFonts {
 
     /** The kit's IBM Plex for the interface, Literata for page and section headings (Draft A). */
     val desk: DeskFonts = DeskFonts.Plex.copy(heading = Literata)
+
+    /**
+     * The kit's own sizes, with nothing added: kept for tests that build a theme by hand. The
+     * larger text on tablet and DeX now comes from the shell (or [LargeWindowText]).
+     */
+    val type: (InputMode, DeskFonts) -> DeskType = { mode, fonts -> DeskType.forMode(mode, fonts) }
 
     /** The kit shell's default `largeWindowTextStep`. */
     const val LARGE_WINDOW_TEXT_STEP = 1f
