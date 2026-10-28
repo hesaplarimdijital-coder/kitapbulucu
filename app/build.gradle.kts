@@ -19,7 +19,7 @@ android {
         targetSdk = 35
         // every CI run gets a higher number, so Android always accepts the update
         versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
-        versionName = "1.1.0"
+        versionName = "1.2.0"
     }
 
     signingConfigs {

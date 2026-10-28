@@ -299,6 +299,13 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [x] Dosyalar açılışta, öne gelişte, pencere odağında (en az 10 sn arayla) ve uygulama öndeyken dakikada bir yeniden okunur; dışarıdan değişen liste için kısa not.
 - [x] Sürüm 1.1.0, CHANGELOG; telefon testleri kullanıcıda tamam.
 
+### S-40 Sürüm 1.2.0 (29.10.2026) · 5 · [O] · bitti (tablette ve telefonda denenecek)
+- [x] Kit 0.2.0'a geçildi; DeX görünümü aynı, telefonda kitin yeni hareketleri ve küçük çubukları.
+- [x] Alttan açılan sayfalar parmakla aşağı çekilip kapanır; uzun içerikte önce içerik kayar.
+- [x] Kitap formunda Yazar ve Yayınevi için iki listeden öneriler ("iş" → "Türkiye İş Bankası Yayınları"); seçilince imleç sona gider.
+- [x] Ayarlar → "Ad ve yazarları düzelt": iki listede tamamı büyük harfli ad ve yazarlar "Fyodor Dostoyevski" biçimine; önce sayılar ve örnekler, yedek, tek adımda geri alma.
+- [x] Gizli değer olmadan her APK aynı anahtarla imzalanır (Actions önbelleği); ilk kurulumda bir kez kaldırıp kurmak gerekir.
+
 ## Sıraya konmayı bekleyenler
 
 Bir sonraki sprint planlanırken sıraya konur.

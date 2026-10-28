@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 1.2.0 — 29.10.2026
+
+- **Telefon**: alttan açılan sayfalar parmakla aşağı çekilip kapanır; kitaplığın 0.2.0 sürümüyle daha akıcı geçişler, kaydırınca gizlenen alt çubuk, aramada "Hepsi / MKE / Barış" seçim düğmeleri, açık rafta kayan geçiş ve Android'in geri hareketi.
+- **Öneriler**: kitap eklerken ve düzenlerken Yazar ve Yayınevi yazdıkça iki listeden öneri çıkar.
+- **Ad ve yazarları düzelt** (Ayarlar): tamamı büyük harfle yazılmış adlar ve yazarlar bir kez "Fyodor Dostoyevski" biçimine çevrilir; yedek alınır, tek adımda geri alınır.
+- **Kurulum**: her APK aynı anahtarla imzalanır, güncellemeler eskisinin üstüne kurulur (ilk seferde bir kez kaldırıp kurmak gerekir).
+
 ## 1.1.0 — 22.10.2026
 
 - **Adlar**: listeler artık "MKE" ve "Barış" olarak görünüyor (Drive'daki dosya adları ve ayarlar değişmedi). Dışa aktarılan Excel'in sayfaları da MKE ve Barış.

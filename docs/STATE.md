@@ -2,7 +2,7 @@
 
 Karar (22.10.2026): arayüzde listeler MKE ve Barış adıyla görünür; dosyalar (`Babam.xlsx`, `Benim.xlsx`), sayfa adı ve iç adlar Babam/Benim olarak kalır.
 
-Son güncelleme: 22.10.2026, sürüm 1.1.0 (son sürüm): MKE/Barış adları, otomatik yeniden okuma; telefon testleri kullanıcıda tamam.
+Son güncelleme: 29.10.2026, sürüm 1.2.0: kit 0.2.0, sürüklenen alt sayfa, yazar/yayınevi önerileri, ad ve yazar düzeltme düğmesi, gizli değersiz sabit imza.
 
 ## Şu an
 
@@ -11,11 +11,12 @@ Son güncelleme: 22.10.2026, sürüm 1.1.0 (son sürüm): MKE/Barış adları, o
 - Uygulama: kurulum, arama, kitap ekleme (Kütüphane'de "+" ve Ctrl+N), silme/düzenleme/taşıma, geri alma, kütüphane tablosu, raflar ve raf doldurma, Excel birleştirme (Ctrl+Shift+O, Ayarlar), yedekten geri yükleme, bekleyen değişiklikler, tek Excel olarak dışa aktarma, Ctrl+O.
 - APK: `ci/apk` dalında `kitapbulucu.apk`; `ornek/` altında örnek dosyalar. Ekran görüntüleri `ci/screenshots`; başvuru görüntüleri `app/src/test/screenshots/` (33 ekran).
 - Kod haritası: `xlsx/`, `model/`, `text/` (TurkishText, Fold, Cleaning), `search/`, `importing/MergePlan`, `store/` (… LibraryStore: restore, exportTo, backupBookCount, mergeDecisions), `ui/` (AppShell, AppShortcuts, Controls + CheckRow, DataSection, BookActions, FilePicker, LibraryTexts, setup/, search/, add/, library/, shelves/, importing/, theme/), `App.kt`.
-- K-01 bitti; K-02 bitti (kit 0.1.2: `type` kancası, klavye açıkken alt çubuk gizli, `DenseTable` çoklu seçim). Uygulama `AppFonts.type` ile klavye-fare modunda 1 sp büyük yazı kullanıyor.
+- K-01 bitti; K-02 bitti (kit 0.1.2: `type` kancası, klavye açıkken alt çubuk gizli, `DenseTable` çoklu seçim). Kit 0.2.0'dan beri tablet/DeX'te +1 sp'yi kabuk veriyor (`largeWindowTextStep`); kabuk dışındaki ekranlar `LargeWindowText` ile aynı boyutta. `AppFonts.type` kitin temel boyutlarıdır (testler kullanır).
 - Raflar (S-33…S-35): `store/ShelfCatalog` (cihazda `files/library/shelves.json`, kişi başına), Raflar ekranında Yeni raf / Adını değiştir / Rafı sil / Kitap ekle; Kütüphane'de "Rafa koy…" bir ya da birçok kitap (Ctrl/Shift, dokunmatikte "Seç").
 - Çalışma biçimi: sprint yok; Opus orkestratör, işler alt ajanlarla (CLAUDE.md). Aynı depoda paralel ajanlar ayrı klonlarda çalışır (`git clone /home/claude/kitapbulucu …`), yeni metinler ayrı `strings_*.xml` dosyalarına yazılır.
-- Kit 0.1.3: ekran geçişleri, `CompactTopBar`, `currentWidthClass()`. JitPack 0.1.3 etiketini derleyemedi (Maven indirme hatası, önbellekte kaldı); uygulama `desktopKit = "ce87c9ae8e"` (aynı kod). Sonraki kit sürümünde etikete dönülür.
+- Kit 0.2.0 (kullanıcı 23.10.2026'da yayımladı): telefonda küçük çubuklar ve kaydırınca gizlenen alt çubuk, chip filtreler, `DetailTransition` (açık raf), öngörülü geri, Android hareketleri. JitPack 0.2.0 etiketini derledi; commit sabitlemesi kalktı.
 - Telefon arayüzü (S-36, S-37): `ui/TouchControls.kt` (liste, FAB, alt sayfa, seçim) ve `ui/PhoneLayout.kt` (alt eylem çubuğu, telefon başlığı, boş durumlar). İki dosyada telefon algılama ayrı (`isCompactLayout()` ve `isPhone()`); ileride birleştirilebilir. DeX görüntüleri değişmedi.
+- 1.2.0 (29.10.2026): alt sayfa parmakla çekilip kapanır (`AppSheet`, DeskMotion); yazar/yayınevi önerileri (`model/Suggestions.kt`, `ui/SuggestField.kt`); Ayarlar'da tek seferlik "Ad ve yazarları düzelt" (`text/TitleCase.kt`, `store/TitleCaseFix.kt`; tamamı büyük harfli hücreler, TDK'ya göre ve/ile/mı küçük, kısaltmalar ve Roma rakamları büyük; tek geri alma adımı). İmza: gizli değer yoksa CI anahtarı Actions önbelleğinde tutar (ARCHITECTURE 13).
 - S-38 (telefon geri bildirimi 2): alt sayfalar `SheetHost` ile uygulamanın penceresinde çizilir (AppShell sarar; kökün safeDrawing boşluğu sayesinde gezinme çubuğu ve klavyenin üstünde); `ShelfFormDialog` imleci sayfa içeriğinde ister. `PhoneForm` + `isKeyboardOpen()`: alt düğme çubuğu klavye açıkken formun sonuna geçer. Ara'da satır yerinde açılır (`LazyListState.reveal`, `revealDelta`: en az kaydırma, başa taşımaz).
 
 ## Kullanıcıdan beklenenler
