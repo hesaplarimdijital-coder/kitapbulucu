@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings: the one-time fix of titles and authors typed in capitals -->
+    <string name="case_title">Fix titles and authors</string>
+    <string name="case_text">Turns titles and authors written all in capitals into the \'Fyodor Dostoyevski\' form. A backup is taken first; Undo takes it all back in one step.</string>
+    <string name="case_button">Fix…</string>
+    <string name="case_dialog_title">Fix titles and authors?</string>
+    <string name="case_in_dad">%1$s books in MKE\'s list</string>
+    <string name="case_in_me">%1$s books in Barış\'s list</string>
+    <string name="case_counts">%1$s will change.</string>
+    <string name="case_examples">For example:</string>
+    <string name="case_example">%1$s → %2$s</string>
+    <string name="case_other_dad">MKE\'s list changes too, and it is the other person\'s list.</string>
+    <string name="case_other_me">Barış\'s list changes too, and it is the other person\'s list.</string>
+    <string name="case_safety">A backup is taken first; Undo takes it all back in one step.</string>
+    <string name="case_apply">Fix</string>
+    <string name="case_none">Nothing to fix: no title or author is written all in capitals.</string>
+    <string name="case_done">Titles and authors of %1$s books fixed. Undo takes it back.</string>
+    <string name="case_undo">Titles and authors of %1$s books fixed</string>
+</resources>

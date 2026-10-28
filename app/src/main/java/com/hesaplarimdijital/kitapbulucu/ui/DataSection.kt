@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,18 +26,23 @@ import androidx.compose.ui.res.stringResource
 import com.hesaplarimdijital.kitapbulucu.R
 import com.hesaplarimdijital.kitapbulucu.model.Owner
 import com.hesaplarimdijital.kitapbulucu.store.Backups
+import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
+import com.hesaplarimdijital.kitapbulucu.store.TitleCaseFix
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
 import desktopkit.settings.SettingsSection
 import desktopkit.theme.DeskTheme
+import kotlinx.coroutines.launch
 import java.text.DateFormat
+import java.text.NumberFormat
 import java.util.Date
 import java.util.Locale
 
 /**
  * Settings for the files' contents (S-23 … S-25): merging another Excel file, exporting both
- * lists as one workbook, changes still waiting to be written, and restoring a backup.
+ * lists as one workbook, fixing titles and authors typed in capitals, changes still waiting to
+ * be written, and restoring a backup.
  */
 @Composable
 fun DataSection(store: LibraryStore, onMerge: () -> Unit) {
@@ -57,6 +63,7 @@ fun DataSection(store: LibraryStore, onMerge: () -> Unit) {
         SettingLine(stringResource(R.string.settings_export_title), subtitle = stringResource(R.string.settings_export_text)) {
             DeskButton(stringResource(R.string.settings_export), { export.launch(resources.getString(R.string.export_file_name)) }, icon = AppIcons.Export)
         }
+        TitleCaseLine(store) { message = it }
 
         val waiting = Owner.entries.map { states.getValue(it) }.filter { it.pendingChanges > 0 }
         val pendingText = if (waiting.isEmpty()) {
@@ -78,6 +85,70 @@ fun DataSection(store: LibraryStore, onMerge: () -> Unit) {
         }
     }
 }
+
+/**
+ * "Ad ve yazarları düzelt": works out what would change off the main thread, asks with the
+ * count per list, a few examples from the lists and, when the other person's list changes too,
+ * says so (the question covers both lists), then applies it as one undoable step.
+ */
+@Composable
+private fun TitleCaseLine(store: LibraryStore, onMessage: (String) -> Unit) {
+    val context = LocalContext.current
+    val resources = context.resources
+    val scope = rememberCoroutineScope()
+    var busy by remember { mutableStateOf(false) }
+    var asking by remember { mutableStateOf<TitleCaseFix.Plan?>(null) }
+    SettingLine(stringResource(R.string.case_title), subtitle = stringResource(R.string.case_text)) {
+        DeskButton(
+            stringResource(R.string.case_button),
+            {
+                busy = true
+                scope.launch {
+                    val plan = store.planTitleCase()
+                    busy = false
+                    if (plan.total == 0) onMessage(resources.getString(R.string.case_none)) else asking = plan
+                }
+            },
+            icon = DeskIcons.Convert,
+            enabled = !busy,
+        )
+    }
+    val plan = asking ?: return
+    val me = remember { AppSettings.of(context).me }
+    ConfirmDialog(
+        title = stringResource(R.string.case_dialog_title),
+        text = titleCaseQuestion(resources, plan, me),
+        actions = listOf(
+            DialogAction(stringResource(R.string.case_apply), primary = true) {
+                store.fixTitleCase(
+                    label = { applied -> resources.getString(R.string.case_undo, count(applied.total)) },
+                    onDone = { applied -> if (applied.total > 0) onMessage(resources.getString(R.string.case_done, count(applied.total))) else onMessage(resources.getString(R.string.case_none)) },
+                )
+            },
+            DialogAction(stringResource(R.string.mapping_cancel)) {},
+        ),
+        onDismiss = { asking = null },
+    )
+}
+
+/** "MKE'nin listesinde 6.412 kitap, Barış'ın listesinde 35 kitap değişecek." with examples and the safety note. */
+internal fun titleCaseQuestion(resources: android.content.res.Resources, plan: TitleCaseFix.Plan, me: Owner?): String {
+    val parts = Owner.entries.filter { plan.count(it) > 0 }.map { owner ->
+        resources.getString(if (owner == Owner.DAD) R.string.case_in_dad else R.string.case_in_me, count(plan.count(owner)))
+    }
+    val text = StringBuilder(resources.getString(R.string.case_counts, parts.joinToString(", ")))
+    if (plan.examples.isNotEmpty()) {
+        text.append("\n\n").append(resources.getString(R.string.case_examples))
+        for ((before, after) in plan.examples) text.append('\n').append(resources.getString(R.string.case_example, before, after))
+    }
+    val other = Owner.entries.firstOrNull { it != me && me != null && plan.count(it) > 0 }
+    if (other != null) text.append("\n\n").append(resources.getString(if (other == Owner.DAD) R.string.case_other_dad else R.string.case_other_me))
+    text.append("\n\n").append(resources.getString(R.string.case_safety))
+    return text.toString()
+}
+
+/** 6412 -> "6.412" in Turkish. */
+private fun count(n: Int): String = NumberFormat.getIntegerInstance(Locale.getDefault()).format(n)
 
 /** One list's backups, folded away until asked for; each can be put back after a question. */
 @Composable

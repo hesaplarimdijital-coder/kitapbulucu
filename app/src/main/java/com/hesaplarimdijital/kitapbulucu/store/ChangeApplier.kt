@@ -41,25 +41,44 @@ object ChangeApplier {
     /**
      * The rows being changed, with every row's identity worked out once and counted, so that a
      * merge of thousands of new books stays linear: a book whose identity is not there yet is
-     * appended without a search.
+     * appended without a search. Until a row is removed the rows of each identity are also kept
+     * by position, so thousands of edits (a shelf renamed, titles fixed) find their rows at once;
+     * after a removal shifts the positions, rows are looked for one by one again.
      */
     internal class Rows(source: List<Book>) {
         val books = ArrayList(source)
         private val ids = source.mapTo(ArrayList(source.size)) { identity(it) }
         private val counts = HashMap<String, Int>().apply { ids.forEach { put(it, getOrDefault(it, 0) + 1) } }
+        /** Ascending row positions per identity; built on the first search, dropped for good by a removal. */
+        private var byId: HashMap<String, ArrayList<Int>>? = null
+        private var removed = false
 
         private fun has(id: String) = counts.getOrDefault(id, 0) > 0
+
+        private fun positions(): HashMap<String, ArrayList<Int>>? {
+            if (removed) return null
+            return byId ?: HashMap<String, ArrayList<Int>>(ids.size * 2).also { map ->
+                ids.forEachIndexed { i, id -> map.getOrPut(id) { ArrayList(1) }.add(i) }
+                byId = map
+            }
+        }
 
         /** The first row with [book]'s identity, or -1. */
         fun loose(book: Book): Int {
             val id = identity(book)
-            return if (has(id)) ids.indexOf(id) else -1
+            if (!has(id)) return -1
+            return positions()?.get(id)?.firstOrNull() ?: ids.indexOf(id)
         }
 
         /** The first row equal to [book] in every field, or -1. */
         fun exact(book: Book): Int {
             val id = identity(book)
             if (!has(id)) return -1
+            val known = positions()
+            if (known != null) {
+                for (i in known[id].orEmpty()) if (books[i] == book) return i
+                return -1
+            }
             for (i in ids.indices) if (ids[i] == id && books[i] == book) return i
             return -1
         }
@@ -75,6 +94,7 @@ object ChangeApplier {
             books.add(book)
             ids.add(id)
             counts[id] = counts.getOrDefault(id, 0) + 1
+            byId?.getOrPut(id) { ArrayList(1) }?.add(ids.size - 1)
         }
 
         private fun set(index: Int, book: Book) {
@@ -85,12 +105,22 @@ object ChangeApplier {
                 counts[old] = counts.getOrDefault(old, 1) - 1
                 ids[index] = id
                 counts[id] = counts.getOrDefault(id, 0) + 1
+                byId?.let { map ->
+                    val previous = map[old]
+                    val was = previous?.binarySearch(index) ?: -1
+                    if (was >= 0) previous!!.removeAt(was)
+                    val list = map.getOrPut(id) { ArrayList(1) }
+                    val at = list.binarySearch(index)
+                    list.add(if (at < 0) -at - 1 else at, index)
+                }
             }
         }
 
         private fun removeAt(index: Int) {
             val old = ids.removeAt(index)
             books.removeAt(index)
+            removed = true
+            byId = null
             counts[old] = counts.getOrDefault(old, 1) - 1
         }
 

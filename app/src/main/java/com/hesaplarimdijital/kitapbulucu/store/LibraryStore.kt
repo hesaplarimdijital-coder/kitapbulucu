@@ -204,6 +204,29 @@ class LibraryStore(
         submitAll(changes, label, onUndo = { shelfCatalog.rename(owner, renamedTo, restoredCode, restoredNote) })
     }
 
+    /**
+     * What fixing titles and authors typed in capitals ([TitleCaseFix]) would change in the lists
+     * as shown now; worked out on the background dispatcher (thousands of books).
+     */
+    suspend fun planTitleCase(): TitleCaseFix.Plan {
+        val books = Owner.entries.associateWith { state(it).table?.books.orEmpty() }
+        return withContext(io) { TitleCaseFix.plan(books) }
+    }
+
+    /**
+     * Fixes titles and authors typed in capitals in both lists as ONE undoable step named by
+     * [label]. The edits are worked out again from the lists as they are now (a re-read may have
+     * come in since the question was asked); each list is then written once, through the usual
+     * safe write (read again, back up, write, read back). [onDone] gets what was applied.
+     */
+    fun fixTitleCase(label: (TitleCaseFix.Plan) -> String, onDone: (TitleCaseFix.Plan) -> Unit = {}) {
+        scope.launch {
+            val plan = planTitleCase()
+            submitAll(plan.changes, label(plan))
+            onDone(plan)
+        }
+    }
+
     val canUndo: Boolean get() = undoStack.isNotEmpty()
 
     /** Forgets the "Geri al" bar (the step can still be undone with Ctrl+Z). */

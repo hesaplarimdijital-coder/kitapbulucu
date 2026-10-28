@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Ayarlar: tamamı büyük harfle yazılmış kitap adı ve yazarlarının bir kerelik düzeltilmesi -->
+    <string name="case_title">Ad ve yazarları düzelt</string>
+    <string name="case_text">Tamamı büyük harfle yazılmış kitap adı ve yazarları \'Fyodor Dostoyevski\' biçimine çevirir. Önce yedek alınır; Geri al ile tek adımda geri alınır.</string>
+    <string name="case_button">Düzelt…</string>
+    <string name="case_dialog_title">Ad ve yazarlar düzeltilsin mi?</string>
+    <string name="case_in_dad">MKE\'nin listesinde %1$s kitap</string>
+    <string name="case_in_me">Barış\'ın listesinde %1$s kitap</string>
+    <string name="case_counts">%1$s değişecek.</string>
+    <string name="case_examples">Örnekler:</string>
+    <string name="case_example">%1$s → %2$s</string>
+    <string name="case_other_dad">MKE\'nin listesi de değişecek; bu öteki kişinin listesi.</string>
+    <string name="case_other_me">Barış\'ın listesi de değişecek; bu öteki kişinin listesi.</string>
+    <string name="case_safety">Önce yedek alınır; Geri al ile tek adımda geri alınır.</string>
+    <string name="case_apply">Düzelt</string>
+    <string name="case_none">Düzeltilecek kitap yok: tamamı büyük harfle yazılmış ad ya da yazar kalmamış.</string>
+    <string name="case_done">%1$s kitabın adı ve yazarı düzeltildi. Geri al ile geri alınabilir.</string>
+    <string name="case_undo">%1$s kitabın adı ve yazarı düzeltildi</string>
+</resources>
