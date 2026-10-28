@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,13 +35,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hesaplarimdijital.kitapbulucu.R
 import com.hesaplarimdijital.kitapbulucu.model.Owner
 import com.hesaplarimdijital.kitapbulucu.model.Shelves
+import com.hesaplarimdijital.kitapbulucu.model.Suggestions
 import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.Change
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
@@ -50,6 +52,7 @@ import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
 import com.hesaplarimdijital.kitapbulucu.ui.BottomActions
 import com.hesaplarimdijital.kitapbulucu.ui.FormField
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneTextButton
+import com.hesaplarimdijital.kitapbulucu.ui.SuggestField
 import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
 import com.hesaplarimdijital.kitapbulucu.ui.NoticeCard
@@ -61,6 +64,8 @@ import desktopkit.screens.PageHeader
 import desktopkit.shell.KeyCap
 import desktopkit.theme.DeskTheme
 import desktopkit.theme.InputMode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * The add form (S-17): title, author, whose list, shelf, then the optional details. Enter saves;
@@ -92,6 +97,10 @@ fun AddBookScreen(
     var done by rememberSaveable { mutableStateOf<String?>(null) }
     var showMore by rememberSaveable(editing != null) { mutableStateOf(editing != null) }
     val titleFocus = remember { FocusRequester() }
+    // authors and publishers of both lists, collected again only when a list changes, and not on the main thread
+    val tables = states.values.mapNotNull { it.table }
+    val authorSuggestions by produceState(Suggestions.EMPTY, tables) { value = withContext(Dispatchers.Default) { Suggestions.authors(tables) } }
+    val publisherSuggestions by produceState(Suggestions.EMPTY, tables) { value = withContext(Dispatchers.Default) { Suggestions.publishers(tables) } }
     val ownerBooks = states.getValue(fields.owner).table?.books.orEmpty()
     val ownerSaved = catalog[fields.owner].orEmpty()
     val shelves = remember(ownerBooks, ownerSaved) { Shelves.overview(ownerBooks, ownerSaved).filterNot { it.isUnshelved } }
@@ -185,7 +194,7 @@ fun AddBookScreen(
                     stringResource(R.string.add_field_title), fields.title, { fields = fields.copy(title = it); done = null },
                     focusRequester = titleFocus, error = check == AddBookForm.Check.NeedTitle, onEnter = { submit() },
                 )
-                FormField(stringResource(R.string.add_field_author), fields.author, { fields = fields.copy(author = it) }, capitalization = KeyboardCapitalization.Words, onEnter = { submit() })
+                SuggestField(stringResource(R.string.add_field_author), fields.author, { fields = fields.copy(author = it) }, authorSuggestions, modifier = Modifier.testTag("field-author"), onEnter = { submit() })
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(stringResource(R.string.add_field_owner), style = type.label, color = colors.textSecondary)
                     SegmentedChoice(
@@ -219,7 +228,7 @@ fun AddBookScreen(
                                 onSelect = { fields = fields.copy(signed = it) },
                             )
                         }
-                        FormField(stringResource(R.string.add_field_publisher), fields.publisher, { fields = fields.copy(publisher = it) }, capitalization = KeyboardCapitalization.Words, onEnter = { submit() })
+                        SuggestField(stringResource(R.string.add_field_publisher), fields.publisher, { fields = fields.copy(publisher = it) }, publisherSuggestions, modifier = Modifier.testTag("field-publisher"), onEnter = { submit() })
                         FormField(stringResource(R.string.add_field_year), fields.year, { fields = fields.copy(year = it) }, keyboardType = KeyboardType.Number, onEnter = { submit() })
                         FormField(stringResource(R.string.add_field_isbn), fields.isbn, { fields = fields.copy(isbn = it) }, keyboardType = KeyboardType.Number, monospace = true, onEnter = { submit() })
                         FormField(stringResource(R.string.add_field_note), fields.note, { fields = fields.copy(note = it) }, onEnter = { submit() })
@@ -245,7 +254,7 @@ fun AddBookScreen(
                         stringResource(R.string.add_field_title), fields.title, { fields = fields.copy(title = it); done = null },
                         focusRequester = titleFocus, error = check == AddBookForm.Check.NeedTitle, onEnter = { submit() },
                     )
-                    FormField(stringResource(R.string.add_field_author), fields.author, { fields = fields.copy(author = it) }, capitalization = KeyboardCapitalization.Words, onEnter = { submit() })
+                    SuggestField(stringResource(R.string.add_field_author), fields.author, { fields = fields.copy(author = it) }, authorSuggestions, modifier = Modifier.testTag("field-author"), onEnter = { submit() })
                     Row(horizontalArrangement = Arrangement.spacedBy(dimens.gapM), verticalAlignment = Alignment.Bottom) {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(stringResource(R.string.add_field_owner), style = type.label, color = colors.textSecondary)
@@ -281,7 +290,7 @@ fun AddBookScreen(
                                 )
                             }
                         }
-                        FormField(stringResource(R.string.add_field_publisher), fields.publisher, { fields = fields.copy(publisher = it) }, capitalization = KeyboardCapitalization.Words, onEnter = { submit() })
+                        SuggestField(stringResource(R.string.add_field_publisher), fields.publisher, { fields = fields.copy(publisher = it) }, publisherSuggestions, modifier = Modifier.testTag("field-publisher"), onEnter = { submit() })
                         Row(horizontalArrangement = Arrangement.spacedBy(dimens.gapM)) {
                             FormField(stringResource(R.string.add_field_year), fields.year, { fields = fields.copy(year = it) }, modifier = Modifier.width(120.dp), keyboardType = KeyboardType.Number, onEnter = { submit() })
                             FormField(stringResource(R.string.add_field_isbn), fields.isbn, { fields = fields.copy(isbn = it) }, modifier = Modifier.weight(1f), keyboardType = KeyboardType.Number, monospace = true, onEnter = { submit() })
