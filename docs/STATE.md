@@ -20,7 +20,7 @@ Son güncelleme: 22.10.2026, sürüm 1.1.0 (son sürüm): MKE/Barış adları, o
 
 ## Kullanıcıdan beklenenler
 
-1. GitHub'a iki gizli değer: `KB_KEYSTORE_BASE64` ve `KB_KEYSTORE_PASSWORD` (12.10.2026'da dosya ve parola verildi). Eklenene kadar APK'lar her seferinde başka anahtarla imzalanır; yeni APK eskisinin üstüne kurulamaz (önce kaldır). S-29'un "üstüne kurulur" maddesi buna bağlı.
+1. Gizli değer artık gerekmez (28.10.2026): CI imza anahtarını GitHub Actions önbelleğinde tutar (ARCHITECTURE 13). Önbellekteki anahtarla imzalanan ilk APK için uygulama bir kez kaldırılıp kurulur; sonrakiler üstüne kurulur. Önbellek silinirse (ör. 60 gün depo etkinliği olmazsa) bir kez daha kaldırıp kurmak gerekir.
 2. Telefonda S-38 denemesi: kitap sayfasında "Sil" görünüyor mu, "Yeni raf" klavyenin üstünde mi, Ekle/Düzenle'de klavye açıkken alt çubuk klavyeye yapışmıyor mu (yalnızca gerçek telefonda görülebilir).
 3. Tablette ve babanın telefonunda baştan sona deneme (kontrol listesi son mesajda); S-06 kalanları (yeniden başlatma sonrası izin, dosyanın öteki cihazda görünmesi, değişikliğin ulaşma süresi).
 4. `ornek/Ortak.xlsx` ve dışa aktarılan `Kitaplar.xlsx` dosyasının Excel, Office NX ve Google E-Tablolar'da açılması.
@@ -77,4 +77,4 @@ Kullanıcı durmadan bitirmemi isteyince hikâyeleri ikişer üçer toplayıp CI
 
 ## Devam mesajı
 
-`CLAUDE.md, docs/STATE.md ve docs/BACKLOG.md dosyalarını oku; önce tablet ve telefon deneme sonuçlarını ve iki gizli değeri sor, sonra gelen geri bildirimlerden bir sprint planla ve onayımı al.`
+`CLAUDE.md, docs/STATE.md ve docs/BACKLOG.md dosyalarını oku; önce tablet ve telefon deneme sonuçlarını sor, sonra gelen geri bildirimlerden bir sprint planla ve onayımı al.`

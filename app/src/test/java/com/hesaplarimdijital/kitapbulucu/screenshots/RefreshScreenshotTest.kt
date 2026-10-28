@@ -82,7 +82,7 @@ class RefreshScreenshotTest {
         val settings = AppSettings(context.getSharedPreferences("refresh-screenshot-app", Context.MODE_PRIVATE)).also { it.updateMe(Owner.ME) }
         compose.runOnUiThread { compose.activity.actionBar?.hide() }
         compose.setContent {
-            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) {
                     val prefs = rememberDeskPreferences(accents = AppPalette.accents)
                     AppShell(prefs, widthClass, rememberNavController(), store, settings, rememberFilePicker(store), initialSearch = "çatıdaki")

@@ -8,9 +8,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
@@ -101,8 +99,10 @@ import desktopkit.components.focusRing
 import desktopkit.components.stateBackground
 import desktopkit.screens.PageHeader
 import desktopkit.shell.CompactTopBar
+import desktopkit.shell.DetailTransition
 import desktopkit.shell.TopBarAction
 import desktopkit.shell.TopBarBackIcon
+import desktopkit.theme.DeskMotion
 import desktopkit.theme.DeskTheme
 import desktopkit.theme.InputMode
 
@@ -391,31 +391,27 @@ private fun PhoneShelves(
 
     Column(Modifier.fillMaxSize()) {
         PageHeader(title, subtitle = stringResource(R.string.fill_left, unshelved))
-        AnimatedContent(
-            open,
+        // list → shelf with Android's shared-axis transition; the predictive Back gesture shrinks the
+        // open shelf with the finger. While books are being added or rows ticked, Back ends that first
+        // (the top bar's handler), so the shelf only takes Back when neither is going on.
+        DetailTransition(
+            detail = open,
+            onBack = { onOpen(null) },
             modifier = Modifier.weight(1f).fillMaxWidth(),
-            transitionSpec = {
-                // a shelf comes in from the right, going back brings the list in from the left
-                val forward = targetState != null
-                (slideInHorizontally(tween(220)) { width -> if (forward) width / 4 else -width / 4 } + fadeIn(tween(220))) togetherWith
-                    (slideOutHorizontally(tween(150)) { width -> if (forward) -width / 4 else width / 4 } + fadeOut(tween(150)))
-            },
-            label = "phoneShelf",
+            handleBack = !adding && !list.selection.active,
+            detailKey = { Shelves.key(it) },
+            list = { PhoneShelfList(groups, codes, owner, onOwner, onOpen = { onOpen(it) }, onCreate = onCreate) },
         ) { shown ->
-            if (shown == null) {
-                PhoneShelfList(groups, codes, owner, onOwner, onOpen = { onOpen(it) }, onCreate = onCreate)
-            } else {
-                val shownGroup = groups.firstOrNull { Shelves.key(it.shelf) == Shelves.key(shown) } ?: ShelfGroup(shown, emptyList())
-                PhoneShelfDetail(
-                    store, actions, owner, shownGroup,
-                    rows = remember(shownGroup.books, owner) { shownGroup.books.map { LibraryRow(owner, it.index, it.value) } },
-                    list = list,
-                    adding = adding && shown == open,
-                    onAdding = onAdding,
-                    initialAddQuery = initialAddQuery,
-                    listLabel = LibraryTexts.ownerLabel(resources, owner),
-                )
-            }
+            val shownGroup = groups.firstOrNull { Shelves.key(it.shelf) == Shelves.key(shown) } ?: ShelfGroup(shown, emptyList())
+            PhoneShelfDetail(
+                store, actions, owner, shownGroup,
+                rows = remember(shownGroup.books, owner) { shownGroup.books.map { LibraryRow(owner, it.index, it.value) } },
+                list = list,
+                adding = adding && shown == open,
+                onAdding = onAdding,
+                initialAddQuery = initialAddQuery,
+                listLabel = LibraryTexts.ownerLabel(resources, owner),
+            )
         }
     }
 }
@@ -476,7 +472,7 @@ private fun PhoneShelfRow(group: ShelfGroup, modifier: Modifier, onClick: () -> 
     val dimens = DeskTheme.dimens
     val interaction = remember { MutableInteractionSource() }
     val state = interaction.collectState()
-    val background by animateColorAsState(stateBackground(state), tween(120), label = "shelfRow")
+    val background by animateColorAsState(stateBackground(state), DeskMotion.color(), label = "shelfRow")
     Column(modifier.fillMaxWidth()) {
         Row(
             Modifier
@@ -577,8 +573,10 @@ private fun PhoneShelfDetail(
         )
         AnimatedVisibility(
             adding && !group.isUnshelved,
-            enter = slideInVertically(tween(240)) { it / 3 } + fadeIn(tween(200)),
-            exit = slideOutVertically(tween(160)) { it / 3 } + fadeOut(tween(140)),
+            enter = slideInVertically(tween(DeskMotion.LONG_MS, easing = DeskMotion.EmphasizedDecelerate)) { it / 10 } +
+                fadeIn(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.StandardDecelerate)),
+            exit = slideOutVertically(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.EmphasizedAccelerate)) { it / 10 } +
+                fadeOut(tween(DeskMotion.SHORT_MS + 50, easing = DeskMotion.StandardAccelerate)),
         ) {
             AddBooksPanel(
                 store, actions, owner, group.shelf, initialAddQuery,

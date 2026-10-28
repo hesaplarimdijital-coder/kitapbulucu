@@ -111,6 +111,8 @@ import desktopkit.shell.TopBarAction
 import desktopkit.shell.TopBarBackIcon
 import desktopkit.theme.DeskTheme
 import desktopkit.theme.InputMode
+import desktopkit.theme.DeskMotion
+import desktopkit.shell.WidthClass
 import java.text.Collator
 import java.util.Locale
 
@@ -363,6 +365,8 @@ fun PhoneBookList(
     /** False on an open shelf, where every row would repeat the shelf's code. */
     showShelf: Boolean = true,
 ) {
+    // Rows are not animated (no animateItem): a list holds thousands of books, and a new sort
+    // order moving every row at once looked jerky on a phone. The list simply shows the new order.
     // a change of the list (a book put on a shelf, another list) ends the selection, as on DeX
     val first = remember { booleanArrayOf(true) }
     LaunchedEffect(rows) {
@@ -382,7 +386,6 @@ fun PhoneBookList(
                 onLongClick = { state.selection = state.selection.toggle(key) },
                 onEdit = { actions.edit(row.owner, row.book) },
                 onDelete = { actions.delete(row.owner, row.book) },
-                modifier = Modifier.animateItem(),
             )
         }
     }
@@ -415,12 +418,12 @@ private fun PhoneBookRow(
             state.hovered -> colors.hover
             else -> Color.Transparent
         },
-        tween(160),
+        DeskMotion.color(),
         label = "rowBackground",
     )
-    val main by animateColorAsState(if (selected) colors.onSelection else colors.text, tween(160), label = "rowText")
-    val second by animateColorAsState(if (selected) colors.onSelection else colors.textSecondary, tween(160), label = "rowSecond")
-    val shelfColor by animateColorAsState(if (selected) colors.onSelection else colors.accentText, tween(160), label = "rowShelf")
+    val main by animateColorAsState(if (selected) colors.onSelection else colors.text, DeskMotion.color(), label = "rowText")
+    val second by animateColorAsState(if (selected) colors.onSelection else colors.textSecondary, DeskMotion.color(), label = "rowSecond")
+    val shelfColor by animateColorAsState(if (selected) colors.onSelection else colors.accentText, DeskMotion.color(), label = "rowShelf")
     Column(modifier.fillMaxWidth()) {
         Row(
             Modifier
@@ -453,8 +456,10 @@ private fun PhoneBookRow(
         ) {
             AnimatedVisibility(
                 selecting,
-                enter = fadeIn(tween(180)) + expandHorizontally(tween(200)),
-                exit = fadeOut(tween(120)) + shrinkHorizontally(tween(160)),
+                enter = fadeIn(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.StandardDecelerate)) +
+                    expandHorizontally(tween(DeskMotion.MEDIUM_MS + 50, easing = DeskMotion.EmphasizedDecelerate)),
+                exit = fadeOut(tween(DeskMotion.SHORT_MS, easing = DeskMotion.StandardAccelerate)) +
+                    shrinkHorizontally(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.EmphasizedAccelerate)),
             ) {
                 Row {
                     SelectionMark(selected)
@@ -751,8 +756,9 @@ private fun rememberColumns(): List<TableColumn<LibraryRow>> {
             TableColumn(BookColumn.SHELF.header, ColumnWidth.Fixed(84.dp), mono = true) { it.book.shelf },
             TableColumn(BookColumn.COPIES.header, ColumnWidth.Fixed(64.dp), alignEnd = true) { it.book.copies.toString() },
             TableColumn(BookColumn.SIGNED.header, ColumnWidth.Fixed(72.dp)) { if (it.book.signed) yes else "" },
-            TableColumn(BookColumn.PUBLISHER.header, ColumnWidth.Weight(1.5f)) { it.book.publisher },
-            TableColumn(BookColumn.YEAR.header, ColumnWidth.Fixed(64.dp)) { it.book.year },
+            // a tablet window with the rail (medium width) leaves these two out, so title and author keep their room
+            TableColumn(BookColumn.PUBLISHER.header, ColumnWidth.Weight(1.5f), hideBelow = WidthClass.Expanded) { it.book.publisher },
+            TableColumn(BookColumn.YEAR.header, ColumnWidth.Fixed(64.dp), hideBelow = WidthClass.Expanded) { it.book.year },
         )
     }
 }

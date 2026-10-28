@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
@@ -39,6 +40,7 @@ import com.hesaplarimdijital.kitapbulucu.ui.setup.MappingScreen
 import com.hesaplarimdijital.kitapbulucu.ui.setup.SetupScreen
 import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelfTarget
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
+import com.hesaplarimdijital.kitapbulucu.ui.theme.LargeWindowText
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppPalette
 import com.hesaplarimdijital.kitapbulucu.xlsx.TestWorkbooks
 import com.hesaplarimdijital.kitapbulucu.xlsx.XlsxWriter
@@ -105,7 +107,7 @@ class SetupScreenshotTest {
     private fun capture(name: String, theme: ThemeMode, input: InputMode, dialogs: Boolean = false, content: @Composable () -> Unit) {
         compose.runOnUiThread { compose.activity.actionBar?.hide() }
         compose.setContent {
-            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) { content() }
             }
         }
@@ -147,13 +149,18 @@ class SetupScreenshotTest {
         val store = sampleStore()
         val settings = sampleSettings()
         capture(name, theme, input) {
-            SetupScreen(store, settings, rememberFilePicker(store), onMap = {}, onDone = {})
+            // as MainActivity: outside the shell, one sp larger on tablet and DeX
+            LargeWindowText(WidthClass.fromWidth(LocalConfiguration.current.screenWidthDp.toFloat())) {
+                SetupScreen(store, settings, rememberFilePicker(store), onMap = {}, onDone = {})
+            }
         }
     }
 
     private fun mapping(name: String, theme: ThemeMode, input: InputMode) {
         val store = sampleStore()
-        capture(name, theme, input) { MappingScreen(Owner.ME, store, onClose = {}) }
+        capture(name, theme, input) {
+            LargeWindowText(WidthClass.fromWidth(LocalConfiguration.current.screenWidthDp.toFloat())) { MappingScreen(Owner.ME, store, onClose = {}) }
+        }
     }
 
     private fun shell(

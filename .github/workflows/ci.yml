@@ -46,23 +46,78 @@ jobs:
           { grep -A7 "What went wrong" jitpack.log; grep -E "^e: |error:" jitpack.log; } | grep -v "^\s*$" | head -9 | while IFS= read -r line; do echo "::error::jitpack: ${line:0:300}"; done
           exit 1
 
-      - name: Signing key
+      # One signing key for every APK, so a new build installs over the old one and keeps its data.
+      # With the repository secrets KB_KEYSTORE_BASE64 / KB_KEYSTORE_PASSWORD (optional) that key is
+      # used. Without them the key lives in the Actions cache under a fixed name: created once with
+      # keytool, then restored on every run (ARCHITECTURE 13). The password never appears in the log.
+      - name: Signing key from secrets
+        id: secret-key
         env:
           KEYSTORE_BASE64: ${{ secrets.KB_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KB_KEYSTORE_PASSWORD }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/kitapbulucu.jks"
             echo "KB_KEYSTORE=$RUNNER_TEMP/kitapbulucu.jks" >> "$GITHUB_ENV"
+            echo "KB_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "found=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::KB_KEYSTORE_BASE64 is not set; the APK is signed with a throwaway debug key."
+            echo "found=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Restore the signing key from the cache
+        id: cached-key
+        if: steps.secret-key.outputs.found != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/kb-signing
+          key: kb-signing-key-v1
+
+      - name: Create the signing key (first run only)
+        if: steps.secret-key.outputs.found != 'true' && steps.cached-key.outputs.cache-hit != 'true'
+        run: |
+          umask 077
+          mkdir -p ~/kb-signing
+          openssl rand -hex 32 > ~/kb-signing/password
+          KB_PW="$(cat ~/kb-signing/password)" keytool -genkeypair -noprompt \
+            -keystore ~/kb-signing/kitapbulucu.jks -storetype PKCS12 -alias kitapbulucu \
+            -keyalg RSA -keysize 2048 -validity 36500 -dname "CN=Kitap Bulucu" \
+            -storepass:env KB_PW -keypass:env KB_PW
+          echo "::warning::A new signing key was created and cached (kb-signing-key-v1). Uninstall the old app once before installing this APK; later APKs install over it."
+
+      # saved straight away, so a failing build further down does not lose the new key
+      - name: Save the signing key in the cache
+        if: steps.secret-key.outputs.found != 'true' && steps.cached-key.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/kb-signing
+          key: kb-signing-key-v1
+
+      - name: Use the cached signing key
+        if: steps.secret-key.outputs.found != 'true'
+        run: |
+          pw="$(cat ~/kb-signing/password)"
+          echo "::add-mask::$pw"
+          echo "KB_KEYSTORE=$HOME/kb-signing/kitapbulucu.jks" >> "$GITHUB_ENV"
+          echo "KB_KEYSTORE_PASSWORD=$pw" >> "$GITHUB_ENV"
+
       - name: Build and test
-        env:
-          KB_KEYSTORE_PASSWORD: ${{ secrets.KB_KEYSTORE_PASSWORD }}
         run: |
           ./gradlew :app:testDebugUnitTest :app:assembleRelease --continue --console=plain 2>&1 | tee build.log
           exit ${PIPESTATUS[0]}
+
+      # the certificate's fingerprint (public) as a notice: the same value on every run means updates install over each other
+      - name: Signing certificate
+        if: success()
+        run: |
+          apk=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          digest=$("$apksigner" verify --print-certs "$apk" | sed -n 's/.*certificate SHA-256 digest: //p' | head -1)
+          if [ -z "$KB_KEYSTORE" ]; then
+            echo "::error::The APK was not signed with the shared key"
+            exit 1
+          fi
+          echo "::notice::APK signing certificate SHA-256 $digest"
 
       - name: No internet permission
         run: |

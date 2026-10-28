@@ -80,7 +80,9 @@ import com.hesaplarimdijital.kitapbulucu.ui.PhoneIcons
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneTextButton
 import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
+import desktopkit.components.ChipRow
 import desktopkit.components.DeskButton
+import desktopkit.components.DeskChip
 import desktopkit.components.DeskIconButton
 import desktopkit.components.DeskIcons
 import desktopkit.components.SegmentedChoice
@@ -224,18 +226,34 @@ fun SearchScreen(
                     },
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    SegmentedChoice(
-                        options = listOf<Pair<Owner?, String>>(
-                            null to stringResource(R.string.search_filter_all),
-                            Owner.DAD to LibraryTexts.ownerLabel(resources, Owner.DAD),
-                            Owner.ME to LibraryTexts.ownerLabel(resources, Owner.ME),
-                        ),
-                        selected = filter,
-                        onSelect = { filter = it },
-                        // the filter never takes the cursor away from the search field
-                        modifier = Modifier.focusProperties { canFocus = false },
+                    val filters = listOf<Pair<Owner?, String>>(
+                        null to stringResource(R.string.search_filter_all),
+                        Owner.DAD to LibraryTexts.ownerLabel(resources, Owner.DAD),
+                        Owner.ME to LibraryTexts.ownerLabel(resources, Owner.ME),
                     )
-                    Spacer(Modifier.weight(1f))
+                    if (phone) {
+                        // phone: Android's filter chips, one of the three chosen (as the segments on DeX)
+                        ChipRow(Modifier.weight(1f), wrap = false, contentPadding = 0.dp) {
+                            filters.forEach { (value, label) ->
+                                DeskChip(
+                                    text = label,
+                                    selected = filter == value,
+                                    onClick = { filter = value },
+                                    // the filter never takes the cursor away from the search field
+                                    modifier = Modifier.focusProperties { canFocus = false },
+                                )
+                            }
+                        }
+                    } else {
+                        SegmentedChoice(
+                            options = filters,
+                            selected = filter,
+                            onSelect = { filter = it },
+                            // the filter never takes the cursor away from the search field
+                            modifier = Modifier.focusProperties { canFocus = false },
+                        )
+                        Spacer(Modifier.weight(1f))
+                    }
                     if (groups.isNotEmpty()) {
                         Text(
                             if (groups.size == 1) stringResource(R.string.search_found_one) else stringResource(R.string.search_found, groups.size),

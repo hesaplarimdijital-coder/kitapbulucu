@@ -31,6 +31,7 @@ import com.hesaplarimdijital.kitapbulucu.ui.setup.SetupScreen
 import com.hesaplarimdijital.kitapbulucu.ui.AppShortcuts
 import desktopkit.DesktopKitRoot
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
+import com.hesaplarimdijital.kitapbulucu.ui.theme.LargeWindowText
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppPalette
 import desktopkit.settings.rememberDeskPreferences
 import desktopkit.shell.ShellNavigator
@@ -81,14 +82,17 @@ class MainActivity : ComponentActivity() {
                     onMerge = { mergeFocus++ },
                 )
             }
-            DesktopKitRoot(prefs, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
+            DesktopKitRoot(prefs, fonts = AppFonts.desk, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
                 val picker = rememberFilePicker(store)
                 // Ctrl+O: choose the file of this device's own list again
                 LaunchedEffect(openFile) { if (openFile > 0) picker.pick(settings.me ?: Owner.DAD) }
                 val mappingOwner = mapping
                 when {
-                    mappingOwner != null -> MappingScreen(mappingOwner, store, onClose = { mapping = null })
-                    !settings.setupDone -> SetupScreen(store, settings, picker, onMap = { mapping = it }, onDone = { settings.updateSetupDone(true) })
+                    // outside the shell: the same larger text on tablet and DeX as the shell sets
+                    mappingOwner != null -> LargeWindowText(widthClass) { MappingScreen(mappingOwner, store, onClose = { mapping = null }) }
+                    !settings.setupDone -> LargeWindowText(widthClass) {
+                        SetupScreen(store, settings, picker, onMap = { mapping = it }, onDone = { settings.updateSetupDone(true) })
+                    }
                     else -> AppShell(prefs, widthClass, navController, store, settings, picker, onMap = { mapping = it }, onShortcut = { perform(it) }, searchFocus = searchFocus, addFocus = addFocus, mergeFocus = mergeFocus)
                 }
             }

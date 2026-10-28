@@ -176,7 +176,7 @@ Ayarlar (S-24, S-25): "Yedek ve aktarma" bölümü. Geri yükleme şimdiki dosya
 
 ## 11. Arayüz
 
-- Kit: `desktop-kit` 0.1.0. Kabuk `DesktopShell` + `ShellSpec`; ekranlar: Ara, Kütüphane, Raflar, Ayarlar.
+- Kit: `desktop-kit` 0.2.0. Kabuk `DesktopShell` + `ShellSpec`; ekranlar: Ara, Kütüphane, Raflar, Ayarlar. Tablet ve DeX'te yazıları kabuk 1 sp büyütür (kabuk dışındaki kurulum, sütun eşleme ve pencereler için `LargeWindowText`); telefonda kitin sıkı boyutları ve kaydırınca çekilen alt çubuk. Telefonda raf açma `DetailTransition` (öngörülü geri), alt sayfalar (`AppSheet`) parmakla aşağı çekilip kapanır.
 - Kabuğun üst çubuğundaki arama kutusu bir düğmedir, metin kutusu değildir. Gerçek arama kutusu Ara ekranının içindedir; Ctrl+K oraya götürüp odaklar.
 - Kabuğun alt çubuk yuvası durum satırı olarak kullanılır: eşitleme zamanı, bekleyen yazma, "Geri al".
 - Telefon: yalnızca dikey. En dar kenarı 600 dp'den küçük cihazda etkinlik dikeye kilitlenir (`requestedOrientation`); tablet ve DeX serbest kalır. Dar pencerede kit üst çubuk + alt gezinme çubuğu gösterir (Ara, Kütüphane, Raflar, Ayarlar). Seçilen tasarım: Taslak A "Fiş" (`docs/design/taslak-a-*.png`); renkler `docs/design/tokens.json` içindeki `A/...` paletleri, başlık serifi Literata. Telefonda da aynı tek sütun düzeni.
@@ -196,7 +196,12 @@ Ayarlar (S-24, S-25): "Yedek ve aktarma" bölümü. Geri yükleme şimdiki dosya
 
 - Paket adı: `com.hesaplarimdijital.kitapbulucu` (uygulama kimliği ve Kotlin paketi).
 - CI release APK'sı üretir (küçültme kapalı). `versionCode` = CI çalıştırma numarası, böylece her yeni APK eskisinin üstüne kurulur.
-- İmza: GitHub gizli değerleri `KB_KEYSTORE_BASE64` (anahtar dosyası, base64) ve `KB_KEYSTORE_PASSWORD`; takma ad `kitapbulucu`. Yoksa CI uyarı verir ve atılık bir hata ayıklama anahtarıyla imzalar (o APK sonrakilerin üstüne kurulamaz).
+- İmza: her APK aynı anahtarla imzalanır (takma ad `kitapbulucu`), böylece yeni APK eskisinin üstüne kurulur ve veriler kalır. Gizli değer gerekmez:
+  - GitHub gizli değerleri `KB_KEYSTORE_BASE64` ve `KB_KEYSTORE_PASSWORD` tanımlıysa onlar kullanılır (isteğe bağlı; şu an yok).
+  - Yoksa anahtar GitHub Actions önbelleğinde sabit adla (`kb-signing-key-v1`, yol `~/kb-signing`, depo dışında) durur: CI her çalışmada onu geri yükler. Önbellekte yoksa bir kez `keytool` ile üretir (RSA 2048, 100 yıl), rastgele parolayı yanındaki `password` dosyasına yazar, ikisini hemen önbelleğe kaydeder ve bir uyarı bırakır. Parola günlükte görünmez (`::add-mask::`); depo herkese açık olduğu için anahtar depoya girmez.
+  - CI her yapımda imza sertifikasının SHA-256 parmak izini not olarak yazar; değer değişmiyorsa APK'lar birbirinin üstüne kurulur.
+  - `keep-signing-key.yml` haftada iki kez (Pzt, Per) ve elle çalıştırılınca yalnızca önbelleği geri yükler; GitHub 7 gün kullanılmayan önbelleği siler.
+  - Sınırlar: GitHub önbelleği yine de silebilir (depo başına 10 GB sınırı, elle silme); herkese açık depoda zamanlanmış iş akışları 60 gün depo etkinliği olmayınca durur. Önbellek giderse sonraki yapım yeni anahtar üretir: telefonda ve tablette uygulama bir kez kaldırılıp yeniden kurulur (Drive'daki Excel dosyaları etkilenmez; cihazdaki ayarlar, dosya seçimleri ve raf listesi silinir, bu yüzden önce bekleyen değişiklik kalmadığından emin olunur). Önbellekteki anahtarın ilk APK'sı da eski atılık anahtarlı sürümün üstüne kurulamaz: bir kez kaldır, sonra güncellemeler üst üste kurulur.
 - JitPack bir kit sürümünü ilk istekte derler; CI derlemeden önce kitin JitPack'te hazır olmasını bekler.
 
 ## 14. Sürümler

@@ -5,7 +5,8 @@ plugins {
 }
 
 // The same key signs every APK, so a new build installs over the old one and keeps its data.
-// CI decodes it from a repository secret; without it (e.g. a local build) the debug key is used.
+// CI provides it (from repository secrets if set, otherwise from the key kept in the Actions cache,
+// ARCHITECTURE 13); without it (e.g. a local build) the debug key is used.
 val keystorePath: String? = System.getenv("KB_KEYSTORE")?.takeIf { file(it).exists() }
 
 android {

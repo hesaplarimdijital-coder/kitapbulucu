@@ -1,10 +1,31 @@
 package com.hesaplarimdijital.kitapbulucu.ui
 
 import android.view.WindowManager
-import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.animate
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Velocity
+import desktopkit.theme.DeskMotion
+import desktopkit.theme.InputMode
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -12,8 +33,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -93,6 +112,7 @@ import desktopkit.components.DeskIcons
 import desktopkit.components.collectState
 import desktopkit.components.deskClickable
 import desktopkit.components.focusRing
+import desktopkit.components.pressScale
 import desktopkit.components.stateBackground
 import desktopkit.shell.currentWidthClass
 import desktopkit.shell.WidthClass
@@ -191,10 +211,12 @@ fun AppFab(label: String, icon: ImageVector, onClick: () -> Unit, expanded: Bool
             state.hovered -> lerp(colors.accent, colors.onAccent, 0.12f)
             else -> colors.accent
         },
+        DeskMotion.color(),
         label = "fab",
     )
     Row(
         modifier
+            .pressScale(state.pressed)
             .shadow(6.dp, shape)
             .background(background, shape)
             .focusRing(state, shape)
@@ -207,8 +229,10 @@ fun AppFab(label: String, icon: ImageVector, onClick: () -> Unit, expanded: Bool
         Icon(icon, contentDescription = null, tint = colors.onAccent, modifier = Modifier.size(24.dp))
         AnimatedVisibility(
             expanded,
-            enter = fadeIn(tween(180)) + expandHorizontally(tween(200)),
-            exit = fadeOut(tween(100)) + shrinkHorizontally(tween(160)),
+            enter = fadeIn(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.StandardDecelerate)) +
+                expandHorizontally(tween(DeskMotion.MEDIUM_MS + 50, easing = DeskMotion.EmphasizedDecelerate)),
+            exit = fadeOut(tween(DeskMotion.SHORT_MS, easing = DeskMotion.StandardAccelerate)) +
+                shrinkHorizontally(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.EmphasizedAccelerate)),
         ) {
             Row {
                 Spacer(Modifier.width(12.dp))
@@ -227,8 +251,10 @@ fun AnimatedFab(visible: Boolean, label: String, icon: ImageVector, onClick: () 
     AnimatedVisibility(
         visible && !isKeyboardOpen(),
         modifier = modifier,
-        enter = fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.8f),
-        exit = fadeOut(tween(120)) + scaleOut(tween(120), targetScale = 0.8f),
+        enter = fadeIn(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.StandardDecelerate)) +
+            scaleIn(tween(DeskMotion.MEDIUM_MS + 50, easing = DeskMotion.EmphasizedDecelerate), initialScale = 0.8f),
+        exit = fadeOut(tween(DeskMotion.SHORT_MS + 20, easing = DeskMotion.StandardAccelerate)) +
+            scaleOut(tween(DeskMotion.SHORT_MS + 20, easing = DeskMotion.EmphasizedAccelerate), targetScale = 0.8f),
     ) {
         AppFab(label, icon, onClick, expanded)
     }
@@ -256,8 +282,8 @@ fun <T> WideSegmentedChoice(options: List<Pair<T, String>>, selected: T, onSelec
             val state = interaction.collectState()
             val isSelected = value == selected
             val shape = RoundedCornerShape(dimens.radiusControl)
-            val background by animateColorAsState(stateBackground(state, isSelected), tween(180), label = "segment")
-            val text by animateColorAsState(if (isSelected) colors.onSelection else colors.textSecondary, tween(180), label = "segmentText")
+            val background by animateColorAsState(stateBackground(state, isSelected), DeskMotion.color(), label = "segment")
+            val text by animateColorAsState(if (isSelected) colors.onSelection else colors.textSecondary, DeskMotion.color(), label = "segmentText")
             Box(
                 Modifier
                     .weight(1f)
@@ -318,13 +344,146 @@ internal class SheetEntry {
 val LocalSheetHost = staticCompositionLocalOf<SheetHostState?> { null }
 
 /**
- * A modal bottom sheet in the kit's look: it slides up over a dimmed screen, a tap above it, Back
- * or Esc closes it, and it never takes more than nine tenths of the height (the content scrolls).
- * [title] adds a heading with a close button. [content] gets a [SheetClose] so that an action
- * runs after the sheet has gone. Inside a [SheetHost] (the app shell) the sheet is drawn in the
- * app's window, above the navigation bar and the keyboard; elsewhere it opens a dialog window.
- * The content is composed where the sheet is drawn: a focus request for a field in it belongs
- * inside [content].
+ * Where a sheet is and where it is going, in pixels: [offset] is how far it is pushed down from its
+ * open place, 0 when open and [height] when gone. Entering, closing, a finger dragging it and the
+ * Back gesture all move this one value, so they can take over from each other at any moment
+ * (a drag catches a sheet that is still sliding in, a let-go sheet springs back from where it is).
+ */
+@Stable
+internal class SheetMotion(private val scope: CoroutineScope, private val flingPx: Float) {
+    /** The sheet's height; 0 until it has been measured (it is not drawn before). */
+    var height by mutableFloatStateOf(0f)
+        private set
+
+    var offset by mutableFloatStateOf(0f)
+        private set
+
+    /** Set once [close] has started; nothing moves the sheet back after that. */
+    var closing by mutableStateOf(false)
+        private set
+
+    /** Runs when the sheet has gone off the screen. */
+    var onClosed: () -> Unit = {}
+
+    private var job: Job? = null
+
+    /** 1 while open, 0 when gone: the dimmed area behind follows it. */
+    val shown: Float get() = if (height <= 0f) 0f else (1f - offset / height).coerceIn(0f, 1f)
+
+    /** The first measure starts the sheet just below the window and slides it in. */
+    fun measured(newHeight: Float) {
+        if (newHeight <= 0f) return
+        val first = height <= 0f
+        height = newHeight
+        if (first && !closing) {
+            offset = newHeight
+            animateTo(0f, tween(SheetMotionSpec.ENTER_MS, easing = DeskMotion.EmphasizedDecelerate))
+        } else if (offset > newHeight) {
+            offset = newHeight
+        }
+    }
+
+    /** Moves the sheet with a finger by [delta] (down is positive); returns what it took. */
+    fun dragBy(delta: Float): Float {
+        if (closing || height <= 0f) return 0f
+        job?.cancel()
+        val before = offset
+        offset = (offset + delta).coerceIn(0f, height)
+        return offset - before
+    }
+
+    /**
+     * The finger let go: a downward fling or a sheet pulled down past a third of its height
+     * closes, anything else springs back open.
+     */
+    fun release(velocity: Float) {
+        if (closing || height <= 0f) return
+        val dismiss = velocity > flingPx || (offset > height * SheetMotionSpec.CLOSE_FRACTION && velocity > -flingPx)
+        if (dismiss) close(velocity) else if (offset > 0f) animateTo(0f, DeskMotion.spatial(), velocity)
+    }
+
+    /** Back gesture in progress (Android 14+): the sheet follows the finger a short way down. */
+    fun backProgress(progress: Float) {
+        if (closing || height <= 0f) return
+        job?.cancel()
+        offset = height * SheetMotionSpec.BACK_FRACTION * progress
+    }
+
+    /** The Back gesture was cancelled: back to open. */
+    fun backCancelled() {
+        if (!closing && offset > 0f) animateTo(0f, DeskMotion.spatial())
+    }
+
+    /** Slides the sheet out (faster from a fling or when it is already half way), then [onClosed]. */
+    fun close(velocity: Float = 0f) {
+        if (closing) return
+        closing = true
+        if (height <= 0f) {
+            job?.cancel()
+            onClosed()
+            return
+        }
+        val left = ((height - offset) / height).coerceIn(0f, 1f)
+        val millis = (SheetMotionSpec.EXIT_MS * left).toInt().coerceAtLeast(DeskMotion.SHORT_MS)
+        val easing = if (velocity > 0f) DeskMotion.StandardDecelerate else DeskMotion.EmphasizedAccelerate
+        animateTo(height, tween(millis, easing = easing), then = { onClosed() })
+    }
+
+    private fun animateTo(target: Float, spec: AnimationSpec<Float>, velocity: Float = 0f, then: () -> Unit = {}) {
+        job?.cancel()
+        job = scope.launch {
+            animate(offset, target, velocity, spec) { value, _ -> offset = value }
+            then()
+        }
+    }
+}
+
+/** Timing and thresholds of [AppSheet], from the kit's motion tokens (Material 3 bottom sheets). */
+internal object SheetMotionSpec {
+    const val ENTER_MS = DeskMotion.LONG_MS
+    const val EXIT_MS = DeskMotion.MEDIUM_MS
+    /** Pulled down further than this share of its height, the sheet closes when let go. */
+    const val CLOSE_FRACTION = 1f / 3f
+    /** How far the Back gesture moves the sheet before it is let go. */
+    const val BACK_FRACTION = 0.12f
+    /** A downward fling faster than this closes the sheet, whatever its position. */
+    val FlingVelocity = 600.dp
+}
+
+/**
+ * Hands the sheet the parts of a drag its scrolling content does not use: pulled down at the top
+ * of the content the sheet follows the finger, pushed up again it opens first and the content
+ * scrolls after. Only for fingers ([touch]): a mouse wheel never moves the sheet.
+ */
+private class SheetNestedScroll(private val motion: SheetMotion, private val touch: () -> Boolean) : NestedScrollConnection {
+    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset =
+        if (available.y < 0f && source == NestedScrollSource.UserInput && motion.offset > 0f && touch()) {
+            Offset(0f, motion.dragBy(available.y))
+        } else {
+            Offset.Zero
+        }
+
+    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset =
+        if (available.y > 0f && source == NestedScrollSource.UserInput && touch()) Offset(0f, motion.dragBy(available.y)) else Offset.Zero
+
+    override suspend fun onPreFling(available: Velocity): Velocity {
+        if (motion.offset <= 0f || motion.closing) return Velocity.Zero
+        motion.release(available.y)
+        return available
+    }
+}
+
+/**
+ * A modal bottom sheet in the kit's look: it slides up over a dimmed screen and never takes more
+ * than nine tenths of the height (the content scrolls). It closes with a tap above it, Back (on
+ * Android 14+ the sheet follows the Back gesture), Esc, or by dragging it down by its handle or
+ * body: let go past a third of its height or flung down it closes, otherwise it springs back. In
+ * scrolling content a downward drag scrolls to the top first, then pulls the sheet. The dimmed
+ * area fades with the sheet. [title] adds a heading with a close button. [content] gets a
+ * [SheetClose] so that an action runs after the sheet has gone. Inside a [SheetHost] (the app
+ * shell) the sheet is drawn in the app's window, above the navigation bar and the keyboard;
+ * elsewhere it opens a dialog window. The content is composed where the sheet is drawn: a focus
+ * request for a field in it belongs inside [content].
  */
 @Composable
 fun AppSheet(
@@ -333,20 +492,19 @@ fun AppSheet(
     title: String? = null,
     content: @Composable ColumnScope.(close: SheetClose) -> Unit,
 ) {
-    val visible = remember { MutableTransitionState(false).apply { targetState = true } }
-    var closing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val flingPx = with(LocalDensity.current) { SheetMotionSpec.FlingVelocity.toPx() }
+    val motion = remember { SheetMotion(scope, flingPx) }
+    val latestDismiss by rememberUpdatedState(onDismiss)
     var after by remember { mutableStateOf<(() -> Unit)?>(null) }
-    val close: SheetClose = { step ->
-        if (!closing) {
-            closing = true
-            after = step
-            visible.targetState = false
-        }
+    motion.onClosed = {
+        latestDismiss()
+        after?.invoke()
     }
-    if (closing && visible.isIdle && !visible.currentState) {
-        LaunchedEffect(Unit) {
-            onDismiss()
-            after?.invoke()
+    val close: SheetClose = { step ->
+        if (!motion.closing) {
+            after = step
+            motion.close()
         }
     }
     val host = LocalSheetHost.current
@@ -356,8 +514,8 @@ fun AppSheet(
         val entry = remember { SheetEntry() }
         entry.content = {
             CompositionLocalProvider(locals) {
-                BackHandler { close {} }
-                SheetFrame(visible, close, title, modifier, inWindow = true, content = content)
+                SheetBack(motion)
+                SheetFrame(motion, close, title, modifier, inWindow = true, content = content)
             }
         }
         DisposableEffect(host, entry) {
@@ -375,14 +533,29 @@ fun AppSheet(
                 @Suppress("DEPRECATION")
                 window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             }
-            SheetFrame(visible, close, title, modifier, inWindow = false, content = content)
+            SheetFrame(motion, close, title, modifier, inWindow = false, content = content)
+        }
+    }
+}
+
+/** Back closes the sheet; on Android 14+ the sheet follows the predictive Back gesture first. */
+@Composable
+private fun SheetBack(motion: SheetMotion) {
+    // stays on while the sheet slides out, so a second Back does not reach the screen below yet
+    PredictiveBackHandler { events ->
+        try {
+            events.collect { event -> motion.backProgress(event.progress) }
+            motion.close()
+        } catch (e: CancellationException) {
+            motion.backCancelled()
+            throw e
         }
     }
 }
 
 @Composable
 private fun SheetFrame(
-    visible: MutableTransitionState<Boolean>,
+    motion: SheetMotion,
     close: SheetClose,
     title: String?,
     modifier: Modifier,
@@ -391,6 +564,9 @@ private fun SheetFrame(
 ) {
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
+    val touch by rememberUpdatedState(DeskTheme.inputMode == InputMode.Touch)
+    val nested = remember(motion) { SheetNestedScroll(motion) { touch } }
+    val drag = rememberDraggableState { delta -> motion.dragBy(delta) }
     // In the app's window the root has already padded for the system bars and the keyboard; the
     // dimmed area and the sheet's surface are drawn on into that padding (nothing clips them), so
     // the status bar is dimmed too and the sheet seems to run on under the navigation bar while
@@ -398,95 +574,106 @@ private fun SheetFrame(
     val safe = WindowInsets.safeDrawing
     val frameInsets = if (inWindow) Modifier else Modifier.windowInsetsPadding(WindowInsets.statusBars)
     val sheetInsets = if (inWindow) Modifier else Modifier.windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
-    // one transition for the whole frame: the dimmed area fades, the sheet also slides
-    AnimatedVisibility(visible, enter = fadeIn(tween(200)), exit = fadeOut(tween(150))) {
-        BoxWithConstraints(
+    BoxWithConstraints(
+        Modifier
+            .fillMaxSize()
+            .then(frameInsets)
+            .onPreviewKeyEvent { event ->
+                if (event.type == KeyEventType.KeyDown && event.key == Key.Escape) {
+                    close {}
+                    true
+                } else {
+                    false
+                }
+            },
+    ) {
+        val maxSheet = maxHeight * 0.9f
+        Box(
             Modifier
                 .fillMaxSize()
-                .then(frameInsets)
-                .onPreviewKeyEvent { event ->
-                    if (event.type == KeyEventType.KeyDown && event.key == Key.Escape) {
-                        close {}
-                        true
-                    } else {
-                        false
-                    }
-                },
-        ) {
-            val maxSheet = maxHeight * 0.9f
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .then(
-                        if (inWindow) {
-                            Modifier.drawBehind {
+                .then(
+                    if (inWindow) {
+                        // the dimmed area fades in and out with the sheet, and while it is dragged
+                        Modifier.drawBehind {
+                            val shown = motion.shown
+                            if (shown > 0f) {
                                 val left = safe.getLeft(this, layoutDirection).toFloat()
                                 val top = safe.getTop(this).toFloat()
                                 val right = safe.getRight(this, layoutDirection).toFloat()
                                 val bottom = safe.getBottom(this).toFloat()
-                                drawRect(colors.scrim, topLeft = Offset(-left, -top), size = Size(size.width + left + right, size.height + top + bottom))
+                                drawRect(colors.scrim, topLeft = Offset(-left, -top), size = Size(size.width + left + right, size.height + top + bottom), alpha = shown)
                             }
-                        } else {
-                            Modifier
-                        },
-                    )
-                    .pointerInput(Unit) { detectTapGestures { close {} } },
-            )
-            val shape = RoundedCornerShape(topStart = dimens.radiusCard + 8.dp, topEnd = dimens.radiusCard + 8.dp)
-            Column(
-                modifier
-                    .align(Alignment.BottomCenter)
-                    .animateEnterExit(
-                        enter = slideInVertically(tween(220)) { it },
-                        exit = slideOutVertically(tween(150)) { it },
-                    )
-                    .widthIn(max = 640.dp)
-                    .fillMaxWidth()
-                    .heightIn(max = maxSheet)
-                    .then(
-                        if (inWindow) {
-                            // the surface goes on under the navigation bar (or the keyboard), over the bottom border line
-                            Modifier.drawWithContent {
-                                drawContent()
-                                val below = safe.getBottom(this).toFloat()
-                                if (below > 0f) drawRect(colors.surfaceRaised, topLeft = Offset(0f, size.height - 1.dp.toPx()), size = Size(size.width, below + 1.dp.toPx()))
-                            }
-                        } else {
-                            Modifier
-                        },
-                    )
-                    .background(colors.surfaceRaised, shape)
-                    .border(1.dp, colors.border, shape)
-                    // taps on the sheet itself do not reach the dimmed area behind it
-                    .pointerInput(Unit) { detectTapGestures { } }
-                    .then(sheetInsets)
-                    .padding(bottom = dimens.gapS),
-            ) {
-                Box(
-                    Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(top = dimens.gapS, bottom = dimens.gapXs)
-                        .size(width = 36.dp, height = 4.dp)
-                        .background(colors.borderStrong, CircleShape),
+                        }
+                    } else {
+                        Modifier
+                    },
                 )
-                if (title != null) {
-                    Row(
-                        Modifier.fillMaxWidth().padding(start = dimens.pagePadding, end = dimens.gapXs),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            title,
-                            style = DeskTheme.type.headline,
-                            color = colors.text,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f).semantics { heading() },
-                        )
-                        DeskIconButton(DeskIcons.Close, stringResource(R.string.touchlist_close), { close {} })
-                    }
+                .pointerInput(Unit) { detectTapGestures { close {} } },
+        )
+        val shape = RoundedCornerShape(topStart = dimens.radiusCard + 8.dp, topEnd = dimens.radiusCard + 8.dp)
+        Column(
+            modifier
+                .align(Alignment.BottomCenter)
+                .widthIn(max = 640.dp)
+                .fillMaxWidth()
+                .heightIn(max = maxSheet)
+                .onSizeChanged { motion.measured(it.height.toFloat()) }
+                // drawn only once measured, from just below the window; moved by the offset alone (no relayout)
+                .graphicsLayer {
+                    translationY = motion.offset
+                    alpha = if (motion.height > 0f) 1f else 0f
                 }
-                content(close)
+                .then(
+                    if (inWindow) {
+                        // the surface goes on under the navigation bar (or the keyboard), over the bottom border line
+                        Modifier.drawWithContent {
+                            drawContent()
+                            val below = safe.getBottom(this).toFloat()
+                            if (below > 0f) drawRect(colors.surfaceRaised, topLeft = Offset(0f, size.height - 1.dp.toPx()), size = Size(size.width, below + 1.dp.toPx()))
+                        }
+                    } else {
+                        Modifier
+                    },
+                )
+                .background(colors.surfaceRaised, shape)
+                .border(1.dp, colors.border, shape)
+                // a drag anywhere on the sheet moves it; the scrolling content passes on what it does not use
+                .draggable(
+                    state = drag,
+                    orientation = Orientation.Vertical,
+                    enabled = !motion.closing,
+                    onDragStopped = { velocity -> motion.release(velocity) },
+                )
+                .nestedScroll(nested)
+                .then(sheetInsets)
+                .padding(bottom = dimens.gapS),
+        ) {
+            // the handle: a wider strip than it looks, so it is easy to catch
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = dimens.gapS, bottom = dimens.gapXs),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(Modifier.size(width = 36.dp, height = 4.dp).background(colors.borderStrong, CircleShape))
             }
+            if (title != null) {
+                Row(
+                    Modifier.fillMaxWidth().padding(start = dimens.pagePadding, end = dimens.gapXs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        title,
+                        style = DeskTheme.type.headline,
+                        color = colors.text,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f).semantics { heading() },
+                    )
+                    DeskIconButton(DeskIcons.Close, stringResource(R.string.touchlist_close), { close {} })
+                }
+            }
+            content(close)
         }
     }
 }

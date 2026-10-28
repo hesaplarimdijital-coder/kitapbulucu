@@ -6,9 +6,12 @@
          library asks for it; CI also fails when the built APK requests it. -->
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
 
+    <!-- enableOnBackInvokedCallback: Android 14+ predictive Back (the kit's DetailTransition, sheets). -->
     <application
         android:name=".App"
         android:allowBackup="false"
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="33"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"

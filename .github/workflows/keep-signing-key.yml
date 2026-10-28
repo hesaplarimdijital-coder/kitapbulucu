@@ -1,0 +1,33 @@
+# The APK signing key lives in the Actions cache (see ci.yml, ARCHITECTURE 13). GitHub removes a
+# cache entry that nobody has used for 7 days, so this restores it twice a week even when no build
+# runs. It only reads the cache; it never creates a key.
+name: Keep signing key
+
+on:
+  schedule:
+    - cron: '23 4 * * 1,4'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  touch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore the signing key from the cache
+        id: key
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/kb-signing
+          key: kb-signing-key-v1
+
+      - name: Report
+        env:
+          HIT: ${{ steps.key.outputs.cache-hit }}
+        run: |
+          if [ "$HIT" = "true" ]; then
+            echo "::notice::The signing key is in the cache."
+          else
+            echo "::warning::The signing key is not in the cache; the next CI build creates a new one (the app must be uninstalled once more)."
+          fi

@@ -62,7 +62,7 @@ class SearchInPlaceTest {
     fun aClickedRowOpensInPlace() {
         val store = store()
         compose.setContent {
-            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = InputMode.Pointer, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = InputMode.Pointer, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
                 SearchScreen(store, initialQuery = "defter")
             }
         }

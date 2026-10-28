@@ -41,7 +41,6 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -81,7 +80,9 @@ import desktopkit.shell.NavSection
 import desktopkit.shell.ShellSpec
 import desktopkit.shell.TopBarBackIcon
 import desktopkit.shell.WidthClass
+import desktopkit.theme.DeskMotion
 import desktopkit.theme.DeskTheme
+import com.hesaplarimdijital.kitapbulucu.ui.theme.LargeWindowText
 
 /** Top-level screens. The route names never reach the user. */
 object Routes {
@@ -279,7 +280,8 @@ fun AppShell(
                     if (store != null) UndoBar(store)
                 }
             }
-            actions?.Dialogs()
+            // drawn outside the shell: the same text step on tablet and DeX as inside it
+            LargeWindowText(widthClass) { actions?.Dialogs() }
         }
     }
 }
@@ -292,20 +294,30 @@ private fun FormRequest.overlayKey(): Int = when (this) {
 }
 
 /**
- * Opening a form: the new page slides up a little and fades in over the screen (phone, about
- * 220 ms) or just fades in (DeX, 150 ms). Closing: the form slides down and fades out over the
- * screen that is already there.
+ * Opening a form: the new page slides up a little and fades in over the screen (phone, the kit's
+ * emphasized curves, 300 ms) or just fades in (DeX, 150 ms). Closing: the form slides down and
+ * fades out over the screen that is already there (200 ms).
  */
 private fun AnimatedContentTransitionScope<FormRequest?>.overlayTransition(phone: Boolean): ContentTransform {
     val opening = initialState == null && targetState != null
     val closing = initialState != null && targetState == null
     return when {
         opening -> {
-            val enter = if (phone) slideInVertically(tween(220, easing = FastOutSlowInEasing)) { it / 10 } + fadeIn(tween(220)) else fadeIn(tween(150))
+            val enter = if (phone) {
+                slideInVertically(tween(DeskMotion.LONG_MS, easing = DeskMotion.EmphasizedDecelerate)) { it / 10 } +
+                    fadeIn(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.StandardDecelerate))
+            } else {
+                fadeIn(tween(150, easing = DeskMotion.Standard))
+            }
             (enter togetherWith ExitTransition.None).apply { targetContentZIndex = 1f }
         }
         closing -> {
-            val exit = if (phone) slideOutVertically(tween(180, easing = FastOutSlowInEasing)) { it / 10 } + fadeOut(tween(180)) else fadeOut(tween(150))
+            val exit = if (phone) {
+                slideOutVertically(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.EmphasizedAccelerate)) { it / 10 } +
+                    fadeOut(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.StandardAccelerate))
+            } else {
+                fadeOut(tween(150, easing = DeskMotion.Standard))
+            }
             (EnterTransition.None togetherWith exit).apply { targetContentZIndex = 0f }
         }
         else -> fadeIn(tween(150)) togetherWith fadeOut(tween(150))
@@ -345,8 +357,8 @@ private fun UndoBar(store: LibraryStore) {
     }
     AnimatedVisibility(
         visible = step != null,
-        enter = expandVertically(tween(200), expandFrom = Alignment.Bottom) + slideInVertically(tween(200)) { it } + fadeIn(tween(200)),
-        exit = shrinkVertically(tween(150), shrinkTowards = Alignment.Bottom) + slideOutVertically(tween(150)) { it } + fadeOut(tween(150)),
+        enter = barEnter(),
+        exit = barExit(),
     ) {
         val current = shown.value ?: return@AnimatedVisibility
         val shape = androidx.compose.foundation.shape.RoundedCornerShape(dimens.radiusControl)
@@ -366,6 +378,17 @@ private fun UndoBar(store: LibraryStore) {
 }
 
 private const val UNDO_BAR_MILLIS = 8_000L
+
+/** The undo and refresh bars rise from the bottom edge (the kit's emphasized curves) and sink back. */
+private fun barEnter(): EnterTransition =
+    expandVertically(tween(DeskMotion.MEDIUM_MS + 50, easing = DeskMotion.EmphasizedDecelerate), expandFrom = Alignment.Bottom) +
+        slideInVertically(tween(DeskMotion.MEDIUM_MS + 50, easing = DeskMotion.EmphasizedDecelerate)) { it } +
+        fadeIn(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.StandardDecelerate))
+
+private fun barExit(): ExitTransition =
+    shrinkVertically(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.EmphasizedAccelerate), shrinkTowards = Alignment.Bottom) +
+        slideOutVertically(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.EmphasizedAccelerate)) { it } +
+        fadeOut(tween(DeskMotion.SHORT_MS + 50, easing = DeskMotion.StandardAccelerate))
 
 /**
  * "MKE'nin listesi güncellendi" for a few seconds when a re-read finds a list changed outside
@@ -389,8 +412,8 @@ private fun RefreshBar(store: LibraryStore) {
     }
     AnimatedVisibility(
         visible = updated != null,
-        enter = expandVertically(tween(200), expandFrom = Alignment.Bottom) + slideInVertically(tween(200)) { it } + fadeIn(tween(200)),
-        exit = shrinkVertically(tween(150), shrinkTowards = Alignment.Bottom) + slideOutVertically(tween(150)) { it } + fadeOut(tween(150)),
+        enter = barEnter(),
+        exit = barExit(),
     ) {
         val current = shown.value ?: return@AnimatedVisibility
         val text = stringResource(
@@ -436,7 +459,7 @@ private fun LibraryNotices(store: LibraryStore, picker: FilePicker, onMap: (Owne
     Column(
         Modifier
             .fillMaxWidth()
-            .animateContentSize(tween(200))
+            .animateContentSize(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.Emphasized))
             .then(if (any) Modifier.padding(horizontal = dimens.pagePadding, vertical = dimens.gapS) else Modifier),
         verticalArrangement = Arrangement.spacedBy(dimens.gapS),
     ) {
