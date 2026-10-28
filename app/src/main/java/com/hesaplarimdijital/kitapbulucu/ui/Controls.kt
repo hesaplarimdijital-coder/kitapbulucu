@@ -38,6 +38,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -171,11 +173,19 @@ fun FormField(
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(dimens.radiusControl)
     val touch = DeskTheme.inputMode == desktopkit.theme.InputMode.Touch
+    // The field keeps its own cursor and selection. When the caller replaces the text (a chosen
+    // suggestion, a cleared form) the cursor goes to the end of the new text instead of staying
+    // at its old index; typing keeps the cursor where the user put it.
+    var field by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
+    val shown = if (field.text == value) field else TextFieldValue(value, TextRange(value.length))
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(label, style = DeskTheme.type.label, color = if (error) colors.danger else colors.textSecondary)
         androidx.compose.foundation.text.BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
+            value = shown,
+            onValueChange = { next ->
+                field = next
+                if (next.text != value) onValueChange(next.text)
+            },
             singleLine = true,
             textStyle = DeskTheme.type.body.copy(
                 color = colors.text,
