@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -107,9 +107,11 @@ class TitleCaseScreenshotTest {
         }
         compose.waitForIdle()
         val button = "Düzelt…"
-        if (compose.onAllNodesWithText(button).fetchSemanticsNodes().isEmpty()) {
-            compose.onAllNodes(hasScrollToNodeAction()).onFirst().performScrollToNode(hasText(button))
-        }
+        // the row may be composed but below the fold (phone): scroll the list that holds it first
+        val holder = hasScrollToNodeAction() and hasAnyDescendant(hasText(button))
+        val list = if (compose.onAllNodes(holder).fetchSemanticsNodes().isNotEmpty()) compose.onAllNodes(holder).onFirst() else compose.onAllNodes(hasScrollToNodeAction()).onFirst()
+        list.performScrollToNode(hasText(button))
+        compose.waitForIdle()
         compose.onNodeWithText(button).performClick()
         compose.waitForIdle()
         val window = compose.activity.window.decorView
