@@ -311,6 +311,12 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [x] `release/0.2.x` dalında 0.2.1 (commit 3c9d77a698) ve kit main'de (1.0.0 çalışması) aynı düzeltme; testler yeşil.
 - [x] Kullanıcı 0.2.1 Release'ini `release/0.2.x` dalına açtı; uygulama sürüm numarasına geçti.
 
+### K-05 Kit 0.2.2: sağ tık menüsü başka yere tıklayınca yanıp sönmesin · 1 · [O] · bitti (DeX'te denenecek)
+- [x] Menü kapanırken kendi yerinde solar (önceden satırın köşesine sıçrıyordu); kapanırken tık yakalamaz.
+- [x] Dışarıya sol tık yalnızca menüyü kapatır (alttaki satır seçilmez); sağ tık eskisini kapatıp yenisini tıklanan yerde açar; Esc kapatır.
+- [x] `release/0.2.x` dalında 0.2.2 (commit 1b7e656ba0) ve kit main'de (1.0.0) aynı düzeltme; testler yeşil.
+- [ ] Kullanıcı 0.2.2 Release'ini `release/0.2.x` dalına açtı; uygulama sürüm numarasına geçti.
+
 ## Sıraya konmayı bekleyenler
 
 ### W-01 Windows sürümü (babanın bilgisayarı için) · [F] · bekliyor (kullanıcı desktop-kit 1.0.0'ı bitirince)
