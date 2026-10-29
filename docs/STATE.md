@@ -21,6 +21,9 @@ Son güncelleme: 29.10.2026, sürüm 1.2.0: kit 0.2.0, sürüklenen alt sayfa, y
 
 ## Kullanıcıdan beklenenler
 
+- Windows sürümü (W-01) kullanıcının desktop-kit 1.0.0 çalışmasının bitmesini bekliyor; bitince haber verecek. Kararlar BACKLOG W-01'de.
+- desktop-kit 0.2.1 Release'i (`release/0.2.x` dalına); gelince `desktopKit = "0.2.1"`.
+
 1. Gizli değer artık gerekmez (28.10.2026): CI imza anahtarını GitHub Actions önbelleğinde tutar (ARCHITECTURE 13). Önbellekteki anahtarla imzalanan ilk APK için uygulama bir kez kaldırılıp kurulur; sonrakiler üstüne kurulur. Önbellek silinirse (ör. 60 gün depo etkinliği olmazsa) bir kez daha kaldırıp kurmak gerekir.
 2. Telefonda S-38 denemesi: kitap sayfasında "Sil" görünüyor mu, "Yeni raf" klavyenin üstünde mi, Ekle/Düzenle'de klavye açıkken alt çubuk klavyeye yapışmıyor mu (yalnızca gerçek telefonda görülebilir).
 3. Tablette ve babanın telefonunda baştan sona deneme (kontrol listesi son mesajda); S-06 kalanları (yeniden başlatma sonrası izin, dosyanın öteki cihazda görünmesi, değişikliğin ulaşma süresi).

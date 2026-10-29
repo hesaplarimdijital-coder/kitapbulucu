@@ -313,6 +313,14 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 
 ## Sıraya konmayı bekleyenler
 
+### W-01 Windows sürümü (babanın bilgisayarı için) · [F] · bekliyor (kullanıcı desktop-kit 1.0.0'ı bitirince)
+Kararlar (29.10.2026):
+- Dil: Kotlin + Compose Multiplatform. Android uygulamasının mantığı (Excel okuyucu/yazıcı, arama, birleştirme, güvenli yazma, raflar) ortak modüle taşınır; Windows arayüzü DeX düzeninin birebir aynısı.
+- Görünüm: desktop-kit Android + Windows (masaüstü) çalışacak hâle getirilir; kullanıcı 1.0.0'ı bitirene kadar kite dokunulmaz, sonra kullanıcı kitte değişiklik yapmaz.
+- Dosyalar: bilgisayardaki Google Drive programının klasöründen Babam.xlsx ve Benim.xlsx seçilir; telefon ve tabletle aynı dosyalar, aynı güvenli yazma kuralları (Android ve Windows aynı anda kullanılabilir).
+- Kurulum: GitHub Actions'ta üretilen .msi (imzasız; ilk kurulumda Windows uyarısı).
+
+
 Bir sonraki sprint planlanırken sıraya konur.
 
 ### S-30 Ara ekranı: daha sade ve kullanışlı sonuçlar · 3 · [O] · bitti
