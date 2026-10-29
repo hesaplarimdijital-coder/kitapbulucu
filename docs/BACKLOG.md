@@ -309,7 +309,7 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 ### K-04 Kit 0.2.1: fareyle gezinirken iz kalmaması · 1 · [O] · bitti (DeX'te denenecek)
 - [x] Fareyle üzerine gelme ve basma renkleri anında değişir (0.1.x gibi); dokunmatikte geçişler kalır; saydama geçişte gri ara renk yok.
 - [x] `release/0.2.x` dalında 0.2.1 (commit 3c9d77a698) ve kit main'de (1.0.0 çalışması) aynı düzeltme; testler yeşil.
-- [ ] Kullanıcı 0.2.1 Release'ini `release/0.2.x` dalına açtı; uygulama sürüm numarasına geçti.
+- [x] Kullanıcı 0.2.1 Release'ini `release/0.2.x` dalına açtı; uygulama sürüm numarasına geçti.
 
 ## Sıraya konmayı bekleyenler
 

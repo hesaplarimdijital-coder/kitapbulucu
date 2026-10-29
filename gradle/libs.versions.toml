@@ -1,7 +1,7 @@
 [versions]
 agp = "8.7.3"
 kotlin = "2.1.0"
-desktopKit = "3c9d77a698"
+desktopKit = "0.2.1"
 activityCompose = "1.9.3"
 composeBom = "2024.12.01"
 junit = "4.13.2"
