@@ -16,8 +16,8 @@
 ## Değişmez kararlar
 - INTERNET izni yok; hesap, reklam, analitik yok. Buluta taşımayı Google Drive uygulaması yapar; uygulama dosyalara SAF ile erişir. Ek depolama izni istenmez.
 - Bağımlılık en az. Her yeni kütüphane için tek cümleyle neden söyle ve onay al. Room yok, Apache POI yok, ML Kit yok.
-- Arayüz kiti: `com.github.hesaplarimdijital-coder:desktop-kit` (JitPack, şu an 0.2.2 — Release beklenirken commit `1b7e656ba0`; 0.2.x yamaları `release/0.2.x` dalından, kit main'i kullanıcının 1.0.0 çalışması). Kiti uygulamada kopyalama ya da yamama: kit deposunda düzelt, sürümü artır, kullanıcıdan GitHub'da Release oluşturmasını iste (oturum etiket gönderemez). Release beklenirken uygulama kitin commit sürümüyle (commit kimliğinin ilk 10 karakteri) derlenir; Release gelince sürüm numarasına geçilir.
-- Sürümler: Kotlin 2.1.0, AGP 8.7.3, Gradle 8.11.1, JDK 17, minSdk 26, target/compileSdk 35, Compose BOM 2024.12.01, Robolectric 4.14.1.
+- Arayüz kiti: `com.github.hesaplarimdijital-coder:desktop-kit` (JitPack, şu an 2.3.0). Kiti uygulamada kopyalama ya da yamama: kit deposunda düzelt, sürümü artır, kullanıcıdan GitHub'da Release oluşturmasını iste (oturum etiket gönderemez). Release beklenirken uygulama kitin commit sürümüyle (commit kimliğinin ilk 10 karakteri) derlenir; Release gelince sürüm numarasına geçilir.
+- Sürümler (kit 2.x'in istediği): Kotlin 2.4.20, AGP 9.4.1 (Kotlin'i kendisi derler; modülde Kotlin eklentisi yok), Gradle 9.8.2, JDK 17, minSdk 34 (Android 14), compileSdk 37, targetSdk 36, Compose BOM 2026.09.00, activity-compose 1.13.0, Robolectric 4.17.
 - Excel: `.xlsx` okuyucu ve yazıcı kendi kodumuz (`java.util.zip` + `XmlPullParser`). `.csv` desteklenir (`;` ya da `,`; UTF-8 ya da Windows-1254). `.xls` desteklenmez: ".xlsx olarak kaydedip tekrar deneyin".
 - Asıl kaynak Drive'daki `Babam.xlsx` ve `Benim.xlsx`. Herkes kendi dosyasına yazar, ikisini de okur. Öteki kişinin dosyası için onay sorulur ve yazmadan hemen önce yeniden okunur.
 - Veri güvenliği: her yazmadan önce dosya yeniden okunur; yedek alınır (son 10); içerik önce uygulama klasöründe üretilip doğrulanır, sonra yazılır ve geri okunur; yazılamayan değişiklik bekleyenlerde kalır, kaybolmaz.
@@ -37,7 +37,7 @@
 - Proxy bir isteği 403 ile reddederse dolanma, yineleme; kullanıcıya söyle.
 
 ## Tuzaklar
-- Robolectric API 34'te çalışmalı: `src/test/resources/robolectric.properties` içinde `sdk=34`; yoksa ekran görüntüleri boş çıkar.
+- Robolectric API 34'te çalışır: `src/test/resources/robolectric.properties` içinde `sdk=34` (API 35+ Java 21 ister; Robolectric 4.14'te başka düzeyler boş ekran görüntüsü veriyordu).
 - Ekran görüntüsü klasörünü test görevinin çıktısı yap (`outputs.dir(...)`); yoksa önbellekten gelen test sonucu görüntü yazmaz.
 - `?.let { { ... } }` içindeki lambda Composable sayılmaz; açık tip ver: `val slot: (@Composable () -> Unit)? = ...`.
 - `LazyColumn` içinde `items` adlı parametre `items()` ile çakışır; başka ad ver.
@@ -46,4 +46,6 @@
 - SAF tek belge izniyle geçici dosya + yeniden adlandırma yapamaz; güvenli yazma sırası ARCHITECTURE 7'de.
 - Oturum GitHub Actions gizli değerlerine ve iş günlüklerine, JitPack'e erişemez (proxy 403). Hata için check-run annotation'larını oku; gizli değerleri kullanıcı ekler.
 - Google Drive klasör seçmeyi desteklemeyebilir; birincil yol iki dosyayı tek tek seçmek.
+- Telefonda içerik pencerenin tamamını kaplar (kit 2.x cam çubuklar): `AppShell` her ekrana üst çubuğun boşluğunu verir; listeler alt boşluğu `rememberShellContentPadding()` ile kendi `contentPadding`'ine ekler, liste olmayan ekranlar (formlar) `AppShell`'den alttan boşluk alır. Alt sayfalar ve iletişim kutuları kabuğun `overlays` yuvasında ya da ekranın içinde çizilir; kabuk dışında kitin alt sayfası ayrı pencere açar.
+- Uygulamanın kendi `BasicTextField`'ları `Modifier.keepsKeyboardOpen()` alır; yoksa kabuk dokununca klavyeyi kapatır.
 - Excel metin olmayan hücreleri tarihe çevirebilir ("Nis.53"); okuyucu tarih biçimli hücreyi metne çevirir, yazıcı her hücreyi metin biçiminde yazar.

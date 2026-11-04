@@ -2,7 +2,7 @@ package com.hesaplarimdijital.kitapbulucu.screenshots
 
 import desktopkit.shell.rememberShellContentPadding
 import androidx.compose.foundation.layout.padding
-com.hesaplarimdijital.kitapbulucu.WindowWidth
+import com.hesaplarimdijital.kitapbulucu.WindowWidth
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas

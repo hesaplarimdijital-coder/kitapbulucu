@@ -2,11 +2,11 @@
 
 Karar (22.10.2026): arayüzde listeler MKE ve Barış adıyla görünür; dosyalar (`Babam.xlsx`, `Benim.xlsx`), sayfa adı ve iç adlar Babam/Benim olarak kalır.
 
-Son güncelleme: 29.10.2026, sürüm 1.2.0: kit 0.2.0, sürüklenen alt sayfa, yazar/yayınevi önerileri, ad ve yazar düzeltme düğmesi, gizli değersiz sabit imza.
+Son güncelleme: 04.11.2026, sürüm 1.3.0: kit 2.3.0 (K-06), derleme ortamı AGP 9 / Kotlin 2.4 / minSdk 34; uygulamanın kendi sayfa, pencere, bildirim ve menü bileşenleri kitinkilerle değişti.
 
 ## Şu an
 
-- Uygulama: Kitap Bulucu, paket `com.hesaplarimdijital.kitapbulucu`, sürüm 1.0.0. Depo: `hesaplarimdijital-coder/kitapbulucu` (herkese açık). Kit deposu `hesaplarimdijital-coder/desktop-kit` (push yetkisi var; etiket gönderilemez).
+- Uygulama: Kitap Bulucu, paket `com.hesaplarimdijital.kitapbulucu`, sürüm 1.3.0. Depo: `hesaplarimdijital-coder/kitapbulucu` (herkese açık). Kit deposu `hesaplarimdijital-coder/desktop-kit` (push yetkisi var; etiket gönderilemez).
 - Sprint 0–6 bitti (kullanıcı "bitene kadar durma, ara mesaj verme" dedi; [F] işler S-23 ve S-27 de Opus ile yapıldı). Açık kalanlar yalnızca kullanıcı denemeleri.
 - Uygulama: kurulum, arama, kitap ekleme (Kütüphane'de "+" ve Ctrl+N), silme/düzenleme/taşıma, geri alma, kütüphane tablosu, raflar ve raf doldurma, Excel birleştirme (Ctrl+Shift+O, Ayarlar), yedekten geri yükleme, bekleyen değişiklikler, tek Excel olarak dışa aktarma, Ctrl+O.
 - APK: `ci/apk` dalında `kitapbulucu.apk`; `ornek/` altında örnek dosyalar. Ekran görüntüleri `ci/screenshots`; başvuru görüntüleri `app/src/test/screenshots/` (33 ekran).
@@ -18,6 +18,9 @@ Son güncelleme: 29.10.2026, sürüm 1.2.0: kit 0.2.0, sürüklenen alt sayfa, y
 - Telefon arayüzü (S-36, S-37): `ui/TouchControls.kt` (liste, FAB, alt sayfa, seçim) ve `ui/PhoneLayout.kt` (alt eylem çubuğu, telefon başlığı, boş durumlar). İki dosyada telefon algılama ayrı (`isCompactLayout()` ve `isPhone()`); ileride birleştirilebilir. DeX görüntüleri değişmedi.
 - 1.2.0 (29.10.2026): alt sayfa parmakla çekilip kapanır (`AppSheet`, DeskMotion); yazar/yayınevi önerileri (`model/Suggestions.kt`, `ui/SuggestField.kt`); Ayarlar'da tek seferlik "Ad ve yazarları düzelt" (`text/TitleCase.kt`, `store/TitleCaseFix.kt`; tamamı büyük harfli hücreler, TDK'ya göre ve/ile/mı küçük, kısaltmalar ve Roma rakamları büyük; tek geri alma adımı). İmza: gizli değer yoksa CI anahtarı Actions önbelleğinde tutar (ARCHITECTURE 13).
 - S-38 (telefon geri bildirimi 2): alt sayfalar `SheetHost` ile uygulamanın penceresinde çizilir (AppShell sarar; kökün safeDrawing boşluğu sayesinde gezinme çubuğu ve klavyenin üstünde); `ShelfFormDialog` imleci sayfa içeriğinde ister. `PhoneForm` + `isKeyboardOpen()`: alt düğme çubuğu klavye açıkken formun sonuna geçer. Ara'da satır yerinde açılır (`LazyListState.reveal`, `revealDelta`: en az kaydırma, başa taşımaz).
+
+- Kit 2.3.0 (K-06, 04.11.2026): `desktopKit = "2.3.0"`; AGP 9.4.1 (yerleşik Kotlin, modülde Kotlin eklentisi yok), Gradle 9.8.2, Kotlin 2.4.20, Compose BOM 2026.09.00, compileSdk 37, minSdk 34 (Android 14), targetSdk 36, Robolectric 4.17 (hâlâ API 34). Ne neyle değişti: `AppSheet` → kitin `GlassBottomSheet`'i üstünde ince sarmalayıcı (sayfa kapanınca eylem çalışır; `SheetHost`, sayfa hareketi ve `SheetHostTest` silindi, yerine `AppSheetTest`); sıralama sayfası → `MoreSheet`; kitap sayfası eylemleri → `DeskListRow`; `ConfirmDialog` ve raf pencereleri → `DeskDialog` (`ConfirmDialog` adı ve `DialogAction` kaldı); `DropdownChoice` → `MenuButton`; `CheckRow` → `CheckboxRow`; `SelectionMark` → `DeskCheckbox`; `UndoBar`/`RefreshBar` → kitin bildirimleri (`rememberToastState`, `DesktopShell(toasts)`, Ctrl+Z ipucu); `isPhone()`/`isCompactLayout()`/`LocalPhone` → `currentWidthClass() == WidthClass.Compact` (testlerde `WindowWidth` sarmalayıcısı kökün yerini tutar); kitap pencereleri `DesktopShell(overlays)` içinde. Kalanlar (kitte karşılığı yok): `AppFab`, `WideSegmentedChoice`, `SuggestField` açılır listesi, `PhoneForm`/`BottomActionBar`, `PhoneHeader`, `NoticeCard`, `FormField`, kitap satırlarının Fiş görünümü.
+- Telefon düzeni (kit 2.x): içerik pencerenin tamamını kaplar; `AppShell` üst çubuğun boşluğunu verir, listeler (Ara, Kütüphane, Raflar, Ayarlar) alttaki boşluğu kendisi ekleyip cam çubuğun altından akar, formlar `AppShell`'den alt boşluk alır; FAB `fabPadding()` ile çubuğun üstünde. Satırlar `listAppear` ile gelir. `FormField` ve aramanın kutusu `keepsKeyboardOpen()` taşır.
 
 ## Kullanıcıdan beklenenler
 
@@ -54,6 +57,8 @@ Son güncelleme: 29.10.2026, sürüm 1.2.0: kit 0.2.0, sürüklenen alt sayfa, y
 - Aynı kitap iki listede de varsa Ara ekranında tek kartta iki satır ("Babam · Raf C2", "Benim · Raf 1B").
 
 ## Riskler
+
+- minSdk 34: Android 13 ve öncesi cihazlar 1.3.0'ı kuramaz. Tablet ve Galaxy S24 etkilenmez; babanın cihazının Android sürümü bilinmiyor, sorulmalı.
 
 - Google Drive klasör seçmeyi desteklemeyebilir; babanın telefonunda paylaşılan dosyanın görünmesi belirsiz. S-06 denemesi henüz yapılmadı.
 - Raf bilgisi hiç yok; uygulamanın asıl faydası raflar girilince ortaya çıkar (S-22).

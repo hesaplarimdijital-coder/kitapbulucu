@@ -315,7 +315,16 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [x] Menü kapanırken kendi yerinde solar (önceden satırın köşesine sıçrıyordu); kapanırken tık yakalamaz.
 - [x] Dışarıya sol tık yalnızca menüyü kapatır (alttaki satır seçilmez); sağ tık eskisini kapatıp yenisini tıklanan yerde açar; Esc kapatır.
 - [x] `release/0.2.x` dalında 0.2.2 (commit 1b7e656ba0) ve kit main'de (1.0.0) aynı düzeltme; testler yeşil.
-- [ ] Kullanıcı 0.2.2 Release'ini `release/0.2.x` dalına açtı; uygulama sürüm numarasına geçti.
+- [x] Gerek kalmadı: uygulama doğrudan kit 2.3.0'a geçti (K-06).
+
+### K-06 Kit 2.3.0'a geçiş · 5 · [O] · bitti (telefonda ve DeX'te denenecek)
+- [x] `desktopKit = "2.3.0"` (JitPack etiketi derledi); derleme ortamı kitin istediği gibi: AGP 9.4.1, Gradle 9.8.2, Kotlin 2.4.20, Compose BOM 2026.09.00, compileSdk 37, minSdk 34, targetSdk 36, activity-compose 1.13.0, Robolectric 4.17. CLAUDE.md "Sürümler" güncel.
+- [x] Uygulamanın kendi bileşenleri kitinkilerle değişti: alt sayfa (`AppSheet` artık kitin `GlassBottomSheet`'i üstünde ince bir sarmalayıcı; `SheetHost` ve sayfa hareketi silindi), sıralama sayfası `MoreSheet`, kitap sayfasının eylemleri `DeskListRow`, `ConfirmDialog` ve raf pencereleri `DeskDialog`, açılır listeler `MenuButton`, birleştirmedeki onay satırları `CheckboxRow`, seçim işareti `DeskCheckbox`, geri al ve "güncellendi" çubukları kitin bildirimleri, `isPhone()`/`isCompactLayout()` kitin genişlik sınıfı.
+- [x] Kitte karşılığı olmayanlar kaldı: FAB, tam genişlikte segment seçimi (kitin `SegmentedChoice`'u seçenekleri yaymıyor), öneri açılır listesi (kitin menüsü klavye odağını alıyor), telefon formunun alt düğme çubuğu, kabuk dışındaki ekranların başlığı, kitap satırlarının "Fiş" görünümü.
+- [x] Telefonda listeler cam alt çubuğun altından akar (`rememberShellContentPadding`), FAB çubuğun üstünde; satırlar sırayla gelir (`listAppear`); uygulamanın metin kutuları klavyeyi açık tutar (`keepsKeyboardOpen`).
+- [x] Bütün özellikler yerinde (arama, kütüphane, raflar, ekleme/düzenleme ve öneriler, birleştirme, yedekler, dışa aktarma, ad düzeltme, güncellendi notu, geri al, kısayollar, F2/Del, çoklu seçim, sağ tık menüleri); testler yeşil, değişen ekran görüntülerine bakıldı ve başvurular yenilendi.
+- [ ] Telefonda: alt sayfaların klavyenin ve gezinme çubuğunun üstünde açılması, aşağı çekip kapatma, listelerin camın altından akması, geri al bildirimi.
+- [ ] DeX'te: geri al bildirimi, pencerelerin Esc/× düğmesi, açılır listeler.
 
 ## Sıraya konmayı bekleyenler
 

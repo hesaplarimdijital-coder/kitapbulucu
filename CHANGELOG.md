@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 1.3.0 — 04.11.2026
+
+- **Telefon**: listeler alttaki buzlu cam çubuğun altından akar; satırlar açılışta sırayla belirir; alttan açılan sayfalar, menüler ve geçişler arayüz kitinin yeni, daha akıcı hareketleriyle çalışır.
+- **Geri al**: "… silindi · Geri al" artık ekranın altında küçük bir bildirim; klavye varsa yanında Ctrl+Z yazar. "Listesi güncellendi" notu da aynı biçimde çıkar.
+- **Pencereler**: onay kutuları, seçim kutucukları, açılır listeler ve "Emin misiniz?" pencereleri kitin kendi görünümünde; pencerede × (klavyede Esc) ile kapatma düğmesi var.
+- **Kurulum**: uygulama artık Android 14 ve sonrasında çalışır (tablet ve Galaxy telefonlar etkilenmez; daha eski Android'li bir cihaz kuramaz).
+
 ## 1.2.0 — 29.10.2026
 
 - **Telefon**: alttan açılan sayfalar parmakla aşağı çekilip kapanır; kitaplığın 0.2.0 sürümüyle daha akıcı geçişler, kaydırınca gizlenen alt çubuk, aramada "Hepsi / MKE / Barış" seçim düğmeleri, açık rafta kayan geçiş ve Android'in geri hareketi.
