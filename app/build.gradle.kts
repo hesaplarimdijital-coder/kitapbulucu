@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -11,12 +10,12 @@ val keystorePath: String? = System.getenv("KB_KEYSTORE")?.takeIf { file(it).exis
 
 android {
     namespace = "com.hesaplarimdijital.kitapbulucu"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.hesaplarimdijital.kitapbulucu"
-        minSdk = 26
-        targetSdk = 35
+        minSdk = 34
+        targetSdk = 36
         // every CI run gets a higher number, so Android always accepts the update
         versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
         versionName = "1.2.0"
@@ -47,10 +46,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
     }
 
     testOptions {
