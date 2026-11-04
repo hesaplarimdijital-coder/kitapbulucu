@@ -3,6 +3,7 @@ package com.hesaplarimdijital.kitapbulucu.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,35 +37,29 @@ import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelvesScreen
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.key
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import com.hesaplarimdijital.kitapbulucu.ui.search.SearchScreen
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
 import desktopkit.components.SegmentedChoice
+import desktopkit.components.ToastDuration
+import desktopkit.components.ToastResult
+import desktopkit.components.ToastState
+import desktopkit.components.rememberToastState
 import desktopkit.input.CommonShortcuts
 import desktopkit.screens.MessageScreen
 import desktopkit.screens.PageHeader
@@ -80,9 +75,9 @@ import desktopkit.shell.NavSection
 import desktopkit.shell.ShellSpec
 import desktopkit.shell.TopBarBackIcon
 import desktopkit.shell.WidthClass
+import desktopkit.shell.rememberShellContentPadding
 import desktopkit.theme.DeskMotion
 import desktopkit.theme.DeskTheme
-import com.hesaplarimdijital.kitapbulucu.ui.theme.LargeWindowText
 
 /** Top-level screens. The route names never reach the user. */
 object Routes {
@@ -175,113 +170,121 @@ fun AppShell(
     LaunchedEffect(mergeFocus) { if (mergeFocus > 0) form = FormRequest.Import }
     BackHandler(enabled = form != null) { form = null }
     val phone = widthClass == WidthClass.Compact
-    // phone sheets are drawn in the app's window, over the whole shell (SheetHost)
-    PhoneProvider(phone) {
-        SheetHost {
-            DesktopShell(
-                spec = spec,
-                widthClass = widthClass,
-                navController = navController,
-                sidebarCollapsed = prefs.sidebarCollapsed,
-                onSidebarCollapsedChange = prefs::updateSidebarCollapsed,
-                menus = AppShortcuts.registry.menus(resources, perform = onShortcut),
-                onSearch = { onShortcut(CommonShortcuts.SEARCH) },
-            ) { route, navigator ->
-                DisposableEffect(route) { onDispose { form = null } }
-                Column(Modifier.fillMaxSize()) {
-                    if (store != null && picker != null) LibraryNotices(store, picker, onMap)
-                    Box(Modifier.weight(1f)) {
-                        // the add, edit and merge forms open over the screen: slide up and fade on the phone, fade on DeX
-                        AnimatedContent(
-                            targetState = form,
-                            modifier = Modifier.fillMaxSize(),
-                            transitionSpec = { overlayTransition(phone) },
-                            contentKey = { it?.overlayKey() ?: 0 },
-                            label = "form overlay",
-                        ) { currentForm ->
-                            if (store != null && currentForm == FormRequest.Import) {
-                                OverlayPage(phone, stringResource(R.string.import_title), onClose = { form = null }) {
-                                    ImportScreen(
-                                        store,
-                                        settings,
-                                        onClose = { form = null },
-                                        initialFile = importPreview?.first,
-                                        initialTarget = importPreview?.second,
-                                    )
-                                }
-                            } else if (store != null && currentForm != null) {
-                                val editing = currentForm is FormRequest.Edit
-                                OverlayPage(phone, stringResource(if (editing) R.string.edit_title else R.string.add_title), onClose = { form = null }) {
-                                    AddBookScreen(
-                                        store,
-                                        settings,
-                                        initialTitle = (currentForm as? FormRequest.Add)?.title.orEmpty(),
-                                        focusKey = addFocus,
-                                        editing = (currentForm as? FormRequest.Edit)?.let { EditTarget(it.owner, it.book) },
-                                        actions = actions,
-                                        onEdited = { form = null },
-                                    )
-                                }
+    // "“X” silindi · Geri al" and "MKE'nin listesi güncellendi": the kit's toasts, above the bars
+    val toasts = rememberToastState()
+    if (store != null) {
+        UndoToasts(store, toasts)
+        RefreshToasts(store, toasts)
+    }
+    DesktopShell(
+        spec = spec,
+        widthClass = widthClass,
+        navController = navController,
+        sidebarCollapsed = prefs.sidebarCollapsed,
+        onSidebarCollapsedChange = prefs::updateSidebarCollapsed,
+        menus = AppShortcuts.registry.menus(resources, perform = onShortcut),
+        onSearch = { onShortcut(CommonShortcuts.SEARCH) },
+        toasts = toasts,
+        // the book dialogs and sheets over the whole shell: phone sheets are drawn in the shell's window
+        overlays = { actions?.Dialogs() },
+    ) { route, navigator ->
+        DisposableEffect(route) { onDispose { form = null } }
+        // On the phone the content fills the window and the glass bars lie over it: the notices and
+        // the screen start below the top bar, lists run on under the bottom bar (they pad their own
+        // ends) and everything else ends above it. Zero on tablet and DeX.
+        val shellPadding = rememberShellContentPadding()
+        val clearOfBars = Modifier.padding(bottom = shellPadding.calculateBottomPadding())
+        Column(Modifier.fillMaxSize().padding(top = shellPadding.calculateTopPadding())) {
+            if (store != null && picker != null) LibraryNotices(store, picker, onMap)
+            Box(Modifier.weight(1f)) {
+                // the add, edit and merge forms open over the screen: slide up and fade on the phone, fade on DeX
+                AnimatedContent(
+                    targetState = form,
+                    modifier = Modifier.fillMaxSize(),
+                    transitionSpec = { overlayTransition(phone) },
+                    contentKey = { it?.overlayKey() ?: 0 },
+                    label = "form overlay",
+                ) { currentForm ->
+                    if (store != null && currentForm == FormRequest.Import) {
+                        OverlayPage(phone, stringResource(R.string.import_title), onClose = { form = null }, clearOfBars) {
+                            ImportScreen(
+                                store,
+                                settings,
+                                onClose = { form = null },
+                                initialFile = importPreview?.first,
+                                initialTarget = importPreview?.second,
+                            )
+                        }
+                    } else if (store != null && currentForm != null) {
+                        val editing = currentForm is FormRequest.Edit
+                        OverlayPage(phone, stringResource(if (editing) R.string.edit_title else R.string.add_title), onClose = { form = null }, clearOfBars) {
+                            AddBookScreen(
+                                store,
+                                settings,
+                                initialTitle = (currentForm as? FormRequest.Add)?.title.orEmpty(),
+                                focusKey = addFocus,
+                                editing = (currentForm as? FormRequest.Edit)?.let { EditTarget(it.owner, it.book) },
+                                actions = actions,
+                                onEdited = { form = null },
+                            )
+                        }
+                    } else {
+                        when (route) {
+                            Routes.SEARCH -> if (store != null) {
+                                // the search field is on the screen; the top bar's search button would only repeat it
+                                if (phone) CompactTopBar(showSearch = false)
+                                SearchScreen(
+                                    store,
+                                    initialQuery = initialSearch,
+                                    focusKey = searchFocus,
+                                    openFirst = initialSearchOpen,
+                                    openAt = initialSearchOpenAt,
+                                    actions = actions,
+                                    onAdd = { title -> form = FormRequest.Add(title) },
+                                )
                             } else {
-                                when (route) {
-                                    Routes.SEARCH -> if (store != null) {
-                                        // the search field is on the screen; the top bar's search button would only repeat it
-                                        if (phone) CompactTopBar(showSearch = false)
-                                        SearchScreen(
-                                            store,
-                                            initialQuery = initialSearch,
-                                            focusKey = searchFocus,
-                                            openFirst = initialSearchOpen,
-                                            openAt = initialSearchOpenAt,
-                                            actions = actions,
-                                            onAdd = { title -> form = FormRequest.Add(title) },
-                                        )
-                                    } else {
-                                        MessageScreen(
-                                            title = stringResource(R.string.placeholder_search_title),
-                                            icon = DeskIcons.Search,
-                                            pageTitle = spec.item(route)?.label,
-                                            description = stringResource(R.string.placeholder_search_text),
-                                        )
-                                    }
-                                    Routes.LIBRARY -> if (store != null && actions != null) {
-                                        LibraryScreen(
-                                            store, settings, actions, spec.item(route)?.label.orEmpty(),
-                                            onAdd = { form = FormRequest.Add() },
-                                            onShelf = { owner, shelf ->
-                                                shelfTarget = ShelfTarget(owner, shelf)
-                                                navigator.navigate(Routes.SHELVES)
-                                            },
-                                        )
-                                    } else {
-                                        MessageScreen(
-                                            title = stringResource(R.string.placeholder_library_title),
-                                            icon = AppIcons.Book,
-                                            pageTitle = spec.item(route)?.label,
-                                            description = stringResource(R.string.placeholder_library_text),
-                                        )
-                                    }
-                                    Routes.SHELVES -> if (store != null && actions != null) {
-                                        ShelvesScreen(store, settings, actions, spec.item(route)?.label.orEmpty(), shelfTarget, initialAddQuery = initialShelfQuery)
-                                    } else {
-                                        MessageScreen(
-                                            title = stringResource(R.string.placeholder_shelves_title),
-                                            icon = AppIcons.Shelf,
-                                            pageTitle = spec.item(route)?.label,
-                                            description = stringResource(R.string.placeholder_shelves_text),
-                                        )
-                                    }
-                                    Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty(), store, settings, picker, onMerge = { form = FormRequest.Import })
-                                }
+                                MessageScreen(
+                                    title = stringResource(R.string.placeholder_search_title),
+                                    icon = DeskIcons.Search,
+                                    modifier = clearOfBars,
+                                    pageTitle = spec.item(route)?.label,
+                                    description = stringResource(R.string.placeholder_search_text),
+                                )
                             }
+                            Routes.LIBRARY -> if (store != null && actions != null) {
+                                LibraryScreen(
+                                    store, settings, actions, spec.item(route)?.label.orEmpty(),
+                                    onAdd = { form = FormRequest.Add() },
+                                    onShelf = { owner, shelf ->
+                                        shelfTarget = ShelfTarget(owner, shelf)
+                                        navigator.navigate(Routes.SHELVES)
+                                    },
+                                )
+                            } else {
+                                MessageScreen(
+                                    title = stringResource(R.string.placeholder_library_title),
+                                    icon = AppIcons.Book,
+                                    modifier = clearOfBars,
+                                    pageTitle = spec.item(route)?.label,
+                                    description = stringResource(R.string.placeholder_library_text),
+                                )
+                            }
+                            Routes.SHELVES -> if (store != null && actions != null) {
+                                ShelvesScreen(store, settings, actions, spec.item(route)?.label.orEmpty(), shelfTarget, initialAddQuery = initialShelfQuery)
+                            } else {
+                                MessageScreen(
+                                    title = stringResource(R.string.placeholder_shelves_title),
+                                    icon = AppIcons.Shelf,
+                                    modifier = clearOfBars,
+                                    pageTitle = spec.item(route)?.label,
+                                    description = stringResource(R.string.placeholder_shelves_text),
+                                )
+                            }
+                            Routes.SETTINGS -> SettingsScreen(prefs, spec.item(route)?.label.orEmpty(), store, settings, picker, onMerge = { form = FormRequest.Import })
                         }
                     }
-                    if (store != null) RefreshBar(store)
-                    if (store != null) UndoBar(store)
                 }
             }
-            // drawn outside the shell: the same text step on tablet and DeX as inside it
-            LargeWindowText(widthClass) { actions?.Dialogs() }
         }
     }
 }
@@ -326,121 +329,59 @@ private fun AnimatedContentTransitionScope<FormRequest?>.overlayTransition(phone
 
 /**
  * A form page. On the phone it gets its own top bar (a close button and the form's title; the
- * system back gesture closes it too) and an opaque background so the screen below never shows through.
+ * system back gesture closes it too) and an opaque background so the screen below never shows
+ * through; [clearOfBars] keeps its bottom buttons above the bottom bar.
  */
 @Composable
-private fun OverlayPage(phone: Boolean, title: String, onClose: () -> Unit, content: @Composable () -> Unit) {
+private fun OverlayPage(phone: Boolean, title: String, onClose: () -> Unit, clearOfBars: Modifier, content: @Composable () -> Unit) {
     Column(Modifier.fillMaxSize().background(DeskTheme.colors.background)) {
         if (phone) CompactTopBar(title = title, onBack = onClose, backIcon = TopBarBackIcon.Close, showSearch = false)
-        Box(Modifier.weight(1f)) { content() }
+        Box(Modifier.weight(1f).then(clearOfBars)) { content() }
     }
 }
 
 /**
- * "“X” silindi · Geri al" for a few seconds after every change; Ctrl+Z works longer. It slides in
- * from the bottom and out again; on the phone it is a rounded snackbar just above the bottom bar.
+ * "“X” silindi · Geri al" as the kit's toast after every change, with Ctrl+Z beside the button when
+ * a keyboard or mouse is there; Ctrl+Z works on after the toast has gone. On the phone it sits just
+ * above the bottom bar, on tablet and DeX at the bottom of the window.
  */
 @Composable
-private fun UndoBar(store: LibraryStore) {
+private fun UndoToasts(store: LibraryStore, toasts: ToastState) {
     val step by store.lastStep.collectAsState()
-    val phone = isPhone()
-    val colors = DeskTheme.colors
-    val dimens = DeskTheme.dimens
-    // the last step stays on screen while the bar slides out
-    val shown = remember { mutableStateOf(step) }
-    if (step != null) shown.value = step
+    val undo = stringResource(R.string.action_undo)
     LaunchedEffect(step) {
-        if (step != null) {
-            kotlinx.coroutines.delay(UNDO_BAR_MILLIS)
+        val current = step ?: return@LaunchedEffect
+        val result = toasts.show(current.label, actionLabel = undo, duration = ToastDuration.Long, shortcut = "Ctrl+Z")
+        if (result == ToastResult.ActionPerformed) {
+            store.undo()
+        } else if (store.lastStep.value === current) {
+            // timed out, closed or replaced by another toast: the bar is over, the step stays undoable
             store.dismissLastStep()
         }
     }
-    AnimatedVisibility(
-        visible = step != null,
-        enter = barEnter(),
-        exit = barExit(),
-    ) {
-        val current = shown.value ?: return@AnimatedVisibility
-        val shape = androidx.compose.foundation.shape.RoundedCornerShape(dimens.radiusControl)
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = if (phone) dimens.gapM else dimens.pagePadding, vertical = dimens.gapS)
-                .background(colors.surfaceRaised, shape)
-                .border(1.dp, colors.borderStrong, shape)
-                .padding(start = dimens.gapM, end = if (phone) dimens.gapXs else dimens.gapM, top = if (phone) 0.dp else dimens.gapS, bottom = if (phone) 0.dp else dimens.gapS),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(current.label, style = DeskTheme.type.body, color = colors.text, modifier = Modifier.weight(1f).padding(vertical = if (phone) dimens.gapS else 0.dp), maxLines = 2)
-            AdaptiveButton(stringResource(R.string.action_undo), { store.undo() }, icon = DeskIcons.Previous, phoneAccent = true)
-        }
-    }
 }
 
-private const val UNDO_BAR_MILLIS = 8_000L
-
-/** The undo and refresh bars rise from the bottom edge (the kit's emphasized curves) and sink back. */
-private fun barEnter(): EnterTransition =
-    expandVertically(tween(DeskMotion.MEDIUM_MS + 50, easing = DeskMotion.EmphasizedDecelerate), expandFrom = Alignment.Bottom) +
-        slideInVertically(tween(DeskMotion.MEDIUM_MS + 50, easing = DeskMotion.EmphasizedDecelerate)) { it } +
-        fadeIn(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.StandardDecelerate))
-
-private fun barExit(): ExitTransition =
-    shrinkVertically(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.EmphasizedAccelerate), shrinkTowards = Alignment.Bottom) +
-        slideOutVertically(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.EmphasizedAccelerate)) { it } +
-        fadeOut(tween(DeskMotion.SHORT_MS + 50, easing = DeskMotion.StandardAccelerate))
-
 /**
- * "MKE'nin listesi güncellendi" for a few seconds when a re-read finds a list changed outside
- * the app (LibraryStore.updated). Quiet: no button, nothing to answer, it slides in and out like
- * the undo bar; on the phone it sits just above the bottom bar.
+ * "MKE'nin listesi güncellendi" as a short toast when a re-read finds a list changed outside the
+ * app (LibraryStore.updated). Quiet: nothing to answer.
  */
 @Composable
-private fun RefreshBar(store: LibraryStore) {
+private fun RefreshToasts(store: LibraryStore, toasts: ToastState) {
     val updated by store.updated.collectAsState()
-    val phone = isPhone()
-    val colors = DeskTheme.colors
-    val dimens = DeskTheme.dimens
-    // the text stays on screen while the bar slides out
-    val shown = remember { mutableStateOf(updated) }
-    if (updated != null) shown.value = updated
+    val resources = LocalContext.current.resources
     LaunchedEffect(updated) {
-        if (updated != null) {
-            kotlinx.coroutines.delay(REFRESH_BAR_MILLIS)
-            store.dismissUpdated()
-        }
-    }
-    AnimatedVisibility(
-        visible = updated != null,
-        enter = barEnter(),
-        exit = barExit(),
-    ) {
-        val current = shown.value ?: return@AnimatedVisibility
-        val text = stringResource(
+        val current = updated ?: return@LaunchedEffect
+        val text = resources.getString(
             when {
                 current.owners.size > 1 -> R.string.refresh_updated_both
                 Owner.DAD in current.owners -> R.string.refresh_updated_dad
                 else -> R.string.refresh_updated_me
             },
         )
-        val shape = androidx.compose.foundation.shape.RoundedCornerShape(dimens.radiusControl)
-        Text(
-            text,
-            style = DeskTheme.type.body,
-            color = colors.text,
-            maxLines = 2,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = if (phone) dimens.gapM else dimens.pagePadding, vertical = dimens.gapS)
-                .background(colors.surfaceRaised, shape)
-                .border(1.dp, colors.border, shape)
-                .padding(horizontal = dimens.gapM, vertical = dimens.gapS)
-                .semantics { liveRegion = LiveRegionMode.Polite },
-        )
+        toasts.show(text, duration = ToastDuration.Short)
+        if (store.updated.value === current) store.dismissUpdated()
     }
 }
-
-private const val REFRESH_BAR_MILLIS = 5_000L
 
 /** A list that could not be read and stray files next to the lists, above every screen. */
 @Composable
@@ -535,7 +476,9 @@ private fun LibraryNotices(store: LibraryStore, picker: FilePicker, onMap: (Owne
 
 @Composable
 private fun SettingsScreen(prefs: DeskPreferences, title: String, store: LibraryStore?, settings: AppSettings?, picker: FilePicker?, onMerge: () -> Unit) {
-    LazyColumn(Modifier.fillMaxSize()) {
+    // on the phone the settings run on under the glass bottom bar
+    val shellPadding = rememberShellContentPadding()
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding())) {
         item { PageHeader(title) }
         if (store != null && settings != null && picker != null) item { LibrarySection(store, settings, picker) }
         if (store != null) item { DataSection(store, onMerge) }

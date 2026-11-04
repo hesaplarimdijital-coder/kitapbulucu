@@ -37,10 +37,8 @@ import com.hesaplarimdijital.kitapbulucu.text.TurkishText
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneForm
 import com.hesaplarimdijital.kitapbulucu.ui.BottomActions
 import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
-import com.hesaplarimdijital.kitapbulucu.ui.DropdownChoice
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneHeader
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneTextButton
-import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
 import com.hesaplarimdijital.kitapbulucu.xlsx.CellReferences
 import com.hesaplarimdijital.kitapbulucu.xlsx.Sheet
@@ -48,6 +46,10 @@ import desktopkit.components.DeskButton
 import desktopkit.screens.PageHeader
 import desktopkit.settings.SettingsSection
 import desktopkit.theme.DeskTheme
+import desktopkit.shell.currentWidthClass
+import desktopkit.shell.WidthClass
+import desktopkit.components.MenuEntry
+import desktopkit.components.MenuButton
 
 /**
  * Once per file whose headers the app does not recognise: which row holds the column names
@@ -62,7 +64,7 @@ fun MappingScreen(owner: Owner, store: LibraryStore, onClose: () -> Unit) {
     val colors = DeskTheme.colors
     val type = DeskTheme.type
     val dimens = DeskTheme.dimens
-    val phone = isPhone()
+    val phone = currentWidthClass() == WidthClass.Compact
     val listName = LibraryTexts.listName(resources, owner)
     val header: @Composable () -> Unit = {
         if (phone) PhoneHeader(stringResource(R.string.mapping_title), subtitle = listName, onClose = onClose)
@@ -116,7 +118,7 @@ internal fun MappingEditor(
     val colors = DeskTheme.colors
     val type = DeskTheme.type
     val dimens = DeskTheme.dimens
-    val phone = isPhone()
+    val phone = currentWidthClass() == WidthClass.Compact
     // a new sheet starts a new mapping
     var headerRow by remember(sheet) { mutableIntStateOf(initial.headerRow) }
     val columns = remember(sheet) { mutableStateMapOf<Int, BookColumn>().apply { putAll(initial.columns) } }
@@ -127,7 +129,7 @@ internal fun MappingEditor(
     val sections: @Composable () -> Unit = {
         if (sheetNames.isNotEmpty()) {
             SettingsSection(stringResource(R.string.setup_sheet)) {
-                DropdownChoice(sheetNames.map { it to it }, sheet.name, onChooseSheet, modifier = Modifier.widthIn(min = 200.dp))
+                MenuButton(sheet.name, { sheetNames.map { name -> MenuEntry.Item(name, { onChooseSheet(name) }, checked = name == sheet.name) } })
             }
         }
         SettingsSection(stringResource(R.string.mapping_header_row)) {
@@ -139,7 +141,10 @@ internal fun MappingEditor(
                     add(row to stringResource(R.string.mapping_row, row + 1, shorten(cells.take(3).joinToString(", "), 48)))
                 }
             }
-            DropdownChoice(rowOptions, headerRow, { headerRow = it }, modifier = Modifier.fillMaxWidth(), menuWidth = 360.dp)
+            MenuButton(
+                rowOptions.firstOrNull { it.first == headerRow }?.second.orEmpty(),
+                { rowOptions.map { (row, label) -> MenuEntry.Item(label, { headerRow = row }, checked = row == headerRow) } },
+            )
         }
         SettingsSection(stringResource(R.string.mapping_columns)) {
             val unused = stringResource(R.string.mapping_unused)
@@ -156,19 +161,22 @@ internal fun MappingEditor(
                     title = title,
                     samples = sampleText,
                     control = {
-                        DropdownChoice(
-                            options = roleOptions,
-                            selected = columns[column],
-                            onSelect = { role ->
-                                if (role == null) {
-                                    columns.remove(column)
-                                } else {
-                                    // a field lives in one column only
-                                    columns.filter { it.value == role && it.key != column }.keys.forEach { columns.remove(it) }
-                                    columns[column] = role
+                        val chosen = columns[column]
+                        MenuButton(
+                            roleOptions.firstOrNull { it.first == chosen }?.second.orEmpty(),
+                            {
+                                roleOptions.map { (role, label) ->
+                                    MenuEntry.Item(label, {
+                                        if (role == null) {
+                                            columns.remove(column)
+                                        } else {
+                                            // a field lives in one column only
+                                            columns.filter { it.value == role && it.key != column }.keys.forEach { columns.remove(it) }
+                                            columns[column] = role
+                                        }
+                                    }, checked = role == chosen)
                                 }
                             },
-                            modifier = Modifier.widthIn(min = 220.dp),
                         )
                     },
                 )

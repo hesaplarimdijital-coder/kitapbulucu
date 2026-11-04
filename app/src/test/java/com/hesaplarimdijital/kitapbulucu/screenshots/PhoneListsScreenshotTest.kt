@@ -1,5 +1,8 @@
 package com.hesaplarimdijital.kitapbulucu.screenshots
 
+import desktopkit.shell.rememberShellContentPadding
+import androidx.compose.foundation.layout.padding
+com.hesaplarimdijital.kitapbulucu.WindowWidth
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -25,7 +28,6 @@ import com.hesaplarimdijital.kitapbulucu.store.FileLinks
 import com.hesaplarimdijital.kitapbulucu.store.LibraryCache
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.ui.Routes
-import com.hesaplarimdijital.kitapbulucu.ui.SheetHost
 import com.hesaplarimdijital.kitapbulucu.ui.library.LibraryScreen
 import com.hesaplarimdijital.kitapbulucu.ui.rememberAppSpec
 import com.hesaplarimdijital.kitapbulucu.ui.rememberBookActions
@@ -105,9 +107,9 @@ class PhoneListsScreenshotTest {
     private fun capture(name: String, theme: ThemeMode, input: InputMode = InputMode.Touch, dialogs: Boolean = false, content: @Composable () -> Unit) {
         compose.runOnUiThread { compose.activity.actionBar?.hide() }
         compose.setContent {
-            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) { WindowWidth {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) { content() }
-            }
+            } }
         }
         compose.waitForIdle()
         val window = compose.activity.window.decorView
@@ -164,18 +166,22 @@ class PhoneListsScreenshotTest {
             val actions = rememberBookActions(store, settings) { _, _ -> }
             LaunchedEffect(route) { ShellNavigator(navController).navigate(route) }
             LaunchedEffect(placing) { placing?.let { actions.placeOnShelf(it.first, it.second) } }
-            // as in AppShell: the sheets are drawn in the app's window, over the shell
-            SheetHost {
-                DesktopShell(spec = spec, widthClass = WidthClass.Compact, navController = navController, onSearch = {}) { current, _ ->
-                    val label = spec.item(current)?.label.orEmpty()
+            // as in AppShell: the dialogs and sheets in the shell's overlays, the screen below the top bar
+            DesktopShell(
+                spec = spec, widthClass = WidthClass.Compact, navController = navController, onSearch = {},
+                overlays = {
+                    actions.Dialogs()
+                    extra()
+                },
+            ) { current, _ ->
+                val label = spec.item(current)?.label.orEmpty()
+                Box(Modifier.padding(top = rememberShellContentPadding().calculateTopPadding())) {
                     when (current) {
                         Routes.LIBRARY -> LibraryScreen(store, settings, actions, label, onAdd = {}, onShelf = { _, _ -> }, previewSelected = selectedRows, previewSheet = sheetRow)
                         Routes.SHELVES -> ShelvesScreen(store, settings, actions, label, shelf, initialAddQuery = shelfQuery)
                         else -> Unit
                     }
                 }
-                actions.Dialogs()
-                extra()
             }
         }
     }

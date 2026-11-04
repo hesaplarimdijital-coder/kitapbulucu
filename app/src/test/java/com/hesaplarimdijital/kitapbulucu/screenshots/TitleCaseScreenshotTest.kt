@@ -1,5 +1,6 @@
 package com.hesaplarimdijital.kitapbulucu.screenshots
 
+import com.hesaplarimdijital.kitapbulucu.WindowWidth
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -96,14 +97,14 @@ class TitleCaseScreenshotTest {
         val settings = AppSettings.of(context).also { it.updateMe(Owner.ME) }
         compose.runOnUiThread { compose.activity.actionBar?.hide() }
         compose.setContent {
-            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) { WindowWidth {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) {
                     val prefs = rememberDeskPreferences(accents = AppPalette.accents)
                     val navController = rememberNavController()
                     LaunchedEffect(Unit) { ShellNavigator(navController).navigate(Routes.SETTINGS) }
                     AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store))
                 }
-            }
+            } }
         }
         compose.waitForIdle()
         val button = "Düzelt…"

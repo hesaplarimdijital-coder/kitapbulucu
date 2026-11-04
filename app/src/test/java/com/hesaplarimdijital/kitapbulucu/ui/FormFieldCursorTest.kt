@@ -1,5 +1,6 @@
 package com.hesaplarimdijital.kitapbulucu.ui
 
+import com.hesaplarimdijital.kitapbulucu.WindowWidth
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,9 +34,9 @@ class FormFieldCursorTest {
     fun typingAfterAnOutsideChangeContinuesAtTheEnd() {
         var text by mutableStateOf("Ab")
         compose.setContent {
-            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = InputMode.Touch, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = InputMode.Touch, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) { WindowWidth {
                 FormField("Yazar", text, { text = it })
-            }
+            } }
         }
         val field = compose.onNode(hasSetTextAction())
         field.performSemanticsAction(SemanticsActions.RequestFocus)
@@ -48,9 +49,9 @@ class FormFieldCursorTest {
     fun typingKeepsItsOwnCursor() {
         var text by mutableStateOf("")
         compose.setContent {
-            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = InputMode.Touch, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = InputMode.Touch, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) { WindowWidth {
                 FormField("Yazar", text, { text = it })
-            }
+            } }
         }
         val field = compose.onNode(hasSetTextAction())
         field.performSemanticsAction(SemanticsActions.RequestFocus)

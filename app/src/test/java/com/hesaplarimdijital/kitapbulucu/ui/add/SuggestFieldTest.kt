@@ -1,5 +1,6 @@
 package com.hesaplarimdijital.kitapbulucu.ui.add
 
+import com.hesaplarimdijital.kitapbulucu.WindowWidth
 import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
@@ -52,9 +53,9 @@ class SuggestFieldTest {
         val store = SuggestFixtures.store(context, "suggest-ui")
         val settings = SuggestFixtures.settings(context, "suggest-ui")
         compose.setContent {
-            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, type = AppFonts.type, colors = { AppPalette.warm(it, AppPalette.Bordo) }) { WindowWidth {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) { AddBookScreen(store, settings) }
-            }
+            } }
         }
         compose.waitForIdle()
     }

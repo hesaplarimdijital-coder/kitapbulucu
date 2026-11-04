@@ -33,8 +33,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -42,7 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -65,34 +62,14 @@ import desktopkit.components.deskClickable
 import desktopkit.components.focusRing
 import desktopkit.components.stateBackground
 import desktopkit.theme.DeskTheme
+import desktopkit.shell.currentWidthClass
+import desktopkit.shell.WidthClass
 
-/**
- * Phone layout helpers. The phone is a window narrower than 600 dp (the kit's Compact class);
- * everything else keeps the tablet and DeX layouts. [AppShell] provides [LocalPhone] from the
- * shell's width class; screens drawn outside the shell (setup, column mapping) and dialogs fall
- * back to the window width.
+/*
+ * Phone layout helpers. The phone is the kit's compact width class (a window narrower than
+ * 600 dp, `currentWidthClass() == WidthClass.Compact`); everything else keeps the tablet and DeX
+ * layouts.
  */
-val LocalPhone = compositionLocalOf<Boolean?> { null }
-
-@Composable
-fun isPhone(): Boolean = LocalPhone.current ?: (LocalConfiguration.current.screenWidthDp < 600)
-
-@Composable
-fun PhoneProvider(phone: Boolean, content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalPhone provides phone, content = content)
-}
-
-/** The app's own line icons for the phone (same 16×16 grid as the kit's). */
-object PhoneIcons {
-    /** A pencil. */
-    val Pencil: ImageVector by lazy {
-        DeskIcons.build(
-            "Pencil",
-            DeskIcons.stroke("M2.5 13.5h2.8L13 5.8 10.2 3 2.5 10.7z"),
-            DeskIcons.stroke("M8.6 4.6l2.8 2.8"),
-        )
-    }
-}
 
 /**
  * A flat button for phones: no border, at least 48 dp tall, the label in the accent colour when
@@ -154,7 +131,7 @@ fun AdaptiveButton(
     enabled: Boolean = true,
     phoneAccent: Boolean = primary,
 ) {
-    if (isPhone()) {
+    if (currentWidthClass() == WidthClass.Compact) {
         PhoneTextButton(text, onClick, modifier, icon = icon, primary = phoneAccent, enabled = enabled)
     } else {
         DeskButton(text, onClick, modifier, icon = icon, primary = primary, enabled = enabled)
@@ -336,7 +313,7 @@ fun PhoneEmptyState(
  */
 @Composable
 fun SettingLine(title: String, modifier: Modifier = Modifier, subtitle: String? = null, control: @Composable () -> Unit) {
-    if (!isPhone()) {
+    if (currentWidthClass() != WidthClass.Compact) {
         SettingRow(title, modifier, subtitle, control)
         return
     }

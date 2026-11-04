@@ -2,7 +2,6 @@ package com.hesaplarimdijital.kitapbulucu
 
 import android.content.pm.ActivityInfo
 import android.graphics.Point
-import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.KeyEvent
@@ -121,16 +120,10 @@ class MainActivity : ComponentActivity() {
     }
 
     /** Size of the whole display, not of the (possibly resized) window. */
-    private fun screenSizePx(): Point =
-        if (Build.VERSION.SDK_INT >= 30) {
-            val bounds = windowManager.maximumWindowMetrics.bounds
-            Point(bounds.width(), bounds.height())
-        } else {
-            Point().also {
-                @Suppress("DEPRECATION")
-                windowManager.defaultDisplay.getRealSize(it)
-            }
-        }
+    private fun screenSizePx(): Point {
+        val bounds = windowManager.maximumWindowMetrics.bounds
+        return Point(bounds.width(), bounds.height())
+    }
 }
 
 /** A device whose display is narrower than 600 dp on its short side is a phone. */

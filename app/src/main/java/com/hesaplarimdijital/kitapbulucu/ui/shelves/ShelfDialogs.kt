@@ -22,7 +22,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
 import com.hesaplarimdijital.kitapbulucu.ui.AppSheet
-import com.hesaplarimdijital.kitapbulucu.ui.isCompactLayout
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -52,50 +51,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.hesaplarimdijital.kitapbulucu.R
 import com.hesaplarimdijital.kitapbulucu.model.ShelfGroup
 import com.hesaplarimdijital.kitapbulucu.model.Shelves
 import com.hesaplarimdijital.kitapbulucu.text.TurkishText
 import com.hesaplarimdijital.kitapbulucu.ui.FormField
 import desktopkit.components.DeskButton
+import desktopkit.components.DeskDialog
 import desktopkit.components.DeskIcons
 import desktopkit.components.collectState
 import desktopkit.components.deskClickable
 import desktopkit.components.focusRing
 import desktopkit.components.stateBackground
 import desktopkit.theme.DeskTheme
+import desktopkit.shell.currentWidthClass
+import desktopkit.shell.WidthClass
 
 private const val MAX_CODE = 16
 private const val MAX_NOTE = 60
-
-/** The frame of the shelf dialogs, in the look of [com.hesaplarimdijital.kitapbulucu.ui.ConfirmDialog]; Esc cancels. */
-@Composable
-private fun ShelfDialogFrame(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    val colors = DeskTheme.colors
-    val dimens = DeskTheme.dimens
-    val shape = RoundedCornerShape(dimens.radiusCard)
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            Modifier
-                .widthIn(max = 480.dp)
-                .fillMaxWidth()
-                .background(colors.surfaceRaised, shape)
-                .border(1.dp, colors.borderStrong, shape)
-                .onPreviewKeyEvent { event ->
-                    if (event.type == KeyEventType.KeyDown && event.key == Key.Escape) {
-                        onDismiss()
-                        true
-                    } else {
-                        false
-                    }
-                }
-                .padding(dimens.gapL),
-            verticalArrangement = Arrangement.spacedBy(dimens.gapM),
-            content = content,
-        )
-    }
-}
 
 /**
  * A new shelf or a new name for one (S-33): code and an optional description. Enter saves, Esc
@@ -129,7 +102,7 @@ fun ShelfFormDialog(
             onSave(Shelves.clean(code), Shelves.clean(note))
         }
     }
-    if (isCompactLayout()) {
+    if (currentWidthClass() == WidthClass.Compact) {
         // phone: a bottom sheet, the fields over the full width and a wide "Kaydet"
         AppSheet(onDismiss = onDismiss, title = title) { close ->
             val saveAndClose = {
@@ -142,7 +115,7 @@ fun ShelfFormDialog(
                 }
             }
             Column(
-                Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(horizontal = dimens.pagePadding).padding(top = dimens.gapS, bottom = dimens.gapS),
+                Modifier.padding(horizontal = dimens.pagePadding).padding(top = dimens.gapS, bottom = dimens.gapS),
                 verticalArrangement = Arrangement.spacedBy(dimens.gapM),
             ) {
                 if (text != null) Text(text, style = DeskTheme.type.body, color = colors.textSecondary)
@@ -161,19 +134,24 @@ fun ShelfFormDialog(
         }
         return
     }
-    ShelfDialogFrame(onDismiss) {
-        Text(title, style = DeskTheme.type.headline, color = colors.text)
-        if (text != null) Text(text, style = DeskTheme.type.body, color = colors.textSecondary)
-        FormField(
-            stringResource(R.string.shelves_code), code, { code = it.take(MAX_CODE); problem = null },
-            modifier = Modifier.fillMaxWidth(), focusRequester = focus,
-            capitalization = KeyboardCapitalization.Characters, monospace = true, error = problem != null, onEnter = save,
-        )
-        NameProblemText(problem, code)
-        FormField(stringResource(R.string.shelves_note), note, { note = it.take(MAX_NOTE) }, modifier = Modifier.fillMaxWidth(), onEnter = save)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.gapS), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
-            DeskButton(stringResource(R.string.shelves_save), save, icon = DeskIcons.Check, primary = true)
+    DeskDialog(
+        onDismiss = onDismiss,
+        title = title,
+        maxWidth = 480.dp,
+        actions = {
             DeskButton(stringResource(R.string.action_cancel), onDismiss)
+            DeskButton(stringResource(R.string.shelves_save), save, icon = DeskIcons.Check, primary = true)
+        },
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(dimens.gapM)) {
+            if (text != null) Text(text, style = DeskTheme.type.body, color = colors.textSecondary)
+            FormField(
+                stringResource(R.string.shelves_code), code, { code = it.take(MAX_CODE); problem = null },
+                modifier = Modifier.fillMaxWidth(), focusRequester = focus,
+                capitalization = KeyboardCapitalization.Characters, monospace = true, error = problem != null, onEnter = save,
+            )
+            NameProblemText(problem, code)
+            FormField(stringResource(R.string.shelves_note), note, { note = it.take(MAX_NOTE) }, modifier = Modifier.fillMaxWidth(), onEnter = save)
         }
     }
     if (focusOnOpen) LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
@@ -217,46 +195,51 @@ fun ShelfPickerDialog(
         onDismiss()
         onPick(shelf)
     }
-    if (isCompactLayout()) {
+    if (currentWidthClass() == WidthClass.Compact) {
         PhonePicker(title, subtitle, shelves, filter, { filter = it.take(MAX_CODE) }, shown, currentKey, onPick, onNew, onDismiss)
         return
     }
-    ShelfDialogFrame(onDismiss) {
-        Text(title, style = DeskTheme.type.headline, color = colors.text)
-        Text(subtitle, style = DeskTheme.type.body, color = colors.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        FormField(
-            stringResource(R.string.picker_filter), filter, { filter = it.take(MAX_CODE); active = 0 },
-            modifier = Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
-                if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                when (event.key) {
-                    Key.DirectionDown -> { if (shown.isNotEmpty()) active = (active + 1).coerceAtMost(shown.size - 1); true }
-                    Key.DirectionUp -> { active = (active - 1).coerceAtLeast(0); true }
-                    else -> false
-                }
-            },
-            focusRequester = focus, capitalization = KeyboardCapitalization.Characters, monospace = true,
-            onEnter = {
-                val chosen = shown.getOrNull(active)
-                when {
-                    chosen != null -> pick(chosen.shelf)
-                    filter.isNotBlank() -> onNew(filter)
-                    else -> Unit
-                }
-            },
-        )
-        when {
-            shelves.isEmpty() -> Text(stringResource(R.string.picker_none), style = DeskTheme.type.body, color = colors.textSecondary)
-            shown.isEmpty() -> Text(stringResource(R.string.picker_no_match, Shelves.clean(filter)), style = DeskTheme.type.body, color = colors.textSecondary)
-            // a plain scrolling column: a list has tens of shelves, not thousands
-            else -> Column(Modifier.fillMaxWidth().heightIn(max = 300.dp).verticalScroll(scroll)) {
-                shown.forEachIndexed { index, group ->
-                    PickerRow(group, highlighted = index == active, isCurrent = Shelves.key(group.shelf) == currentKey) { pick(group.shelf) }
+    DeskDialog(
+        onDismiss = onDismiss,
+        title = title,
+        maxWidth = 480.dp,
+        actions = {
+            DeskButton(stringResource(R.string.action_cancel), onDismiss)
+            DeskButton(stringResource(R.string.shelves_new), { onNew(filter) }, icon = DeskIcons.Plus)
+        },
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(dimens.gapM)) {
+            Text(subtitle, style = DeskTheme.type.body, color = colors.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            FormField(
+                stringResource(R.string.picker_filter), filter, { filter = it.take(MAX_CODE); active = 0 },
+                modifier = Modifier.fillMaxWidth().onPreviewKeyEvent { event ->
+                    if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                    when (event.key) {
+                        Key.DirectionDown -> { if (shown.isNotEmpty()) active = (active + 1).coerceAtMost(shown.size - 1); true }
+                        Key.DirectionUp -> { active = (active - 1).coerceAtLeast(0); true }
+                        else -> false
+                    }
+                },
+                focusRequester = focus, capitalization = KeyboardCapitalization.Characters, monospace = true,
+                onEnter = {
+                    val chosen = shown.getOrNull(active)
+                    when {
+                        chosen != null -> pick(chosen.shelf)
+                        filter.isNotBlank() -> onNew(filter)
+                        else -> Unit
+                    }
+                },
+            )
+            when {
+                shelves.isEmpty() -> Text(stringResource(R.string.picker_none), style = DeskTheme.type.body, color = colors.textSecondary)
+                shown.isEmpty() -> Text(stringResource(R.string.picker_no_match, Shelves.clean(filter)), style = DeskTheme.type.body, color = colors.textSecondary)
+                // a plain scrolling column: a list has tens of shelves, not thousands
+                else -> Column(Modifier.fillMaxWidth().heightIn(max = 300.dp).verticalScroll(scroll)) {
+                    shown.forEachIndexed { index, group ->
+                        PickerRow(group, highlighted = index == active, isCurrent = Shelves.key(group.shelf) == currentKey) { pick(group.shelf) }
+                    }
                 }
             }
-        }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(dimens.gapS), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
-            DeskButton(stringResource(R.string.shelves_new), { onNew(filter) }, icon = DeskIcons.Plus)
-            DeskButton(stringResource(R.string.action_cancel), onDismiss)
         }
     }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
@@ -308,7 +291,7 @@ private fun PhonePicker(
                 }
             },
         )
-        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+        Column {
             if (!exact) {
                 PhonePickerRow(
                     code = null,

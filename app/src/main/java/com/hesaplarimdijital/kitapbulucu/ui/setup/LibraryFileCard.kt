@@ -22,16 +22,18 @@ import com.hesaplarimdijital.kitapbulucu.model.Owner
 import com.hesaplarimdijital.kitapbulucu.store.LibraryState
 import com.hesaplarimdijital.kitapbulucu.store.LoadFailure
 import com.hesaplarimdijital.kitapbulucu.store.LoadStatus
-import com.hesaplarimdijital.kitapbulucu.ui.DropdownChoice
 import com.hesaplarimdijital.kitapbulucu.ui.FilePicker
 import com.hesaplarimdijital.kitapbulucu.ui.ButtonRow
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
 import com.hesaplarimdijital.kitapbulucu.ui.SettingLine
-import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
 import desktopkit.settings.SettingsSection
 import desktopkit.theme.DeskTheme
+import desktopkit.shell.currentWidthClass
+import desktopkit.shell.WidthClass
+import desktopkit.components.MenuEntry
+import desktopkit.components.MenuButton
 
 /**
  * One library file in setup: whose it is, which file is linked and how reading it went, with
@@ -85,12 +87,7 @@ fun LibraryFileCard(
         }
         if (state.sheetNames.isNotEmpty() && selectedSheet != null) {
             SettingLine(stringResource(R.string.setup_sheet)) {
-                DropdownChoice(
-                    options = state.sheetNames.map { it to it },
-                    selected = selectedSheet,
-                    onSelect = onChooseSheet,
-                    modifier = Modifier.widthIn(min = 160.dp),
-                )
+                MenuButton(selectedSheet, { state.sheetNames.map { name -> MenuEntry.Item(name, { onChooseSheet(name) }, checked = name == selectedSheet) } })
             }
         }
         Spacer(Modifier.height(dimens.gapS))
@@ -108,7 +105,7 @@ fun LibraryFileCard(
             }
             DeskButton(stringResource(R.string.setup_create), { picker.create(owner) }, icon = DeskIcons.Plus)
         }
-        if (isPhone()) {
+        if (currentWidthClass() == WidthClass.Compact) {
             // one line when the buttons fit, one under the other when they do not
             ButtonRow(endAligned = false, reverseInRow = false, content = buttons)
         } else {

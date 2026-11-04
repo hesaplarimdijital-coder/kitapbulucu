@@ -23,7 +23,8 @@ import desktopkit.theme.grow
  * Text sizes: the kit's shell (0.2.0) sets every style 1 sp larger on tablet and DeX windows
  * (`DesktopShell(largeWindowTextStep = 1f)`), which is what the user asked for on DeX; the app
  * adds nothing of its own inside the shell. Screens drawn outside the shell (setup, column
- * mapping, the book dialogs) get the same step from [LargeWindowText].
+ * mapping) get the same step from [LargeWindowText]; the book dialogs are drawn in the shell's
+ * overlays and take its step.
  */
 object AppFonts {
     val Literata = FontFamily(

@@ -26,12 +26,13 @@ import com.hesaplarimdijital.kitapbulucu.ui.PhoneForm
 import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
 import com.hesaplarimdijital.kitapbulucu.ui.FilePicker
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneHeader
-import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import desktopkit.components.DeskButton
 import desktopkit.components.SegmentedChoice
 import desktopkit.screens.PageHeader
 import desktopkit.settings.SettingsSection
 import desktopkit.theme.DeskTheme
+import desktopkit.shell.currentWidthClass
+import desktopkit.shell.WidthClass
 
 /**
  * First start: whose device this is, then the two files (chosen or created). [onDone] once this
@@ -51,7 +52,7 @@ fun SetupScreen(
     val type = DeskTheme.type
     val dimens = DeskTheme.dimens
     val me = settings.me
-    val phone = isPhone()
+    val phone = currentWidthClass() == WidthClass.Compact
     val ownReady = me != null && states.getValue(me).status == LoadStatus.READY
     val order = if (me == Owner.ME) listOf(Owner.ME, Owner.DAD) else listOf(Owner.DAD, Owner.ME)
     val body: @Composable () -> Unit = {

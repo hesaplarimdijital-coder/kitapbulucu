@@ -86,13 +86,9 @@ import com.hesaplarimdijital.kitapbulucu.ui.AppIcons
 import com.hesaplarimdijital.kitapbulucu.ui.AppSheet
 import com.hesaplarimdijital.kitapbulucu.ui.BookActions
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
-import com.hesaplarimdijital.kitapbulucu.ui.SelectionMark
-import com.hesaplarimdijital.kitapbulucu.ui.SheetAction
-import com.hesaplarimdijital.kitapbulucu.ui.SheetChoice
 import com.hesaplarimdijital.kitapbulucu.ui.TouchIcons
 import com.hesaplarimdijital.kitapbulucu.ui.TouchSelection
 import com.hesaplarimdijital.kitapbulucu.ui.WideSegmentedChoice
-import com.hesaplarimdijital.kitapbulucu.ui.isCompactLayout
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
 import desktopkit.components.ColumnWidth
 import desktopkit.components.DenseTable
@@ -115,6 +111,19 @@ import desktopkit.theme.DeskMotion
 import desktopkit.shell.WidthClass
 import java.text.Collator
 import java.util.Locale
+import desktopkit.shell.currentWidthClass
+import com.hesaplarimdijital.kitapbulucu.ui.fabPadding
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.lazy.itemsIndexed
+import desktopkit.theme.LocalMotionTier
+import desktopkit.shell.rememberShellContentPadding
+import desktopkit.components.rememberListAppear
+import desktopkit.components.listAppear
+import desktopkit.components.animatedStateBackground
+import desktopkit.components.DeskListRow
+import desktopkit.components.DeskCheckbox
+import desktopkit.components.MoreSheet
+import desktopkit.components.ActionGroup
 
 /** One row of a library table: the book and where it sits in the file, for a stable key. */
 class LibraryRow(val owner: Owner, val position: Int, val book: Book)
@@ -148,7 +157,7 @@ fun LibraryScreen(
     val state = states.getValue(owner)
     val now = System.currentTimeMillis()
 
-    if (isCompactLayout()) {
+    if (currentWidthClass() == WidthClass.Compact) {
         PhoneLibrary(state, owner, { owner = it }, actions, title, onAdd, onShelf, previewSelected, previewSheet)
         return
     }
@@ -281,7 +290,7 @@ private fun PhoneLibrary(
                 !state.isLinked -> Message(stringResource(R.string.library_not_linked))
                 books == null -> Message(LibraryTexts.status(resources, state))
                 books.isEmpty() -> Message(stringResource(R.string.library_empty))
-                else -> PhoneBookList(sorted, list, actions, onShelf, listState, Modifier.fillMaxSize())
+                else -> PhoneBookList(sorted, list, actions, onShelf, listState, Modifier.fillMaxSize(), appearKey = owner)
             }
             AnimatedFab(
                 visible = !list.selection.active && state.isLinked,
@@ -289,20 +298,22 @@ private fun PhoneLibrary(
                 icon = DeskIcons.Plus,
                 onClick = onAdd,
                 expanded = fabExpanded,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(dimens.gapL),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(fabPadding()),
             )
         }
     }
-    if (sorting) {
-        AppSheet(onDismiss = { sorting = false }, title = stringResource(R.string.touchlist_sort)) { close ->
-            // scrolls when the window is short (landscape, split screen)
-            Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
-                PhoneSort.entries.forEach { option ->
-                    SheetChoice(sortLabel(option), selected = option == sort) { close { sortName = option.name } }
-                }
-            }
-        }
-    }
+    // the kit's "⋯" sheet: the orders, the chosen one ticked
+    val sortLabels = PhoneSort.entries.associateWith { sortLabel(it) }
+    MoreSheet(
+        visible = sorting,
+        onDismiss = { sorting = false },
+        title = stringResource(R.string.touchlist_sort),
+        groups = listOf(
+            ActionGroup(null, PhoneSort.entries.map { option ->
+                MenuEntry.Item(sortLabels.getValue(option), { sortName = option.name }, icon = if (option == sort) DeskIcons.Check else null)
+            }),
+        ),
+    )
 }
 
 @Composable
@@ -364,6 +375,8 @@ fun PhoneBookList(
     header: (LazyListScope.() -> Unit)? = null,
     /** False on an open shelf, where every row would repeat the shelf's code. */
     showShelf: Boolean = true,
+    /** The rows come in one after the other when this changes (another list, another shelf). */
+    appearKey: Any? = null,
 ) {
     // Rows are not animated (no animateItem): a list holds thousands of books, and a new sort
     // order moving every row at once looked jerky on a phone. The list simply shows the new order.
@@ -373,12 +386,16 @@ fun PhoneBookList(
         if (first[0]) first[0] = false else state.selection = TouchSelection.None
     }
     val selection = state.selection
-    LazyColumn(modifier, state = listState, contentPadding = PaddingValues(bottom = 96.dp)) {
+    // the rows run on under the glass bottom bar; the last ones stay clear of the floating button
+    val shellPadding = rememberShellContentPadding()
+    val appear = rememberListAppear(appearKey)
+    LazyColumn(modifier, state = listState, contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding() + 96.dp)) {
         header?.invoke(this)
-        items(rows, key = ::rowKey, contentType = { "book" }) { row ->
+        itemsIndexed(rows, key = { _, row -> rowKey(row) }, contentType = { _, _ -> "book" }) { index, row ->
             val key = rowKey(row)
             PhoneBookRow(
                 row,
+                modifier = Modifier.listAppear(appear, index),
                 selected = key in selection,
                 selecting = selection.active,
                 showShelf = showShelf,
@@ -411,19 +428,12 @@ private fun PhoneBookRow(
     val interaction = remember { MutableInteractionSource() }
     val state = interaction.collectState()
     val book = row.book
-    val background by animateColorAsState(
-        when {
-            state.pressed -> colors.pressed
-            selected -> colors.selection
-            state.hovered -> colors.hover
-            else -> Color.Transparent
-        },
-        DeskMotion.color(),
-        label = "rowBackground",
-    )
-    val main by animateColorAsState(if (selected) colors.onSelection else colors.text, DeskMotion.color(), label = "rowText")
-    val second by animateColorAsState(if (selected) colors.onSelection else colors.textSecondary, DeskMotion.color(), label = "rowSecond")
-    val shelfColor by animateColorAsState(if (selected) colors.onSelection else colors.accentText, DeskMotion.color(), label = "rowShelf")
+    // the kit's colours: instant under a mouse, eased on touch
+    val background by animatedStateBackground(state, selected)
+    val fade = DeskMotion.fade(LocalMotionTier.current, DeskMotion.color<Color>())
+    val main by animateColorAsState(if (selected) colors.onSelection else colors.text, fade, label = "rowText")
+    val second by animateColorAsState(if (selected) colors.onSelection else colors.textSecondary, fade, label = "rowSecond")
+    val shelfColor by animateColorAsState(if (selected) colors.onSelection else colors.accentText, fade, label = "rowShelf")
     Column(modifier.fillMaxWidth()) {
         Row(
             Modifier
@@ -462,7 +472,8 @@ private fun PhoneBookRow(
                     shrinkHorizontally(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.EmphasizedAccelerate)),
             ) {
                 Row {
-                    SelectionMark(selected)
+                    // the kit's check box, as in its list rows' selection mode
+                    DeskCheckbox(selected, onCheckedChange = null)
                     Spacer(Modifier.width(dimens.gapL))
                 }
             }
@@ -544,7 +555,7 @@ private fun BookSheet(row: LibraryRow, actions: BookActions, onShelf: ((Owner, S
     val dimens = DeskTheme.dimens
     val book = row.book
     AppSheet(onDismiss = onDismiss) { close ->
-        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+        Column {
             Column(
                 Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding).padding(top = dimens.gapXs, bottom = dimens.gapM),
                 verticalArrangement = Arrangement.spacedBy(dimens.gapXs),
@@ -583,20 +594,27 @@ private fun BookSheet(row: LibraryRow, actions: BookActions, onShelf: ((Owner, S
                 }
             }
             HorizontalRule()
-            SheetAction(stringResource(R.string.action_edit), TouchIcons.Pencil, { close { actions.edit(row.owner, book) } })
-            SheetAction(stringResource(R.string.action_place), AppIcons.Shelf, { close { actions.placeOnShelf(row.owner, listOf(book)) } })
-            SheetAction(stringResource(R.string.action_move), TouchIcons.Swap, { close { actions.move(row.owner, book) } })
+            // the actions as the kit's list rows: icon and label, the whole line tappable
+            SheetRow(stringResource(R.string.action_edit), TouchIcons.Pencil) { close { actions.edit(row.owner, book) } }
+            SheetRow(stringResource(R.string.action_place), AppIcons.Shelf) { close { actions.placeOnShelf(row.owner, listOf(book)) } }
+            SheetRow(stringResource(R.string.action_move), TouchIcons.Swap) { close { actions.move(row.owner, book) } }
             if (onShelf != null && book.shelf.isNotBlank()) {
-                SheetAction(stringResource(R.string.action_shelf_books), DeskIcons.ListView, { close { onShelf(row.owner, book.shelf) } })
+                SheetRow(stringResource(R.string.action_shelf_books), DeskIcons.ListView) { close { onShelf(row.owner, book.shelf) } }
             }
-            SheetAction(stringResource(R.string.action_copy), TouchIcons.Copy, {
+            SheetRow(stringResource(R.string.action_copy), TouchIcons.Copy) {
                 clipboard.setText(AnnotatedString(copyText(resources, row)))
                 close {}
-            })
+            }
             HorizontalRule()
-            SheetAction(stringResource(R.string.action_delete), DeskIcons.Delete, { close { actions.delete(row.owner, book) } }, destructive = true)
+            SheetRow(stringResource(R.string.action_delete), DeskIcons.Delete, tint = colors.danger) { close { actions.delete(row.owner, book) } }
         }
     }
+}
+
+/** One action of the book's sheet: the kit's list row with an icon, no divider. */
+@Composable
+private fun SheetRow(label: String, icon: ImageVector, tint: Color = DeskTheme.colors.textSecondary, onClick: () -> Unit) {
+    DeskListRow(label, leading = icon, leadingTint = tint, divider = false, onClick = onClick)
 }
 
 @Composable

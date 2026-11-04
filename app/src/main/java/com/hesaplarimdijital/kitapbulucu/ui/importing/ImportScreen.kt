@@ -54,16 +54,13 @@ import com.hesaplarimdijital.kitapbulucu.ui.isKeyboardOpen
 import com.hesaplarimdijital.kitapbulucu.ui.BottomActions
 import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
 import com.hesaplarimdijital.kitapbulucu.ui.ButtonRow
-import com.hesaplarimdijital.kitapbulucu.ui.CheckRow
 import com.hesaplarimdijital.kitapbulucu.ui.ConfirmDialog
 import com.hesaplarimdijital.kitapbulucu.ui.DialogAction
-import com.hesaplarimdijital.kitapbulucu.ui.DropdownChoice
 import com.hesaplarimdijital.kitapbulucu.ui.FilePicker
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
 import com.hesaplarimdijital.kitapbulucu.ui.NoticeCard
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneTextButton
 import com.hesaplarimdijital.kitapbulucu.ui.SettingLine
-import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import com.hesaplarimdijital.kitapbulucu.ui.setup.MappingEditor
 import com.hesaplarimdijital.kitapbulucu.xlsx.SpreadsheetException
 import com.hesaplarimdijital.kitapbulucu.xlsx.SpreadsheetReader
@@ -76,6 +73,11 @@ import desktopkit.theme.DeskTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import desktopkit.shell.currentWidthClass
+import desktopkit.shell.WidthClass
+import desktopkit.components.MenuEntry
+import desktopkit.components.MenuButton
+import desktopkit.components.CheckboxRow
 
 /** A picked file as read: its name and sheets. */
 class PickedFile(val name: String, val workbook: Workbook)
@@ -235,7 +237,7 @@ private fun Start(
             }
         }
     }
-    if (isPhone()) {
+    if (currentWidthClass() == WidthClass.Compact) {
         // phone: "Dosya seç…" is the main button at the bottom
         PhoneForm(
             bar = {
@@ -306,7 +308,7 @@ private fun Review(
     val colors = DeskTheme.colors
     val type = DeskTheme.type
     val dimens = DeskTheme.dimens
-    val phone = isPhone()
+    val phone = currentWidthClass() == WidthClass.Compact
     var plan by remember { mutableStateOf<MergePlan.Plan?>(null) }
     // the plan is worked out once per file, sheet and list; a list that changes meanwhile is
     // picked up when the user returns, not while they are ticking rows
@@ -363,7 +365,7 @@ private fun Review(
                     }
                     if (sheetNames.isNotEmpty()) {
                         SettingLine(stringResource(R.string.setup_sheet)) {
-                            DropdownChoice(sheetNames.map { it to it }, sheetName, onSheet, modifier = Modifier.widthIn(min = 200.dp))
+                            MenuButton(sheetName, { sheetNames.map { name -> MenuEntry.Item(name, { onSheet(name) }, checked = name == sheetName) } })
                         }
                     }
                     if (phone) {
@@ -402,9 +404,11 @@ private fun Review(
                         }
                         items(current.added.size, key = { "a$it" }) { index ->
                             val book = current.added[index]
-                            CheckRow(index !in addedOff, { on -> addedOff = if (on) addedOff - index else addedOff + index }, Modifier.padding(horizontal = dimens.pagePadding - dimens.gapS)) {
-                                BookLine(book)
-                            }
+                            CheckboxRow(
+                                book.title, index !in addedOff, { on -> addedOff = if (on) addedOff - index else addedOff + index },
+                                Modifier.padding(horizontal = dimens.pagePadding - dimens.gapS),
+                                subtitle = ImportTexts.details(resources, book).ifEmpty { null },
+                            )
                         }
                     }
                     if (current.changed.isNotEmpty()) {
@@ -415,20 +419,13 @@ private fun Review(
                         }
                         items(current.changed.size, key = { "c$it" }) { index ->
                             val change = current.changed[index]
-                            CheckRow(index !in changedOff, { on -> changedOff = if (on) changedOff - index else changedOff + index }, Modifier.padding(horizontal = dimens.pagePadding - dimens.gapS)) {
-                                Column {
-                                    BookLine(change.existing)
-                                    for (field in change.fields) {
-                                        Text(
-                                            ImportTexts.field(resources, field),
-                                            style = type.labelSmall,
-                                            color = colors.textSecondary,
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
-                                    }
-                                }
-                            }
+                            // the changed fields one per line under the book, as the subtitle
+                            val details = ImportTexts.details(resources, change.existing)
+                            CheckboxRow(
+                                change.existing.title, index !in changedOff, { on -> changedOff = if (on) changedOff - index else changedOff + index },
+                                Modifier.padding(horizontal = dimens.pagePadding - dimens.gapS),
+                                subtitle = (listOf(details).filter { it.isNotEmpty() } + change.fields.map { ImportTexts.field(resources, it) }).joinToString("\n").ifEmpty { null },
+                            )
                         }
                     }
                     if (current.missing.isNotEmpty()) {
@@ -439,9 +436,11 @@ private fun Review(
                         }
                         items(current.missing.size, key = { "m$it" }) { index ->
                             val book = current.missing[index]
-                            CheckRow(index in missingOn, { on -> missingOn = if (on) missingOn + index else missingOn - index }, Modifier.padding(horizontal = dimens.pagePadding - dimens.gapS)) {
-                                BookLine(book)
-                            }
+                            CheckboxRow(
+                                book.title, index in missingOn, { on -> missingOn = if (on) missingOn + index else missingOn - index },
+                                Modifier.padding(horizontal = dimens.pagePadding - dimens.gapS),
+                                subtitle = ImportTexts.details(resources, book).ifEmpty { null },
+                            )
                         }
                     }
                     item { Spacer(Modifier.height(dimens.gapL)) }
@@ -502,18 +501,6 @@ private fun SelectAll(selected: Int, total: Int, onSet: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun BookLine(book: Book) {
-    val colors = DeskTheme.colors
-    val type = DeskTheme.type
-    val resources = LocalContext.current.resources
-    Column {
-        Text(book.title, style = type.bodyStrong, color = colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        val details = ImportTexts.details(resources, book)
-        if (details.isNotEmpty()) Text(details, style = type.labelSmall, color = colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
-}
-
-@Composable
 private fun Question(pair: MergePlan.Ambiguous, answer: Boolean?, onAnswer: (Boolean) -> Unit) {
     val colors = DeskTheme.colors
     val type = DeskTheme.type
@@ -543,7 +530,7 @@ private fun Done(title: String, result: MergePlan.Result, onClose: () -> Unit) {
         Text(ImportTexts.result(resources, result), style = DeskTheme.type.title, color = DeskTheme.colors.text)
         Text(stringResource(R.string.import_done_text), style = DeskTheme.type.body, color = DeskTheme.colors.textSecondary)
     }
-    if (isPhone()) {
+    if (currentWidthClass() == WidthClass.Compact) {
         PhoneForm(bar = { BottomPrimaryButton(stringResource(R.string.import_close), onClose, Modifier.focusRequester(focus)) }) {
             Column(Modifier.padding(horizontal = dimens.pagePadding, vertical = dimens.gapM), verticalArrangement = Arrangement.spacedBy(dimens.gapM)) { texts() }
         }

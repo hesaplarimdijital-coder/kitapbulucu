@@ -1,5 +1,6 @@
 package com.hesaplarimdijital.kitapbulucu.ui.search
 
+import com.hesaplarimdijital.kitapbulucu.WindowWidth
 import android.content.Context
 import android.net.Uri
 import androidx.activity.ComponentActivity
@@ -62,9 +63,9 @@ class SearchInPlaceTest {
     fun aClickedRowOpensInPlace() {
         val store = store()
         compose.setContent {
-            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = InputMode.Pointer, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = ThemeMode.Light, accent = AppPalette.Bordo, inputMode = InputMode.Pointer, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) { WindowWidth {
                 SearchScreen(store, initialQuery = "defter")
-            }
+            } }
         }
         compose.waitUntil(5_000) { store.index.value != null }
         compose.waitForIdle()

@@ -44,62 +44,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import desktopkit.components.DeskIcons
-import desktopkit.components.MenuEntry
-import desktopkit.components.MenuPopup
+import desktopkit.components.DeskButton
+import desktopkit.components.DeskDialog
 import desktopkit.components.collectState
 import desktopkit.components.deskClickable
 import desktopkit.components.focusRing
 import desktopkit.components.stateBackground
 import desktopkit.theme.DeskTheme
-
-/**
- * A drop-down built from the kit's parts: a field that shows the chosen option and opens the
- * kit's menu below it. Works with mouse, touch and keyboard (Tab to focus, Enter to open).
- */
-@Composable
-fun <T> DropdownChoice(
-    options: List<Pair<T, String>>,
-    selected: T,
-    onSelect: (T) -> Unit,
-    modifier: Modifier = Modifier,
-    menuWidth: Dp = 260.dp,
-) {
-    var open by remember { mutableStateOf(false) }
-    var height by remember { mutableIntStateOf(0) }
-    val interaction = remember { MutableInteractionSource() }
-    val state = interaction.collectState()
-    val colors = DeskTheme.colors
-    val dimens = DeskTheme.dimens
-    val shape = RoundedCornerShape(dimens.radiusControl)
-    val label = options.firstOrNull { it.first == selected }?.second.orEmpty()
-    val phone = isPhone()
-    Box(modifier) {
-        Row(
-            modifier = Modifier
-                .then(if (phone) Modifier.fillMaxWidth() else Modifier)
-                .defaultMinSize(minHeight = dimens.minTarget.coerceAtLeast(dimens.controlHeight))
-                .onSizeChanged { height = it.height }
-                .focusRing(state, shape)
-                .background(stateBackground(state, rest = colors.surfaceRaised), shape)
-                .border(1.dp, colors.borderStrong, shape)
-                .deskClickable(interaction, { open = true }, role = Role.DropdownList)
-                .padding(horizontal = dimens.gapM),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(label, style = DeskTheme.type.label, color = colors.text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = phone))
-            Spacer(Modifier.width(dimens.gapS))
-            Icon(DeskIcons.ChevronDown, contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(dimens.icon))
-        }
-        MenuPopup(
-            visible = open,
-            onDismiss = { open = false },
-            entries = options.map { (value, text) -> MenuEntry.Item(text, { onSelect(value) }, checked = value == selected) },
-            offset = IntOffset(0, height),
-            minWidth = menuWidth,
-        )
-    }
-}
+import desktopkit.shell.currentWidthClass
+import desktopkit.shell.keepsKeyboardOpen
+import desktopkit.shell.WidthClass
 
 /** A card with a title, a sentence and actions, for things the user should know now. */
 @Composable
@@ -113,7 +67,7 @@ fun NoticeCard(
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
     val shape = RoundedCornerShape(dimens.radiusCard)
-    if (isPhone()) {
+    if (currentWidthClass() == WidthClass.Compact) {
         // the accent stripe is laid over the card, so the card needs no intrinsic height
         Box(
             modifier
@@ -200,6 +154,8 @@ fun FormField(
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onNext = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Next) }),
             modifier = Modifier
                 .fillMaxWidth()
+                // counted as one of the kit's fields: a tap on it keeps the on-screen keyboard open
+                .keepsKeyboardOpen()
                 .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                 .onFocusChanged { focused = it.isFocused }
                 .onPreviewKeyEvent { event ->
@@ -235,129 +191,37 @@ fun FormField(
 class DialogAction(val label: String, val primary: Boolean = false, val onClick: () -> Unit)
 
 /**
- * A small dialog in the kit's look: title, sentence, buttons. Esc and a tap outside cancel;
- * the first primary button takes the keyboard focus, so Enter confirms. It fades and grows in
- * and fades out (the action runs once the exit has finished, a tenth of a second later). On a
- * phone it is as wide as the screen less 16 dp margins, with the buttons right-aligned in one
- * line (cancel left, main action right) or stacked when they do not fit.
+ * The kit's dialog ([DeskDialog]) with a sentence and buttons: Esc, the dialog's own close button
+ * (× on touch, "Esc" with a keyboard) and a tap outside cancel; the first primary button takes the
+ * keyboard focus, so Enter confirms. A button closes the dialog and then runs its action. The
+ * buttons sit in one line at the end (cancel left, main action right) or, when they do not fit
+ * (a phone with three of them), one under the other.
  */
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun ConfirmDialog(title: String, text: String, actions: List<DialogAction>, onDismiss: () -> Unit) {
-    val colors = DeskTheme.colors
-    val dimens = DeskTheme.dimens
-    val shape = RoundedCornerShape(dimens.radiusCard)
-    val phone = isPhone()
     val first = remember { androidx.compose.ui.focus.FocusRequester() }
-    val visible = remember { androidx.compose.animation.core.MutableTransitionState(false).apply { targetState = true } }
-    var pending by remember { mutableStateOf<(() -> Unit)?>(null) }
-    // every way out first plays the exit, then runs what the caller asked for; a second click meanwhile does nothing
-    fun leave(after: () -> Unit) {
-        if (pending != null) return
-        pending = after
-        visible.targetState = false
-    }
-    androidx.compose.runtime.LaunchedEffect(visible.currentState, visible.targetState) {
-        val after = pending
-        if (after != null && !visible.currentState && !visible.targetState) {
-            pending = null
-            after()
-        }
-    }
-    androidx.compose.ui.window.Dialog(
-        onDismissRequest = { leave(onDismiss) },
-        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = !phone),
-    ) {
-        androidx.compose.animation.AnimatedVisibility(
-            visibleState = visible,
-            enter = androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(150)) +
-                androidx.compose.animation.scaleIn(androidx.compose.animation.core.tween(150), initialScale = 0.94f),
-            exit = androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(100)) +
-                androidx.compose.animation.scaleOut(androidx.compose.animation.core.tween(100), targetScale = 0.96f),
-        ) {
-            Column(
-                Modifier
-                    .then(if (phone) Modifier.padding(horizontal = dimens.gapL) else Modifier.widthIn(max = 480.dp))
-                    .fillMaxWidth()
-                    .background(colors.surfaceRaised, shape)
-                    .border(1.dp, colors.borderStrong, shape)
-                    .padding(dimens.gapL),
-                verticalArrangement = Arrangement.spacedBy(dimens.gapM),
-            ) {
-                Text(title, style = DeskTheme.type.headline, color = colors.text)
-                Text(text, style = DeskTheme.type.body, color = colors.textSecondary)
-                val firstPrimary = actions.indexOfFirst { it.primary }
-                val run: (DialogAction) -> Unit = { action ->
-                    leave {
-                        onDismiss()
-                        action.onClick()
-                    }
-                }
-                if (phone) {
-                    ButtonRow(Modifier.padding(top = dimens.gapXs)) {
-                        actions.forEachIndexed { index, action ->
-                            val modifier = if (index == firstPrimary) Modifier.focusRequester(first) else Modifier
-                            if (action.primary) {
-                                desktopkit.components.DeskButton(action.label, { run(action) }, modifier = modifier, primary = true)
-                            } else {
-                                PhoneTextButton(action.label, { run(action) }, modifier = modifier)
-                            }
-                        }
-                    }
-                } else {
-                    androidx.compose.foundation.layout.FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(dimens.gapS),
-                        verticalArrangement = Arrangement.spacedBy(dimens.gapS),
-                    ) {
-                        actions.forEachIndexed { index, action ->
-                            desktopkit.components.DeskButton(
-                                action.label,
-                                { run(action) },
-                                modifier = if (index == firstPrimary) Modifier.focusRequester(first) else Modifier,
-                                primary = action.primary,
-                            )
-                        }
-                    }
+    val firstPrimary = actions.indexOfFirst { it.primary }
+    DeskDialog(
+        onDismiss = onDismiss,
+        title = title,
+        maxWidth = 480.dp,
+        actions = {
+            ButtonRow(Modifier.weight(1f)) {
+                actions.forEachIndexed { index, action ->
+                    DeskButton(
+                        action.label,
+                        {
+                            onDismiss()
+                            action.onClick()
+                        },
+                        modifier = if (index == firstPrimary) Modifier.focusRequester(first) else Modifier,
+                        primary = action.primary,
+                    )
                 }
             }
-        }
+        },
+    ) {
+        Text(text, style = DeskTheme.type.body, color = DeskTheme.colors.textSecondary)
     }
     androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
-}
-
-/**
- * A row with a check box in the kit's look: click, tap, Space or Enter toggles it. The kit has
- * no check box of its own, and one row per book reads better than a switch.
- */
-@Composable
-fun CheckRow(checked: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    val colors = DeskTheme.colors
-    val dimens = DeskTheme.dimens
-    val interaction = remember { MutableInteractionSource() }
-    val state = interaction.collectState()
-    val shape = RoundedCornerShape(dimens.radiusControl)
-    Row(
-        modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(stateBackground(state))
-            .focusRing(state, shape)
-            .deskClickable(interaction, { onChange(!checked) }, role = Role.Checkbox)
-            .defaultMinSize(minHeight = if (isPhone()) 48.dp else 0.dp)
-            .padding(horizontal = dimens.gapS, vertical = dimens.gapXs),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val box = RoundedCornerShape(4.dp)
-        Box(
-            Modifier
-                .size(18.dp)
-                .background(if (checked) colors.accent else colors.surface, box)
-                .border(1.5.dp, if (checked) colors.accent else colors.borderStrong, box),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (checked) Icon(DeskIcons.Check, contentDescription = null, tint = colors.onAccent, modifier = Modifier.size(14.dp))
-        }
-        Spacer(Modifier.width(dimens.gapM))
-        Box(Modifier.weight(1f)) { content() }
-    }
 }

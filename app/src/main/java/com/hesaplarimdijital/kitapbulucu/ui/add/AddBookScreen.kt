@@ -53,7 +53,6 @@ import com.hesaplarimdijital.kitapbulucu.ui.BottomActions
 import com.hesaplarimdijital.kitapbulucu.ui.FormField
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneTextButton
 import com.hesaplarimdijital.kitapbulucu.ui.SuggestField
-import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
 import com.hesaplarimdijital.kitapbulucu.ui.NoticeCard
 import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelfField
@@ -66,6 +65,8 @@ import desktopkit.theme.DeskTheme
 import desktopkit.theme.InputMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import desktopkit.shell.currentWidthClass
+import desktopkit.shell.WidthClass
 
 /**
  * The add form (S-17): title, author, whose list, shelf, then the optional details. Enter saves;
@@ -130,7 +131,7 @@ fun AddBookScreen(
         }
     }
 
-    val phone = isPhone()
+    val phone = currentWidthClass() == WidthClass.Compact
 
     /** The checks' answers: a missing title, a bad count, a book that is already there, the other person's list. */
     val checkContent: @Composable () -> Unit = {

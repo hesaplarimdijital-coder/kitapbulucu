@@ -1,5 +1,6 @@
 package com.hesaplarimdijital.kitapbulucu.screenshots
 
+import com.hesaplarimdijital.kitapbulucu.WindowWidth
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -82,12 +83,12 @@ class RefreshScreenshotTest {
         val settings = AppSettings(context.getSharedPreferences("refresh-screenshot-app", Context.MODE_PRIVATE)).also { it.updateMe(Owner.ME) }
         compose.runOnUiThread { compose.activity.actionBar?.hide() }
         compose.setContent {
-            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) {
+            DesktopKitTheme(themeMode = theme, accent = AppPalette.Bordo, inputMode = input, fonts = AppFonts.desk, colors = { AppPalette.warm(it, AppPalette.Bordo) }) { WindowWidth {
                 Box(Modifier.fillMaxSize().background(DeskTheme.colors.background)) {
                     val prefs = rememberDeskPreferences(accents = AppPalette.accents)
                     AppShell(prefs, widthClass, rememberNavController(), store, settings, rememberFilePicker(store), initialSearch = "çatıdaki")
                 }
-            }
+            } }
         }
         compose.waitForIdle()
         val window = compose.activity.window.decorView

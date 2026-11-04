@@ -1,5 +1,6 @@
 package com.hesaplarimdijital.kitapbulucu.ui.search
 
+import desktopkit.shell.keepsKeyboardOpen
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -76,9 +77,8 @@ import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.text.TurkishText
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneEmptyState
-import com.hesaplarimdijital.kitapbulucu.ui.PhoneIcons
+import com.hesaplarimdijital.kitapbulucu.ui.TouchIcons
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneTextButton
-import com.hesaplarimdijital.kitapbulucu.ui.isPhone
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
 import desktopkit.components.ChipRow
 import desktopkit.components.DeskButton
@@ -93,6 +93,10 @@ import desktopkit.shell.KeyCap
 import desktopkit.theme.DeskTheme
 import desktopkit.theme.InputMode
 import kotlinx.coroutines.delay
+import desktopkit.shell.currentWidthClass
+import desktopkit.shell.WidthClass
+import androidx.compose.foundation.layout.PaddingValues
+import desktopkit.shell.rememberShellContentPadding
 
 /** Literata for book titles (Draft A). */
 private val Serif = AppFonts.Literata
@@ -125,7 +129,11 @@ internal suspend fun LazyListState.reveal(index: Int) {
         if (visible.isEmpty()) return
         val item = visible.firstOrNull { it.index == index }
         if (item != null) {
-            val delta = revealDelta(item.offset, item.offset + item.size, info.viewportStartOffset, info.viewportEndOffset)
+            // the padded ends (the phone's glass bottom bar) do not count as visible
+            val delta = revealDelta(
+                item.offset, item.offset + item.size,
+                info.viewportStartOffset + info.beforeContentPadding, info.viewportEndOffset - info.afterContentPadding,
+            )
             if (delta != 0) animateScrollBy(delta.toFloat())
             return
         }
@@ -170,7 +178,7 @@ fun SearchScreen(
     val type = DeskTheme.type
     val resources = LocalContext.current.resources
     val pointer = DeskTheme.inputMode == InputMode.Pointer
-    val phone = isPhone()
+    val phone = currentWidthClass() == WidthClass.Compact
     val keyboard = LocalSoftwareKeyboardController.current
 
     val currentIndex = index
@@ -239,8 +247,8 @@ fun SearchScreen(
                                     text = label,
                                     selected = filter == value,
                                     onClick = { filter = value },
-                                    // the filter never takes the cursor away from the search field
-                                    modifier = Modifier.focusProperties { canFocus = false },
+                                    // the filter never takes the cursor away from the search field, nor the keyboard
+                                    modifier = Modifier.focusProperties { canFocus = false }.keepsKeyboardOpen(),
                                 )
                             }
                         }
@@ -264,7 +272,14 @@ fun SearchScreen(
                 }
             }
         }
-        LazyColumn(Modifier.fillMaxSize(), state = list, horizontalAlignment = Alignment.CenterHorizontally) {
+        // on the phone the results run on under the glass bottom bar
+        val shellPadding = rememberShellContentPadding()
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            state = list,
+            contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             val rowModifier = Modifier.padding(horizontal = dimens.pagePadding).widthIn(max = 760.dp).fillMaxWidth()
             when {
                 currentIndex == null -> item { Message(stringResource(R.string.search_loading), null, rowModifier) }
@@ -378,6 +393,8 @@ private fun SearchField(query: String, focusKey: Int, onQueryChange: (String) ->
                 keyboardActions = KeyboardActions(onSearch = { onSearchAction() }),
                 modifier = Modifier
                     .fillMaxWidth()
+                    // counted as one of the kit's fields: a tap on it keeps the keyboard open
+                    .keepsKeyboardOpen()
                     .focusRequester(focus)
                     .onFocusChanged { focused = it.isFocused }
                     .onPreviewKeyEvent { event -> event.type == KeyEventType.KeyDown && onKey(event.key) },
@@ -523,11 +540,11 @@ private fun Details(group: BookGroup, actions: com.hesaplarimdijital.kitapbulucu
                 }
                 if (actions != null) {
                     Spacer(Modifier.height(dimens.gapS))
-                    if (isPhone()) {
+                    if (currentWidthClass() == WidthClass.Compact) {
                         // one tidy line of flat buttons, never wrapped big ones
                         Box(Modifier.fillMaxWidth().height(1.dp).background(colors.border))
                         Row(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                            PhoneTextButton(stringResource(R.string.action_edit), { actions.edit(hit.owner, book) }, Modifier.weight(1f), icon = PhoneIcons.Pencil, contentPadding = 4.dp)
+                            PhoneTextButton(stringResource(R.string.action_edit), { actions.edit(hit.owner, book) }, Modifier.weight(1f), icon = TouchIcons.Pencil, contentPadding = 4.dp)
                             PhoneTextButton(stringResource(R.string.phone_screens_move), { actions.move(hit.owner, book) }, Modifier.weight(1f), icon = DeskIcons.Convert, contentPadding = 4.dp)
                             PhoneTextButton(stringResource(R.string.action_delete), { actions.delete(hit.owner, book) }, Modifier.weight(1f), icon = DeskIcons.Delete, danger = true, contentPadding = 4.dp)
                         }
@@ -577,7 +594,7 @@ private fun KeyHints(modifier: Modifier) {
 private fun Message(title: String, text: String?, modifier: Modifier) {
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
-    if (isPhone()) {
+    if (currentWidthClass() == WidthClass.Compact) {
         PhoneEmptyState(DeskIcons.Search, title, modifier, text)
         return
     }

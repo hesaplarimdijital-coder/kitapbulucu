@@ -83,7 +83,6 @@ import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
 import com.hesaplarimdijital.kitapbulucu.ui.TextAction
 import com.hesaplarimdijital.kitapbulucu.ui.TouchIcons
 import com.hesaplarimdijital.kitapbulucu.ui.WideSegmentedChoice
-import com.hesaplarimdijital.kitapbulucu.ui.isCompactLayout
 import com.hesaplarimdijital.kitapbulucu.ui.library.BookTable
 import com.hesaplarimdijital.kitapbulucu.ui.library.LibraryRow
 import com.hesaplarimdijital.kitapbulucu.ui.library.PhoneBookList
@@ -105,6 +104,14 @@ import desktopkit.shell.TopBarBackIcon
 import desktopkit.theme.DeskMotion
 import desktopkit.theme.DeskTheme
 import desktopkit.theme.InputMode
+import desktopkit.shell.currentWidthClass
+import desktopkit.shell.WidthClass
+import com.hesaplarimdijital.kitapbulucu.ui.fabPadding
+import desktopkit.shell.rememberShellContentPadding
+import desktopkit.components.rememberListAppear
+import desktopkit.components.listAppear
+import desktopkit.components.animatedStateBackground
+import desktopkit.components.ListAppear
 
 /** Where the Shelves screen should open: a list and, optionally, one shelf. */
 data class ShelfTarget(val owner: Owner, val shelf: String?)
@@ -151,7 +158,7 @@ fun ShelvesScreen(
     val codes = remember(groups) { groups.filterNot { it.isUnshelved }.map { it.shelf } }
     val me = settings?.me
 
-    if (isCompactLayout()) {
+    if (currentWidthClass() == WidthClass.Compact) {
         PhoneShelves(
             store, actions, title, owner,
             onOwner = {
@@ -364,6 +371,8 @@ private fun PhoneShelves(
     val group = open?.let { code -> groups.firstOrNull { Shelves.key(it.shelf) == Shelves.key(code) } ?: ShelfGroup(code, emptyList()) }
     val rows = remember(group?.books, owner) { group?.books.orEmpty().map { LibraryRow(owner, it.index, it.value) } }
     val list = remember(owner, open) { PhoneListState() }
+    // taken out here, not in the list: coming back from a shelf, the rows do not come in again
+    val shelvesAppear = rememberListAppear(owner)
 
     // the top bar: adding books, selecting rows, an open shelf, or the screen's own
     when {
@@ -400,7 +409,7 @@ private fun PhoneShelves(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             handleBack = !adding && !list.selection.active,
             detailKey = { Shelves.key(it) },
-            list = { PhoneShelfList(groups, codes, owner, onOwner, onOpen = { onOpen(it) }, onCreate = onCreate) },
+            list = { PhoneShelfList(groups, codes, owner, onOwner, onOpen = { onOpen(it) }, onCreate = onCreate, appear = shelvesAppear) },
         ) { shown ->
             val shownGroup = groups.firstOrNull { Shelves.key(it.shelf) == Shelves.key(shown) } ?: ShelfGroup(shown, emptyList())
             PhoneShelfDetail(
@@ -424,10 +433,12 @@ private fun PhoneShelfList(
     onOwner: (Owner) -> Unit,
     onOpen: (String) -> Unit,
     onCreate: () -> Unit,
+    appear: ListAppear,
 ) {
     val resources = LocalContext.current.resources
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
+    val shellPadding = rememberShellContentPadding()
     val listState = rememberSaveable(owner, saver = LazyListState.Saver) { LazyListState() }
     val expanded by remember(listState) { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     Column(Modifier.fillMaxSize()) {
@@ -438,7 +449,8 @@ private fun PhoneShelfList(
             modifier = Modifier.padding(horizontal = dimens.pagePadding).padding(bottom = dimens.gapS),
         )
         Box(Modifier.weight(1f).fillMaxWidth()) {
-            LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 96.dp)) {
+            // the rows run on under the glass bottom bar; the last ones stay clear of the floating button
+            LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding() + 96.dp)) {
                 if (codes.isEmpty()) {
                     item(key = "none") {
                         Text(
@@ -449,8 +461,8 @@ private fun PhoneShelfList(
                         )
                     }
                 }
-                items(groups, key = { "shelf:" + it.shelf }) { group ->
-                    PhoneShelfRow(group, Modifier.animateItem()) { onOpen(group.shelf) }
+                itemsIndexed(groups, key = { _, group -> "shelf:" + group.shelf }) { index, group ->
+                    PhoneShelfRow(group, Modifier.listAppear(appear, index).animateItem()) { onOpen(group.shelf) }
                 }
             }
             AnimatedFab(
@@ -459,7 +471,7 @@ private fun PhoneShelfList(
                 icon = DeskIcons.Plus,
                 onClick = onCreate,
                 expanded = expanded,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(dimens.gapL),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(fabPadding()),
             )
         }
     }
@@ -472,7 +484,8 @@ private fun PhoneShelfRow(group: ShelfGroup, modifier: Modifier, onClick: () -> 
     val dimens = DeskTheme.dimens
     val interaction = remember { MutableInteractionSource() }
     val state = interaction.collectState()
-    val background by animateColorAsState(stateBackground(state), DeskMotion.color(), label = "shelfRow")
+    // the kit's colour: instant under a mouse, eased on touch
+    val background by animatedStateBackground(state)
     Column(modifier.fillMaxWidth()) {
         Row(
             Modifier
@@ -540,7 +553,7 @@ private fun PhoneShelfDetail(
     val expanded by remember(listState) { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     Box(Modifier.fillMaxSize()) {
         PhoneBookList(
-            rows, list, actions, onShelf = null, listState = listState, modifier = Modifier.fillMaxSize(), showShelf = false,
+            rows, list, actions, onShelf = null, listState = listState, modifier = Modifier.fillMaxSize(), showShelf = false, appearKey = group.shelf,
             header = {
                 item(key = "header") {
                     Column(
@@ -569,7 +582,7 @@ private fun PhoneShelfDetail(
             icon = DeskIcons.Plus,
             onClick = { onAdding(true) },
             expanded = expanded,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(dimens.gapL),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(fabPadding()),
         )
         AnimatedVisibility(
             adding && !group.isUnshelved,
@@ -709,7 +722,10 @@ private fun AddBooksPanel(
                     Text(stringResource(R.string.shelves_add_none), style = DeskTheme.type.body, color = colors.textSecondary)
                 }
             }
-            LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(top = dimens.gapXs, bottom = dimens.gapL)) {
+            LazyColumn(
+                Modifier.weight(1f).fillMaxWidth(),
+                contentPadding = PaddingValues(top = dimens.gapXs, bottom = rememberShellContentPadding().calculateBottomPadding() + dimens.gapL),
+            ) {
                 itemsIndexed(shown) { i, hit ->
                     PhoneHitRow(hit, highlighted = highlight && i == active, here = Shelves.key(hit.book.shelf) == shelfKey, modifier = Modifier.animateItem()) {
                         place(listOf(hit.book), false)
