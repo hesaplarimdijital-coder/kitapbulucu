@@ -326,6 +326,12 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [ ] Telefonda: alt sayfaların klavyenin ve gezinme çubuğunun üstünde açılması, aşağı çekip kapatma, listelerin camın altından akması, geri al bildirimi.
 - [ ] DeX'te: geri al bildirimi, pencerelerin Esc/× düğmesi, açılır listeler.
 
+### K-07 Kit 2.4.0: ayrıntı geçişinde iki sayfa üst üste binmesin · 1 · [O] · bitti (telefonda denenecek)
+- [x] Telefonda açılan sayfa saydam değil, sağdan listenin üstüne kayar; liste yalnızca kararır. Kapanış ve geri hareketi aynı ilkeyle.
+- [x] Tablet/DeX'te solmalar sırayla (önce eski söner, sonra yeni belirir).
+- [x] Kit testleri her karede iki sayfanın karışmadığını denetliyor; uygulamada değişiklik gerekmedi.
+- [ ] Kullanıcı 2.4.0 Release'ini açtı; uygulama sürüm numarasına geçti.
+
 ## Sıraya konmayı bekleyenler
 
 ### W-01 Windows sürümü (babanın bilgisayarı için) · [F] · bekliyor (kullanıcı desktop-kit 1.0.0'ı bitirince)
