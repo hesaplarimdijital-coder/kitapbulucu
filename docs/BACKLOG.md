@@ -330,7 +330,7 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [x] Telefonda açılan sayfa saydam değil, sağdan listenin üstüne kayar; liste yalnızca kararır. Kapanış ve geri hareketi aynı ilkeyle.
 - [x] Tablet/DeX'te solmalar sırayla (önce eski söner, sonra yeni belirir).
 - [x] Kit testleri her karede iki sayfanın karışmadığını denetliyor; uygulamada değişiklik gerekmedi.
-- [ ] Kullanıcı 2.4.0 Release'ini açtı; uygulama sürüm numarasına geçti.
+- [x] Kullanıcı 2.4.0 Release'ini açtı (11.11.2026; sekmeler arası Geri düzeltmesiyle birlikte); uygulama sürüm numarasına geçti.
 
 ## Sıraya konmayı bekleyenler
 
