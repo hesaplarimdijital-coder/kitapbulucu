@@ -344,6 +344,15 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [ ] Telefonda: aşağı çekip yenileme, yüzen düğmenin kaydırınca küçülmesi ve klavye açılınca gizlenmesi.
 - [ ] DeX'te: kaydırma çubuğu, simge düğmelerinin ipuçları, tablonun seçim çubuğu, fare üstündeyken bildirimin beklemesi.
 
+### S-41 Telefonda form kaydırınca başa atlıyor · 2 · [O] · bitti (telefonda denenecek)
+- [x] Neden: S24 kaydı kare kare incelendi (dokunma noktası ve içeriğin kayması, 108 kare/sn). Form kendiliğinden başa dönmüyor: her dönüşte parmak hızla aşağı kayıyor (ekranda ~930'dan ~1670 piksele); form ekranın yalnızca ~1,4 katı uzunluğunda, hızlı her kaydırma bir uçtan öbürüne gidiyor. Asıl kusur: kabuğun alt gezinme çubuğu formun "Vazgeç / Kaydet" çubuğunun altında duruyor, kaydırınca kayıp gidip geliyor, gidince altında çubuk boyu boş şerit kalıyordu; form zıplıyormuş gibi görünüyordu. Odaktaki alanın görünüme çekilmesi (klavye kapalıyken) olmuyor.
+- [x] Telefonda Ekle, Düzenle ve Excel birleştirme açıkken alt gezinme çubuğu görünmez (kit 2.9.0 `HideBottomNavigation()`, `AppShell.OverlayPage`); form sistem çubuğuna kadar uzar, kaydırırken yüksekliği değişmez, kapanınca çubuk geri gelir. Kurulum ve sütun eşleme zaten kabuğun dışında. Tablet ve DeX değişmedi.
+- [x] Form parmağın bıraktığı yerde kalır; imleç Kitap adı'nda ve klavye kapalıyken de (`PhoneFormScrollTest.theFormStaysWhereTheFingerLeftIt`; düzeltmeden önce de geçti).
+- [x] `PhoneFormScrollTest.theBottomNavigationIsNotShownUnderThePhoneForm` düzeltmeden önce CI'da kırıldı (`repro/s-41` dalı), düzeltmeyle geçiyor.
+- [x] Klavye açıkken Vazgeç/Kaydet formun sonunda; Yazar/Yayınevi önerileri yerinde (testler); değişen ekran görüntülerine (telefonda Ekle, Düzenle, birleştirme) bakıldı, DeX görüntüleri aynı.
+- [ ] Telefonda: form kaydırınca yerinde kalıyor, alttaki çubuk görünmüyor, form kapanınca çubuk geri geliyor.
+- [ ] Kullanıcı kit 2.9.0 Release'ini açınca `desktopKit = "2.9.0"`.
+
 ## Sıraya konmayı bekleyenler
 
 ### W-01 Windows sürümü (babanın bilgisayarı için) · [F] · bekliyor (kullanıcı desktop-kit 1.0.0'ı bitirince)

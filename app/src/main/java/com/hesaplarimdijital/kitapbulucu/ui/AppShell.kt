@@ -75,6 +75,7 @@ import desktopkit.settings.SettingsSection
 import desktopkit.settings.ShortcutListSection
 import desktopkit.shell.CompactTopBar
 import desktopkit.shell.DesktopShell
+import desktopkit.shell.HideBottomNavigation
 import desktopkit.shell.NavItem
 import desktopkit.shell.NavSection
 import desktopkit.shell.ShellSpec
@@ -335,12 +336,17 @@ private fun AnimatedContentTransitionScope<FormRequest?>.overlayTransition(phone
 /**
  * A form page. On the phone it gets its own top bar (a close button and the form's title; the
  * system back gesture closes it too) and an opaque background so the screen below never shows
- * through; [clearOfBars] keeps its bottom buttons above the bottom bar.
+ * through. It is a full-screen form there: the shell's bottom navigation is not shown under its
+ * own "Vazgeç / Kaydet" bar (it used to slide in and out under it while the form scrolled, S-41),
+ * so [clearOfBars] only keeps the form above the system bar.
  */
 @Composable
 private fun OverlayPage(phone: Boolean, title: String, onClose: () -> Unit, clearOfBars: Modifier, content: @Composable () -> Unit) {
     Column(Modifier.fillMaxSize().background(DeskTheme.colors.background)) {
-        if (phone) CompactTopBar(title = title, onBack = onClose, backIcon = TopBarBackIcon.Close, showSearch = false)
+        if (phone) {
+            CompactTopBar(title = title, onBack = onClose, backIcon = TopBarBackIcon.Close, showSearch = false)
+            HideBottomNavigation()
+        }
         Box(Modifier.weight(1f).then(clearOfBars)) { content() }
     }
 }

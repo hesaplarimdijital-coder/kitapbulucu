@@ -1,5 +1,9 @@
 # Değişiklikler
 
+## 1.4.1 — 13.11.2026
+
+- **Telefon**: kitap ekleme, düzenleme ve Excel birleştirme açıkken alttaki Ara / Kütüphane / Raflar / Ayarlar çubuğu görünmez. Form kaydırılırken altında çubuk kayıp gidip gelmez, "Vazgeç / Kaydet" ekranın altında yerinde durur, form da bırakılan yerde kalır.
+
 ## 1.4.0 — 13.11.2026
 
 - **Telefon**: Ara, Kütüphane ve Raflar listesi parmakla aşağı çekilince iki Excel dosyası yeniden okunur; "Kitap ekle" / "Yeni raf" düğmesi kaydırınca küçülür, klavye açılınca gizlenir.
