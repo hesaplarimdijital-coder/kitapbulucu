@@ -93,6 +93,13 @@ class LibraryStore(
     val updated: StateFlow<ListsUpdated?> = _updated.asStateFlow()
 
     private var refreshing = false
+    private val _refreshing = MutableStateFlow(false)
+
+    /**
+     * True while a pass someone asked for runs (a pull on a phone list, F5, "Tekrar dene"): the kit's
+     * refresh disc turns while it is. The start and the background checks leave it false.
+     */
+    val userRefreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
     private var refreshAgain = false
     /** The running pass was asked for in the background only: lists already shown do not say "reading". */
     private var quietPass = false
@@ -109,6 +116,7 @@ class LibraryStore(
 
     /** Reads both files again and writes pending changes; calls while a pass runs are folded into one more pass. */
     fun refresh() {
+        _refreshing.value = true
         scope.launch { refreshNow() }
     }
 
@@ -466,6 +474,8 @@ class LibraryStore(
         } finally {
             refreshing = false
             quietPass = false
+            // a request made during the pass was folded into it (refreshAgain), so it is over too
+            _refreshing.value = false
         }
     }
 

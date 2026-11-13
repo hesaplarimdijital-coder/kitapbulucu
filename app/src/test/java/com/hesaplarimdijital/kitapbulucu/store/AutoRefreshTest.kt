@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -251,6 +252,24 @@ class AutoRefreshTest {
         assertEquals(LoadStatus.LOADING, store.state(Owner.DAD).status) // F5 and the start say "reading"
         io.runAll()
         assertEquals(LoadStatus.READY, store.state(Owner.DAD).status)
+    }
+
+    /** The phone's pull-to-refresh disc turns for a pass someone asked for, never for the start or a background check. */
+    @Test
+    fun onlyARequestedPassShowsRefreshing() {
+        val io = ManualDispatcher()
+        val store = linkedDad(io)
+        assertFalse(store.userRefreshing.value) // the start's pass is over and was not asked for
+        store.refreshInBackground()
+        assertFalse(store.userRefreshing.value)
+        store.refresh() // a pull while the background pass still runs: folded into it
+        assertTrue(store.userRefreshing.value)
+        io.runAll()
+        assertFalse(store.userRefreshing.value)
+        store.refresh()
+        assertTrue(store.userRefreshing.value)
+        io.runAll()
+        assertFalse(store.userRefreshing.value)
     }
 
     // ------------------------------------------------------------------ the "updated" note

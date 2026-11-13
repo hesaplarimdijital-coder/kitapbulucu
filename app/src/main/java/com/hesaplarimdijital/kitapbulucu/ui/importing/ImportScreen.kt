@@ -58,7 +58,10 @@ import com.hesaplarimdijital.kitapbulucu.ui.ConfirmDialog
 import com.hesaplarimdijital.kitapbulucu.ui.DialogAction
 import com.hesaplarimdijital.kitapbulucu.ui.FilePicker
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
-import com.hesaplarimdijital.kitapbulucu.ui.NoticeCard
+import desktopkit.components.verticalScrollbar
+import androidx.compose.foundation.lazy.rememberLazyListState
+import desktopkit.components.BannerTone
+import desktopkit.components.StatusBanner
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneTextButton
 import com.hesaplarimdijital.kitapbulucu.ui.SettingLine
 import com.hesaplarimdijital.kitapbulucu.ui.setup.MappingEditor
@@ -251,12 +254,12 @@ private fun Start(
         ) {
             body()
             if (failure != null) {
-                NoticeCard(
+                StatusBanner(
+                    tone = BannerTone.Error,
                     title = stringResource(R.string.import_failed),
                     text = LibraryTexts.failure(resources, failure),
                     modifier = Modifier.padding(horizontal = dimens.pagePadding, vertical = dimens.gapM),
-                    tone = colors.danger,
-                ) {}
+                )
             }
         }
         return
@@ -268,7 +271,7 @@ private fun Start(
             verticalArrangement = Arrangement.spacedBy(dimens.gapS),
         ) {
             if (failure != null) {
-                NoticeCard(title = stringResource(R.string.import_failed), text = LibraryTexts.failure(resources, failure), tone = colors.danger) {}
+                StatusBanner(BannerTone.Error, LibraryTexts.failure(resources, failure), title = stringResource(R.string.import_failed))
             }
             Row(horizontalArrangement = Arrangement.spacedBy(dimens.gapS)) {
                 DeskButton(
@@ -355,8 +358,9 @@ private fun Review(
     // on the phone the bar is pinned at the bottom, or ends the list while the keyboard is open
     val barInList = phone && isKeyboardOpen()
 
+    val reviewList = rememberLazyListState()
     Column(Modifier.fillMaxSize()) {
-        LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
+        LazyColumn(Modifier.weight(1f).fillMaxWidth().verticalScrollbar(reviewList), state = reviewList) {
             item {
                 PageHeader(title, subtitle = stringResource(R.string.import_from, fileName, LibraryTexts.listName(resources, target)))
                 SettingsSection(stringResource(R.string.import_file_section)) {

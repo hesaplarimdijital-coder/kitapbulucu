@@ -60,9 +60,9 @@ import desktopkit.theme.DeskTheme
 import desktopkit.theme.LocalMotionTier
 
 /*
- * Shared pieces of the phone layout (compact windows): the floating action button, a full-width
- * segmented choice, the kit's bottom sheet for sheets shown while composed, and the multi-selection
- * state of a list. The DeX and tablet layouts do not use them.
+ * Shared pieces of the phone layout (compact windows): a full-width segmented choice, the kit's
+ * bottom sheet for sheets shown while composed, and the multi-selection state of a list. The
+ * floating button is the kit's ShellPrimaryAction. The DeX and tablet layouts do not use them.
  */
 
 /** Icons the phone layout needs beyond the kit's and [AppIcons], in the same 16×16 line style. */
@@ -126,89 +126,11 @@ data class TouchSelection(val keys: Set<Any> = emptySet()) {
     }
 }
 
-// ---------------------------------------------------------------------------------- FAB
-
-/**
- * The screen's one primary action, bottom right: an extended floating button with a label that
- * folds into the icon while [expanded] is false (the list has been scrolled).
- */
-@Composable
-fun AppFab(label: String, icon: ImageVector, onClick: () -> Unit, expanded: Boolean, modifier: Modifier = Modifier) {
-    val colors = DeskTheme.colors
-    val interaction = remember { MutableInteractionSource() }
-    val state = interaction.collectState()
-    val shape = RoundedCornerShape(16.dp)
-    val background by animateColorAsState(
-        when {
-            state.pressed -> lerp(colors.accent, colors.onAccent, 0.24f)
-            state.hovered -> lerp(colors.accent, colors.onAccent, 0.12f)
-            else -> colors.accent
-        },
-        DeskMotion.color(),
-        label = "fab",
-    )
-    Row(
-        modifier
-            .pressScale(state.pressed)
-            .shadow(6.dp, shape)
-            .background(background, shape)
-            .focusRing(state, shape)
-            .deskClickable(interaction, onClick, role = Role.Button, onClickLabel = label)
-            .semantics { if (!expanded) contentDescription = label }
-            .defaultMinSize(minWidth = 56.dp, minHeight = 56.dp)
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(icon, contentDescription = null, tint = colors.onAccent, modifier = Modifier.size(24.dp))
-        AnimatedVisibility(
-            expanded,
-            enter = fadeIn(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.StandardDecelerate)) +
-                expandHorizontally(tween(DeskMotion.MEDIUM_MS + 50, easing = DeskMotion.EmphasizedDecelerate)),
-            exit = fadeOut(tween(DeskMotion.SHORT_MS, easing = DeskMotion.StandardAccelerate)) +
-                shrinkHorizontally(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.EmphasizedAccelerate)),
-        ) {
-            Row {
-                Spacer(Modifier.width(12.dp))
-                Text(label, style = DeskTheme.type.bodyStrong, color = colors.onAccent, maxLines = 1)
-            }
-        }
-    }
-}
-
-/**
- * A FAB that appears with a small scale and fade, and leaves the same way. It also steps aside
- * while the on-screen keyboard is open instead of riding on top of it.
- */
-@Composable
-fun AnimatedFab(visible: Boolean, label: String, icon: ImageVector, onClick: () -> Unit, expanded: Boolean, modifier: Modifier = Modifier) {
-    AnimatedVisibility(
-        visible && !isKeyboardOpen(),
-        modifier = modifier,
-        enter = fadeIn(tween(DeskMotion.MEDIUM_MS, easing = DeskMotion.StandardDecelerate)) +
-            scaleIn(tween(DeskMotion.MEDIUM_MS + 50, easing = DeskMotion.EmphasizedDecelerate), initialScale = 0.8f),
-        exit = fadeOut(tween(DeskMotion.SHORT_MS + 20, easing = DeskMotion.StandardAccelerate)) +
-            scaleOut(tween(DeskMotion.SHORT_MS + 20, easing = DeskMotion.EmphasizedAccelerate), targetScale = 0.8f),
-    ) {
-        AppFab(label, icon, onClick, expanded)
-    }
-}
-
-/**
- * Where a FAB sits in a screen whose list runs on under the phone's glass bottom bar: the usual
- * margin, plus the bars' height below it (nothing on tablet and DeX).
- */
-@Composable
-fun fabPadding(): PaddingValues {
-    val gap = DeskTheme.dimens.gapL
-    val bars = rememberShellContentPadding().calculateBottomPadding()
-    return PaddingValues(start = gap, top = gap, end = gap, bottom = gap + bars)
-}
-
 // ---------------------------------------------------------------------------------- segmented
 
 /**
  * The kit's segmented choice stretched over the full width, each option an equal part (the kit's
- * [desktopkit.components.SegmentedChoice] keeps its options at their own width).
+ * [desktopkit.components.SegmentedChoice] keeps its options at their own width, still in 2.8.0).
  */
 @Composable
 fun <T> WideSegmentedChoice(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier) {

@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -53,10 +55,13 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import com.hesaplarimdijital.kitapbulucu.ui.search.SearchScreen
+import desktopkit.components.verticalScrollbar
+import androidx.compose.foundation.lazy.rememberLazyListState
+import desktopkit.components.BannerTone
 import desktopkit.components.DeskButton
+import desktopkit.components.StatusBanner
 import desktopkit.components.DeskIcons
 import desktopkit.components.SegmentedChoice
-import desktopkit.components.ToastDuration
 import desktopkit.components.ToastResult
 import desktopkit.components.ToastState
 import desktopkit.components.rememberToastState
@@ -351,7 +356,7 @@ private fun UndoToasts(store: LibraryStore, toasts: ToastState) {
     val undo = stringResource(R.string.action_undo)
     LaunchedEffect(step) {
         val current = step ?: return@LaunchedEffect
-        val result = toasts.show(current.label, actionLabel = undo, duration = ToastDuration.Long, shortcut = "Ctrl+Z")
+        val result = toasts.show(current.label, actionLabel = undo, shortcut = "Ctrl+Z", durationMillis = UNDO_TOAST_MILLIS)
         if (result == ToastResult.ActionPerformed) {
             store.undo()
         } else if (store.lastStep.value === current) {
@@ -360,6 +365,12 @@ private fun UndoToasts(store: LibraryStore, toasts: ToastState) {
         }
     }
 }
+
+/** How long the undo toast stays (8 s, as before kit 2.3.0); the kit pauses it under the pointer and the focus. */
+private const val UNDO_TOAST_MILLIS = 8_000L
+
+/** How long the "list updated" note stays (5 s). */
+private const val REFRESH_TOAST_MILLIS = 5_000L
 
 /**
  * "MKE'nin listesi güncellendi" as a short toast when a re-read finds a list changed outside the
@@ -378,7 +389,7 @@ private fun RefreshToasts(store: LibraryStore, toasts: ToastState) {
                 else -> R.string.refresh_updated_me
             },
         )
-        toasts.show(text, duration = ToastDuration.Short)
+        toasts.show(text, durationMillis = REFRESH_TOAST_MILLIS)
         if (store.updated.value === current) store.dismissUpdated()
     }
 }
@@ -389,8 +400,9 @@ private fun LibraryNotices(store: LibraryStore, picker: FilePicker, onMap: (Owne
     val states by store.states.collectAsState()
     val warning by store.warning.collectAsState()
     val resources = LocalContext.current.resources
-    val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
+    // the kit's banners, no wider than a line of text reads well on DeX
+    val noticeWidth = Modifier.widthIn(max = 760.dp)
     val notices by store.notices.collectAsState()
     val failed = Owner.entries.map { states.getValue(it) }.filter { it.status == LoadStatus.FAILED }
     val unwritten = Owner.entries.map { states.getValue(it) }.filter { it.writeFailure != null && it.pendingChanges > 0 }
@@ -407,37 +419,49 @@ private fun LibraryNotices(store: LibraryStore, picker: FilePicker, onMap: (Owne
         for (state in unwritten) {
             key("write-" + state.owner) {
                 Appear {
-                    NoticeCard(
+                    val otherFile = state.writeFailure == WriteFailure.NOT_XLSX || state.writeFailure == WriteFailure.NO_PERMISSION
+                    StatusBanner(
+                        tone = BannerTone.Error,
                         title = stringResource(R.string.write_failed_title, LibraryTexts.listName(resources, state.owner), state.pendingChanges),
                         text = LibraryTexts.writeFailure(resources, state.writeFailure!!) + " " + stringResource(R.string.write_retry_note),
-                        tone = colors.danger,
-                    ) {
-                        AdaptiveButton(stringResource(R.string.action_retry), store::refresh, primary = true)
-                        if (state.writeFailure == WriteFailure.NOT_XLSX || state.writeFailure == WriteFailure.NO_PERMISSION) {
-                            AdaptiveButton(stringResource(R.string.action_choose_other_file), { picker.pick(state.owner) })
-                        }
-                    }
+                        modifier = noticeWidth,
+                        actionLabel = stringResource(R.string.action_retry),
+                        onAction = store::refresh,
+                        secondaryActionLabel = if (otherFile) stringResource(R.string.action_choose_other_file) else null,
+                        onSecondaryAction = if (otherFile) ({ picker.pick(state.owner) }) else null,
+                    )
                 }
             }
         }
         for (notice in notices) {
             key(notice) {
                 Appear {
+                    val understood = stringResource(R.string.action_understood)
                     when (notice) {
-                        StoreNotice.FirstWrite -> NoticeCard(
+                        StoreNotice.FirstWrite -> StatusBanner(
+                            tone = BannerTone.Info,
                             title = stringResource(R.string.notice_first_write_title),
                             text = stringResource(R.string.notice_first_write_text),
-                        ) { AdaptiveButton(stringResource(R.string.action_understood), { store.dismiss(notice) }, phoneAccent = true) }
-                        is StoreNotice.OtherSheetsKept -> NoticeCard(
+                            modifier = noticeWidth,
+                            actionLabel = understood,
+                            onAction = { store.dismiss(notice) },
+                        )
+                        is StoreNotice.OtherSheetsKept -> StatusBanner(
+                            tone = BannerTone.Warning,
                             title = stringResource(R.string.notice_other_sheets_title, LibraryTexts.listName(resources, notice.owner)),
                             text = stringResource(R.string.notice_other_sheets_text, notice.names.joinToString(", ")),
-                            tone = colors.warning,
-                        ) { AdaptiveButton(stringResource(R.string.action_understood), { store.dismiss(notice) }, phoneAccent = true) }
-                        is StoreNotice.ChangesLanded -> NoticeCard(
+                            modifier = noticeWidth,
+                            actionLabel = understood,
+                            onAction = { store.dismiss(notice) },
+                        )
+                        is StoreNotice.ChangesLanded -> StatusBanner(
+                            tone = BannerTone.Warning,
                             title = stringResource(R.string.notice_changes_landed_title),
                             text = notice.notes.joinToString("\n") { LibraryTexts.landed(resources, it) },
-                            tone = colors.warning,
-                        ) { AdaptiveButton(stringResource(R.string.action_understood), { store.dismiss(notice) }, phoneAccent = true) }
+                            modifier = noticeWidth,
+                            actionLabel = understood,
+                            onAction = { store.dismiss(notice) },
+                        )
                     }
                 }
             }
@@ -445,30 +469,30 @@ private fun LibraryNotices(store: LibraryStore, picker: FilePicker, onMap: (Owne
         for (state in failed) {
             key("failed-" + state.owner) {
                 Appear {
-                    NoticeCard(
+                    val needsMapping = state.failure == LoadFailure.NO_HEADER
+                    StatusBanner(
+                        tone = BannerTone.Error,
                         title = LibraryTexts.listName(resources, state.owner),
                         text = LibraryTexts.failure(resources, state.failure ?: LoadFailure.IO),
-                        tone = colors.danger,
-                    ) {
-                        if (state.failure == LoadFailure.NO_HEADER) {
-                            AdaptiveButton(stringResource(R.string.setup_map_columns), { onMap(state.owner) }, primary = true)
-                        } else {
-                            AdaptiveButton(stringResource(R.string.action_retry), store::refresh, phoneAccent = true)
-                        }
-                        AdaptiveButton(stringResource(R.string.action_choose_other_file), { picker.pick(state.owner) })
-                    }
+                        modifier = noticeWidth,
+                        actionLabel = stringResource(if (needsMapping) R.string.setup_map_columns else R.string.action_retry),
+                        onAction = { if (needsMapping) onMap(state.owner) else store.refresh() },
+                        secondaryActionLabel = stringResource(R.string.action_choose_other_file),
+                        onSecondaryAction = { picker.pick(state.owner) },
+                    )
                 }
             }
         }
         if (stray != null) {
             Appear {
-                NoticeCard(
+                StatusBanner(
+                    tone = BannerTone.Warning,
                     title = stringResource(R.string.stray_files_title),
                     text = stringResource(R.string.stray_files_text, stray.names.joinToString(", ")),
-                    tone = colors.warning,
-                ) {
-                    AdaptiveButton(stringResource(R.string.action_understood), store::dismissWarning, phoneAccent = true)
-                }
+                    modifier = noticeWidth,
+                    actionLabel = stringResource(R.string.action_understood),
+                    onAction = store::dismissWarning,
+                )
             }
         }
     }
@@ -478,7 +502,9 @@ private fun LibraryNotices(store: LibraryStore, picker: FilePicker, onMap: (Owne
 private fun SettingsScreen(prefs: DeskPreferences, title: String, store: LibraryStore?, settings: AppSettings?, picker: FilePicker?, onMerge: () -> Unit) {
     // on the phone the settings run on under the glass bottom bar
     val shellPadding = rememberShellContentPadding()
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding())) {
+    val list = rememberLazyListState()
+    // with a mouse (DeX) a thin scrollbar shows where the page is
+    LazyColumn(Modifier.fillMaxSize().verticalScrollbar(list), state = list, contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding())) {
         item { PageHeader(title) }
         if (store != null && settings != null && picker != null) item { LibrarySection(store, settings, picker) }
         if (store != null) item { DataSection(store, onMerge) }

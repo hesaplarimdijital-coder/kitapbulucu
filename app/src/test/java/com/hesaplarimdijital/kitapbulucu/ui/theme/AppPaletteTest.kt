@@ -1,6 +1,7 @@
 package com.hesaplarimdijital.kitapbulucu.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import desktopkit.theme.Accent
 import desktopkit.theme.DeskColors
 import desktopkit.theme.DeskPalette
@@ -49,6 +50,33 @@ class AppPaletteTest {
         }
         println("lowest contrast across ${palettes().size} palettes: %.2f:1".format(lowest))
         assertTrue(failures.joinToString("\n"), failures.isEmpty())
+    }
+
+    /** Text fields can be found by their edge (WCAG 1.4.11, the kit's `controlBorder` role since 2.8.0). */
+    @Test
+    fun fieldEdgesKeepThreeToOne() {
+        val failures = ArrayList<String>()
+        for ((name, c) in palettes()) {
+            val surfaces = listOf("background" to c.background, "chrome" to c.chrome, "surface" to c.surface, "raised" to c.surfaceRaised, "hover" to c.hover)
+            for ((s, bg) in surfaces) {
+                val ratio = contrastRatio(c.controlBorder, bg)
+                if (ratio < 3.0) failures.add("%s controlBorder on %s: %.2f:1".format(name, s, ratio))
+            }
+            // warm, not the kit's cool grey: the edge is darker than the paper and lighter than the ink
+            assertTrue(name, contrastRatio(c.controlBorder, c.text) >= 1.5)
+        }
+        assertTrue(failures.joinToString("\n"), failures.isEmpty())
+    }
+
+    /** The overlay roles: a see-through scrim, and a light mark that reads on it over a mid-grey picture. */
+    @Test
+    fun overlayRolesAreSensible() {
+        val grey = Color(0xFF808080)
+        for ((name, c) in palettes()) {
+            assertTrue(name, c.overlayScrim.alpha in 0.2f..0.6f)
+            assertTrue(name, contrastRatio(c.onOverlay, c.overlayScrim.compositeOver(grey)) >= 4.5)
+            assertTrue(name, c.onOverlay.alpha == 1f)
+        }
     }
 
     @Test

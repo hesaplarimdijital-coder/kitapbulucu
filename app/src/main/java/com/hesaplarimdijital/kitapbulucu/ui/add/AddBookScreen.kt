@@ -46,7 +46,6 @@ import com.hesaplarimdijital.kitapbulucu.model.Suggestions
 import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.Change
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
-import com.hesaplarimdijital.kitapbulucu.ui.AdaptiveButton
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneForm
 import com.hesaplarimdijital.kitapbulucu.ui.BottomPrimaryButton
 import com.hesaplarimdijital.kitapbulucu.ui.BottomActions
@@ -54,7 +53,8 @@ import com.hesaplarimdijital.kitapbulucu.ui.FormField
 import com.hesaplarimdijital.kitapbulucu.ui.PhoneTextButton
 import com.hesaplarimdijital.kitapbulucu.ui.SuggestField
 import com.hesaplarimdijital.kitapbulucu.ui.LibraryTexts
-import com.hesaplarimdijital.kitapbulucu.ui.NoticeCard
+import desktopkit.components.BannerTone
+import desktopkit.components.StatusBanner
 import com.hesaplarimdijital.kitapbulucu.ui.shelves.ShelfField
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
@@ -138,26 +138,30 @@ fun AddBookScreen(
         when (val current = check) {
             AddBookForm.Check.NeedTitle -> Text(stringResource(R.string.add_need_title), style = type.body, color = colors.danger)
             AddBookForm.Check.BadCopies -> Text(stringResource(R.string.add_bad_copies), style = type.body, color = colors.danger)
-            is AddBookForm.Check.Exists -> NoticeCard(
+            is AddBookForm.Check.Exists -> StatusBanner(
+                tone = BannerTone.Warning,
                 title = current.existing.title,
                 text = stringResource(
                     R.string.add_exists,
                     inList(resources, fields.owner),
                     if (current.existing.shelf.isBlank()) stringResource(R.string.add_exists_no_shelf) else stringResource(R.string.add_exists_shelf, current.existing.shelf),
                 ),
-                tone = colors.warning,
-            ) {
-                AdaptiveButton(stringResource(R.string.add_one_more), { submit(confirmedDuplicate = true) }, primary = true)
-                AdaptiveButton(stringResource(R.string.add_cancel), { check = null })
-            }
-            is AddBookForm.Check.OtherList -> NoticeCard(
+                modifier = Modifier.widthIn(max = 760.dp),
+                actionLabel = stringResource(R.string.add_one_more),
+                onAction = { submit(confirmedDuplicate = true) },
+                secondaryActionLabel = stringResource(R.string.add_cancel),
+                onSecondaryAction = { check = null },
+            )
+            is AddBookForm.Check.OtherList -> StatusBanner(
+                tone = BannerTone.Warning,
                 title = current.book.title,
                 text = stringResource(R.string.add_other_confirm, toList(resources, fields.owner)),
-                tone = colors.warning,
-            ) {
-                AdaptiveButton(stringResource(R.string.add_confirm), { submit(confirmedOther = true, confirmedDuplicate = true) }, primary = true)
-                AdaptiveButton(stringResource(R.string.add_cancel), { check = null })
-            }
+                modifier = Modifier.widthIn(max = 760.dp),
+                actionLabel = stringResource(R.string.add_confirm),
+                onAction = { submit(confirmedOther = true, confirmedDuplicate = true) },
+                secondaryActionLabel = stringResource(R.string.add_cancel),
+                onSecondaryAction = { check = null },
+            )
             else -> Unit
         }
     }

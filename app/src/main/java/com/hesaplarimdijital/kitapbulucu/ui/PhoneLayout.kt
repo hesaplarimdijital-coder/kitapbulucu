@@ -314,7 +314,7 @@ fun PhoneEmptyState(
 @Composable
 fun SettingLine(title: String, modifier: Modifier = Modifier, subtitle: String? = null, control: @Composable () -> Unit) {
     if (currentWidthClass() != WidthClass.Compact) {
-        SettingRow(title, modifier, subtitle, control)
+        SettingRow(title, modifier, subtitle, control = control)
         return
     }
     val colors = DeskTheme.colors

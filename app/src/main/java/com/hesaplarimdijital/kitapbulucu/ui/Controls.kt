@@ -2,6 +2,7 @@ package com.hesaplarimdijital.kitapbulucu.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,58 +56,13 @@ import desktopkit.shell.currentWidthClass
 import desktopkit.shell.keepsKeyboardOpen
 import desktopkit.shell.WidthClass
 
-/** A card with a title, a sentence and actions, for things the user should know now. */
-@Composable
-fun NoticeCard(
-    title: String,
-    text: String,
-    modifier: Modifier = Modifier,
-    tone: Color = DeskTheme.colors.accentText,
-    actions: @Composable () -> Unit = {},
-) {
-    val colors = DeskTheme.colors
-    val dimens = DeskTheme.dimens
-    val shape = RoundedCornerShape(dimens.radiusCard)
-    if (currentWidthClass() == WidthClass.Compact) {
-        // the accent stripe is laid over the card, so the card needs no intrinsic height
-        Box(
-            modifier
-                .fillMaxWidth()
-                .clip(shape)
-                .background(colors.surface)
-                .border(1.dp, colors.border, shape),
-        ) {
-            Box(Modifier.matchParentSize()) { Box(Modifier.width(4.dp).fillMaxHeight().background(tone)) }
-            Column(Modifier.padding(start = dimens.gapM + 4.dp, end = dimens.gapM, top = dimens.gapM, bottom = dimens.gapS), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
-                Text(title, style = DeskTheme.type.title, color = colors.text)
-                Text(text, style = DeskTheme.type.body, color = colors.textSecondary)
-                // flat buttons, one line when they fit and one under the other when they do not
-                ButtonRow { actions() }
-            }
-        }
-        return
-    }
-    Row(
-        modifier = modifier
-            .widthIn(max = 760.dp)
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .clip(shape)
-            .background(colors.surface)
-            .border(1.dp, colors.border, shape),
-    ) {
-        Box(Modifier.width(4.dp).fillMaxHeight().background(tone))
-        Column(Modifier.padding(dimens.gapM).weight(1f), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
-            Text(title, style = DeskTheme.type.title, color = colors.text)
-            Text(text, style = DeskTheme.type.body, color = colors.textSecondary)
-            Row(horizontalArrangement = Arrangement.spacedBy(dimens.gapS)) { actions() }
-        }
-    }
-}
-
 /**
- * A labelled one-line text field in the kit's look. Tab and Shift+Tab move between fields,
- * Enter runs [onEnter] (the form's save).
+ * A labelled one-line text field drawn like the kit's [desktopkit.components.DeskTextField]
+ * (2.8.0: the surface colour, a `controlBorder` edge at rest, the text tone under the pointer, a
+ * 2 dp accent ring with the focus and a danger ring with [error]). It stays the app's own because
+ * the kit's field does not let the on-screen keyboard capitalise ([capitalization]: shelf codes in
+ * capitals, names with capital initials, a title's first letter). Tab and Shift+Tab move between
+ * fields, Enter runs [onEnter] (the form's save), the keyboard's Next key goes to the next field.
  */
 @Composable
 fun FormField(
@@ -124,16 +80,25 @@ fun FormField(
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val interaction = remember { MutableInteractionSource() }
+    val state = interaction.collectState()
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(dimens.radiusControl)
     val touch = DeskTheme.inputMode == desktopkit.theme.InputMode.Touch
+    val ring = when {
+        error -> colors.danger
+        focused -> colors.accent
+        state.hovered || state.pressed -> colors.textTertiary
+        else -> colors.controlBorder
+    }
     // The field keeps its own cursor and selection. When the caller replaces the text (a chosen
     // suggestion, a cleared form) the cursor goes to the end of the new text instead of staying
     // at its old index; typing keeps the cursor where the user put it.
     var field by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
     val shown = if (field.text == value) field else TextFieldValue(value, TextRange(value.length))
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(label, style = DeskTheme.type.label, color = if (error) colors.danger else colors.textSecondary)
+    Column(modifier) {
+        Text(label, style = DeskTheme.type.label, color = colors.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Spacer(Modifier.height(6.dp))
         androidx.compose.foundation.text.BasicTextField(
             value = shown,
             onValueChange = { next ->
@@ -146,6 +111,7 @@ fun FormField(
                 fontFamily = if (monospace) DeskTheme.type.mono.fontFamily else DeskTheme.type.body.fontFamily,
             ),
             cursorBrush = androidx.compose.ui.graphics.SolidColor(colors.accent),
+            interactionSource = interaction,
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                 keyboardType = keyboardType,
                 capitalization = capitalization,
@@ -156,6 +122,7 @@ fun FormField(
                 .fillMaxWidth()
                 // counted as one of the kit's fields: a tap on it keeps the on-screen keyboard open
                 .keepsKeyboardOpen()
+                .hoverable(interaction)
                 .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                 .onFocusChanged { focused = it.isFocused }
                 .onPreviewKeyEvent { event ->
@@ -176,10 +143,10 @@ fun FormField(
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .defaultMinSize(minHeight = if (touch) 48.dp else 36.dp)
-                        .background(colors.surfaceRaised, shape)
-                        .border(if (focused) 2.dp else 1.dp, if (focused) colors.accent else if (error) colors.danger else colors.borderStrong, shape)
-                        .padding(horizontal = dimens.gapM, vertical = 8.dp),
+                        .defaultMinSize(minHeight = dimens.controlHeight.coerceAtLeast(dimens.minTarget))
+                        .background(colors.surface, shape)
+                        .border(if (focused || error) 2.dp else 1.dp, ring, shape)
+                        .padding(horizontal = if (touch) 14.dp else 8.dp),
                     contentAlignment = Alignment.CenterStart,
                 ) { inner() }
             },

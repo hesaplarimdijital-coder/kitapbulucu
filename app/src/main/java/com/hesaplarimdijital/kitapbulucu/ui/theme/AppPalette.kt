@@ -11,7 +11,7 @@ import desktopkit.theme.mixSrgb
  * the kit computes its palette for the chosen theme and accent, then the surfaces and text are
  * warmed ("Kâğıt" cream with brown ink, "Gece okuması" warm dark, true black for OLED) and the
  * accent, selection and status colours are re-checked against the new surfaces so every pair
- * keeps at least 4.5:1 (AppPaletteTest).
+ * keeps at least 4.5:1, and the edges of text fields at least 3:1 (AppPaletteTest).
  */
 object AppPalette {
     val Bordo = Accent.custom("Bordo", Color(0xFFC2364B))
@@ -39,6 +39,11 @@ object AppPalette {
         val warning: Color,
         val danger: Color,
         val scrim: Color,
+        /** The edge of a text field at rest: at least 3:1 against the background and the surfaces (kit 2.8.0). */
+        val controlBorder: Color,
+        /** Darkens what lies under something drawn over it, and what is drawn there (the kit's overlay roles). */
+        val overlayScrim: Color,
+        val onOverlay: Color,
     ) {
         val textSurfaces: List<Color> get() = listOf(background, chrome, surface, surfaceRaised, hover)
     }
@@ -49,6 +54,7 @@ object AppPalette {
         hover = Color(0xFFE6DCC7), pressed = Color(0xFFDBD0B9), border = Color(0xFFDDD2BC), borderStrong = Color(0xFFC9BCA2),
         text = Color(0xFF2A2018), textSecondary = Color(0xFF4E4034), textTertiary = Color(0xFF63554A),
         success = Color(0xFF2F6B3F), warning = Color(0xFF7A5510), danger = Color(0xFFA3312A), scrim = Color(0x662A2018),
+        controlBorder = Color(0xFF857560), overlayScrim = Color(0x592A2018), onOverlay = Color(0xFFFFFCF5),
     )
 
     /** "Gece okuması": warm dark, like a lamp-lit page. */
@@ -57,6 +63,7 @@ object AppPalette {
         hover = Color(0xFF372F27), pressed = Color(0xFF41382E), border = Color(0xFF342C25), borderStrong = Color(0xFF43392F),
         text = Color(0xFFF0E8DA), textSecondary = Color(0xFFD3C8B6), textTertiary = Color(0xFFAFA28F),
         success = Color(0xFF7FCB93), warning = Color(0xFFE3B45C), danger = Color(0xFFF08A7C), scrim = Color(0x99000000),
+        controlBorder = Color(0xFF8A7A69), overlayScrim = Color(0x66000000), onOverlay = Color(0xFFF0E8DA),
     )
 
     /** OLED: true black behind everything, the same warm ink on barely raised surfaces. */
@@ -65,6 +72,7 @@ object AppPalette {
         hover = Color(0xFF221C17), pressed = Color(0xFF2B241E), border = Color(0xFF1E1915), borderStrong = Color(0xFF2E2721),
         text = Color(0xFFF0E8DA), textSecondary = Color(0xFFD3C8B6), textTertiary = Color(0xFFAFA28F),
         success = Color(0xFF7FCB93), warning = Color(0xFFE3B45C), danger = Color(0xFFF08A7C), scrim = Color(0xB3000000),
+        controlBorder = Color(0xFF75675A), overlayScrim = Color(0x66000000), onOverlay = Color(0xFFF0E8DA),
     )
 
     /** The `colors = { … }` hook: [kit] is what the kit computed for the current theme and [accent]. */
@@ -108,6 +116,9 @@ object AppPalette {
             danger = base.danger,
             brandSecondary = tone,
             scrim = base.scrim,
+            controlBorder = base.controlBorder,
+            overlayScrim = base.overlayScrim,
+            onOverlay = base.onOverlay,
         )
     }
 }

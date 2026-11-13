@@ -74,7 +74,6 @@ import com.hesaplarimdijital.kitapbulucu.search.SearchHit
 import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.text.TurkishText
-import com.hesaplarimdijital.kitapbulucu.ui.AnimatedFab
 import com.hesaplarimdijital.kitapbulucu.ui.BookActions
 import com.hesaplarimdijital.kitapbulucu.ui.ConfirmDialog
 import com.hesaplarimdijital.kitapbulucu.ui.DialogAction
@@ -89,6 +88,8 @@ import com.hesaplarimdijital.kitapbulucu.ui.library.PhoneBookList
 import com.hesaplarimdijital.kitapbulucu.ui.library.PhoneListState
 import com.hesaplarimdijital.kitapbulucu.ui.library.PhoneListTopBar
 import com.hesaplarimdijital.kitapbulucu.ui.theme.AppFonts
+import desktopkit.components.verticalScrollbar
+import androidx.compose.foundation.lazy.rememberLazyListState
 import desktopkit.components.DeskButton
 import desktopkit.components.DeskIcons
 import desktopkit.components.SegmentedChoice
@@ -106,7 +107,8 @@ import desktopkit.theme.DeskTheme
 import desktopkit.theme.InputMode
 import desktopkit.shell.currentWidthClass
 import desktopkit.shell.WidthClass
-import com.hesaplarimdijital.kitapbulucu.ui.fabPadding
+import desktopkit.components.PullToRefresh
+import desktopkit.shell.ShellPrimaryAction
 import desktopkit.shell.rememberShellContentPadding
 import desktopkit.components.rememberListAppear
 import desktopkit.components.listAppear
@@ -263,7 +265,9 @@ fun ShelvesScreen(
                             BookTable(rows, actions, onShelf = null, modifier = Modifier.weight(1f))
                         }
                     } else {
-                        LazyColumn(Modifier.fillMaxSize()) {
+                        val shelfList = rememberLazyListState()
+                        // with a mouse a thin scrollbar shows where the list is
+                        LazyColumn(Modifier.fillMaxSize().verticalScrollbar(shelfList), state = shelfList) {
                             if (codes.isEmpty()) {
                                 item {
                                     Text(
@@ -371,8 +375,16 @@ private fun PhoneShelves(
     val group = open?.let { code -> groups.firstOrNull { Shelves.key(it.shelf) == Shelves.key(code) } ?: ShelfGroup(code, emptyList()) }
     val rows = remember(group?.books, owner) { group?.books.orEmpty().map { LibraryRow(owner, it.index, it.value) } }
     val list = remember(owner, open) { PhoneListState() }
-    // taken out here, not in the list: coming back from a shelf, the rows do not come in again
+    // taken out here, not in the list: the rows come in when the other person's list is chosen, not
+    // when the screen opens or a shelf is closed (kit 2.8.0)
     val shelvesAppear = rememberListAppear(owner)
+    val refreshing by store.userRefreshing.collectAsState()
+    // the screen's main action as the kit's floating button: "Yeni raf" on the list, "Kitap ekle" on a shelf
+    when {
+        group == null -> ShellPrimaryAction(stringResource(R.string.shelves_new), DeskIcons.Plus, onCreate)
+        !group.isUnshelved && !adding && !list.selection.active ->
+            ShellPrimaryAction(stringResource(R.string.shelves_add_books), DeskIcons.Plus) { onAdding(true) }
+    }
 
     // the top bar: adding books, selecting rows, an open shelf, or the screen's own
     when {
@@ -409,7 +421,9 @@ private fun PhoneShelves(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             handleBack = !adding && !list.selection.active,
             detailKey = { Shelves.key(it) },
-            list = { PhoneShelfList(groups, codes, owner, onOwner, onOpen = { onOpen(it) }, onCreate = onCreate, appear = shelvesAppear) },
+            list = {
+                PhoneShelfList(groups, codes, owner, onOwner, onOpen = { onOpen(it) }, appear = shelvesAppear, refreshing = refreshing, onRefresh = store::refresh)
+            },
         ) { shown ->
             val shownGroup = groups.firstOrNull { Shelves.key(it.shelf) == Shelves.key(shown) } ?: ShelfGroup(shown, emptyList())
             PhoneShelfDetail(
@@ -420,6 +434,8 @@ private fun PhoneShelves(
                 onAdding = onAdding,
                 initialAddQuery = initialAddQuery,
                 listLabel = LibraryTexts.ownerLabel(resources, owner),
+                refreshing = refreshing,
+                onRefresh = store::refresh,
             )
         }
     }
@@ -432,15 +448,15 @@ private fun PhoneShelfList(
     owner: Owner,
     onOwner: (Owner) -> Unit,
     onOpen: (String) -> Unit,
-    onCreate: () -> Unit,
     appear: ListAppear,
+    refreshing: Boolean,
+    onRefresh: () -> Unit,
 ) {
     val resources = LocalContext.current.resources
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
     val shellPadding = rememberShellContentPadding()
     val listState = rememberSaveable(owner, saver = LazyListState.Saver) { LazyListState() }
-    val expanded by remember(listState) { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     Column(Modifier.fillMaxSize()) {
         WideSegmentedChoice(
             options = Owner.entries.map { it to LibraryTexts.ownerLabel(resources, it) },
@@ -448,9 +464,10 @@ private fun PhoneShelfList(
             onSelect = onOwner,
             modifier = Modifier.padding(horizontal = dimens.pagePadding).padding(bottom = dimens.gapS),
         )
-        Box(Modifier.weight(1f).fillMaxWidth()) {
-            // the rows run on under the glass bottom bar; the last ones stay clear of the floating button
-            LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding() + 96.dp)) {
+        // a pull from the top reads both files again
+        PullToRefresh(refreshing, onRefresh, Modifier.weight(1f).fillMaxWidth()) {
+            // the rows run on under the glass bottom bar; the kit's padding keeps the last ones clear of the floating button
+            LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding())) {
                 if (codes.isEmpty()) {
                     item(key = "none") {
                         Text(
@@ -465,14 +482,6 @@ private fun PhoneShelfList(
                     PhoneShelfRow(group, Modifier.listAppear(appear, index).animateItem()) { onOpen(group.shelf) }
                 }
             }
-            AnimatedFab(
-                visible = true,
-                label = stringResource(R.string.shelves_new),
-                icon = DeskIcons.Plus,
-                onClick = onCreate,
-                expanded = expanded,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(fabPadding()),
-            )
         }
     }
 }
@@ -546,14 +555,17 @@ private fun PhoneShelfDetail(
     onAdding: (Boolean) -> Unit,
     initialAddQuery: String,
     listLabel: String,
+    refreshing: Boolean,
+    onRefresh: () -> Unit,
 ) {
     val colors = DeskTheme.colors
     val dimens = DeskTheme.dimens
     val listState = remember(group.shelf, owner) { LazyListState() }
-    val expanded by remember(listState) { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     Box(Modifier.fillMaxSize()) {
+        // a shelf opens with its rows: they are simply there (no appear key)
         PhoneBookList(
-            rows, list, actions, onShelf = null, listState = listState, modifier = Modifier.fillMaxSize(), showShelf = false, appearKey = group.shelf,
+            rows, list, actions, onShelf = null, listState = listState, modifier = Modifier.fillMaxSize(), showShelf = false,
+            refreshing = refreshing, onRefresh = onRefresh,
             header = {
                 item(key = "header") {
                     Column(
@@ -575,14 +587,6 @@ private fun PhoneShelfDetail(
                     }
                 }
             },
-        )
-        AnimatedFab(
-            visible = !group.isUnshelved && !adding && !list.selection.active,
-            label = stringResource(R.string.shelves_add_books),
-            icon = DeskIcons.Plus,
-            onClick = { onAdding(true) },
-            expanded = expanded,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(fabPadding()),
         )
         AnimatedVisibility(
             adding && !group.isUnshelved,

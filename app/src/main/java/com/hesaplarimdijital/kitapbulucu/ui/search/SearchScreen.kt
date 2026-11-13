@@ -97,6 +97,8 @@ import desktopkit.shell.currentWidthClass
 import desktopkit.shell.WidthClass
 import androidx.compose.foundation.layout.PaddingValues
 import desktopkit.shell.rememberShellContentPadding
+import desktopkit.components.PullToRefresh
+import desktopkit.components.verticalScrollbar
 
 /** Literata for book titles (Draft A). */
 private val Serif = AppFonts.Literata
@@ -272,89 +274,94 @@ fun SearchScreen(
                 }
             }
         }
-        // on the phone the results run on under the glass bottom bar
+        // on the phone the results run on under the glass bottom bar; a pull from their top reads
+        // both files again (touch only; F5 and the automatic checks stay)
         val shellPadding = rememberShellContentPadding()
-        LazyColumn(
-            Modifier.fillMaxSize(),
-            state = list,
-            contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            val rowModifier = Modifier.padding(horizontal = dimens.pagePadding).widthIn(max = 760.dp).fillMaxWidth()
-            when {
-                currentIndex == null -> item { Message(stringResource(R.string.search_loading), null, rowModifier) }
-                query.isBlank() -> item {
-                    val now = System.currentTimeMillis()
-                    val updates = Owner.entries.filter { states.getValue(it).isLinked }
-                        .joinToString("\n") { LibraryTexts.updated(resources, it, states.getValue(it), now) }
-                    Message(stringResource(R.string.search_empty_title), stringResource(R.string.search_empty_text) + if (updates.isEmpty()) "" else "\n\n$updates", rowModifier)
-                }
-                else -> {
-                    if (groups.isEmpty()) {
-                        item {
-                            val title = when (filter) {
-                                null -> stringResource(R.string.search_none_both)
-                                Owner.DAD -> stringResource(R.string.search_none_dad)
-                                Owner.ME -> stringResource(R.string.search_none_me)
-                            }
-                            if (phone) {
-                                Column(rowModifier, horizontalAlignment = Alignment.CenterHorizontally) {
-                                    PhoneEmptyState(
-                                        icon = DeskIcons.Search,
-                                        title = title,
-                                        text = stringResource(R.string.phone_screens_search_none_hint),
-                                    ) {
-                                        DeskButton(
-                                            stringResource(R.string.search_add),
-                                            { onAdd?.invoke(query) },
-                                            modifier = Modifier.fillMaxWidth().widthIn(max = 420.dp).defaultMinSize(minHeight = 52.dp),
-                                            icon = DeskIcons.Plus,
-                                            primary = true,
-                                            enabled = onAdd != null,
-                                        )
-                                    }
-                                    if (onAdd == null) Text(stringResource(R.string.search_add_later), style = type.labelSmall, color = colors.textTertiary)
-                                    if (suggestions.isNotEmpty()) {
-                                        Text(
-                                            stringResource(R.string.search_suggestions),
-                                            style = type.label,
-                                            color = colors.textSecondary,
-                                            modifier = Modifier.fillMaxWidth().padding(top = dimens.gapL, start = dimens.gapM),
-                                        )
-                                    }
+        val refreshing by store.userRefreshing.collectAsState()
+        PullToRefresh(refreshing, store::refresh, Modifier.fillMaxSize()) {
+            LazyColumn(
+                // with a mouse (DeX) a thin scrollbar shows where the list is
+                Modifier.fillMaxSize().verticalScrollbar(list),
+                state = list,
+                contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                val rowModifier = Modifier.padding(horizontal = dimens.pagePadding).widthIn(max = 760.dp).fillMaxWidth()
+                when {
+                    currentIndex == null -> item { Message(stringResource(R.string.search_loading), null, rowModifier) }
+                    query.isBlank() -> item {
+                        val now = System.currentTimeMillis()
+                        val updates = Owner.entries.filter { states.getValue(it).isLinked }
+                            .joinToString("\n") { LibraryTexts.updated(resources, it, states.getValue(it), now) }
+                        Message(stringResource(R.string.search_empty_title), stringResource(R.string.search_empty_text) + if (updates.isEmpty()) "" else "\n\n$updates", rowModifier)
+                    }
+                    else -> {
+                        if (groups.isEmpty()) {
+                            item {
+                                val title = when (filter) {
+                                    null -> stringResource(R.string.search_none_both)
+                                    Owner.DAD -> stringResource(R.string.search_none_dad)
+                                    Owner.ME -> stringResource(R.string.search_none_me)
                                 }
-                            } else {
-                                Column(rowModifier.padding(top = dimens.gapL), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
-                                    Text(title, style = TextStyle(fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = colors.text)
-                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(dimens.gapS)) {
-                                        DeskButton(stringResource(R.string.search_add), { onAdd?.invoke(query) }, icon = DeskIcons.Plus, primary = true, enabled = onAdd != null)
+                                if (phone) {
+                                    Column(rowModifier, horizontalAlignment = Alignment.CenterHorizontally) {
+                                        PhoneEmptyState(
+                                            icon = DeskIcons.Search,
+                                            title = title,
+                                            text = stringResource(R.string.phone_screens_search_none_hint),
+                                        ) {
+                                            DeskButton(
+                                                stringResource(R.string.search_add),
+                                                { onAdd?.invoke(query) },
+                                                modifier = Modifier.fillMaxWidth().widthIn(max = 420.dp).defaultMinSize(minHeight = 52.dp),
+                                                icon = DeskIcons.Plus,
+                                                primary = true,
+                                                enabled = onAdd != null,
+                                            )
+                                        }
                                         if (onAdd == null) Text(stringResource(R.string.search_add_later), style = type.labelSmall, color = colors.textTertiary)
+                                        if (suggestions.isNotEmpty()) {
+                                            Text(
+                                                stringResource(R.string.search_suggestions),
+                                                style = type.label,
+                                                color = colors.textSecondary,
+                                                modifier = Modifier.fillMaxWidth().padding(top = dimens.gapL, start = dimens.gapM),
+                                            )
+                                        }
                                     }
-                                    if (suggestions.isNotEmpty()) {
-                                        Spacer(Modifier.height(dimens.gapS))
-                                        Text(stringResource(R.string.search_suggestions), style = type.label, color = colors.textSecondary)
+                                } else {
+                                    Column(rowModifier.padding(top = dimens.gapL), verticalArrangement = Arrangement.spacedBy(dimens.gapS)) {
+                                        Text(title, style = TextStyle(fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 20.sp), color = colors.text)
+                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(dimens.gapS)) {
+                                            DeskButton(stringResource(R.string.search_add), { onAdd?.invoke(query) }, icon = DeskIcons.Plus, primary = true, enabled = onAdd != null)
+                                            if (onAdd == null) Text(stringResource(R.string.search_add_later), style = type.labelSmall, color = colors.textTertiary)
+                                        }
+                                        if (suggestions.isNotEmpty()) {
+                                            Spacer(Modifier.height(dimens.gapS))
+                                            Text(stringResource(R.string.search_suggestions), style = type.label, color = colors.textSecondary)
+                                        }
                                     }
                                 }
                             }
                         }
+                        itemsIndexed(shown, key = { position, group -> "$position:" + BookGroups.key(group.title, group.author) }) { position, group ->
+                            ResultRow(
+                                actions = actions,
+                                group = group,
+                                selected = position == selected,
+                                opened = position == opened,
+                                modifier = rowModifier,
+                                onClick = {
+                                    selected = position
+                                    opened = if (opened == position) -1 else position
+                                },
+                            )
+                        }
+                        if (pointer && shown.isNotEmpty()) item { KeyHints(rowModifier.padding(vertical = dimens.gapM)) }
                     }
-                    itemsIndexed(shown, key = { position, group -> "$position:" + BookGroups.key(group.title, group.author) }) { position, group ->
-                        ResultRow(
-                            actions = actions,
-                            group = group,
-                            selected = position == selected,
-                            opened = position == opened,
-                            modifier = rowModifier,
-                            onClick = {
-                                selected = position
-                                opened = if (opened == position) -1 else position
-                            },
-                        )
-                    }
-                    if (pointer && shown.isNotEmpty()) item { KeyHints(rowModifier.padding(vertical = dimens.gapM)) }
                 }
+                item { Spacer(Modifier.height(dimens.gapL)) }
             }
-            item { Spacer(Modifier.height(dimens.gapL)) }
         }
     }
 }
@@ -373,7 +380,7 @@ private fun SearchField(query: String, focusKey: Int, onQueryChange: (String) ->
             .fillMaxWidth()
             .height(if (touch) 56.dp else 48.dp)
             .background(colors.surfaceRaised, shape)
-            .border(if (focused) 2.dp else 1.dp, if (focused) colors.accent else colors.borderStrong, shape)
+            .border(if (focused) 2.dp else 1.dp, if (focused) colors.accent else colors.controlBorder, shape)
             .padding(horizontal = dimens.gapM),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -402,7 +409,7 @@ private fun SearchField(query: String, focusKey: Int, onQueryChange: (String) ->
         }
         if (query.isNotEmpty()) {
             if (touch) {
-                DeskIconButton(DeskIcons.Close, stringResource(R.string.search_clear), { onQueryChange("") })
+                DeskIconButton(DeskIcons.Close, stringResource(R.string.search_clear), { onQueryChange("") }, shortcut = "Esc")
             } else {
                 KeyCap("Esc")
                 Spacer(Modifier.width(dimens.gapS))

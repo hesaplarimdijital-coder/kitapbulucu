@@ -81,7 +81,6 @@ import com.hesaplarimdijital.kitapbulucu.store.AppSettings
 import com.hesaplarimdijital.kitapbulucu.store.LibraryState
 import com.hesaplarimdijital.kitapbulucu.store.LibraryStore
 import com.hesaplarimdijital.kitapbulucu.text.TurkishText
-import com.hesaplarimdijital.kitapbulucu.ui.AnimatedFab
 import com.hesaplarimdijital.kitapbulucu.ui.AppIcons
 import com.hesaplarimdijital.kitapbulucu.ui.AppSheet
 import com.hesaplarimdijital.kitapbulucu.ui.BookActions
@@ -112,12 +111,13 @@ import desktopkit.shell.WidthClass
 import java.text.Collator
 import java.util.Locale
 import desktopkit.shell.currentWidthClass
-import com.hesaplarimdijital.kitapbulucu.ui.fabPadding
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.lazy.itemsIndexed
 import desktopkit.theme.LocalMotionTier
 import desktopkit.shell.rememberShellContentPadding
 import desktopkit.components.rememberListAppear
+import desktopkit.components.PullToRefresh
+import desktopkit.shell.ShellPrimaryAction
 import desktopkit.components.listAppear
 import desktopkit.components.animatedStateBackground
 import desktopkit.components.DeskListRow
@@ -158,7 +158,8 @@ fun LibraryScreen(
     val now = System.currentTimeMillis()
 
     if (currentWidthClass() == WidthClass.Compact) {
-        PhoneLibrary(state, owner, { owner = it }, actions, title, onAdd, onShelf, previewSelected, previewSheet)
+        val refreshing by store.userRefreshing.collectAsState()
+        PhoneLibrary(state, owner, { owner = it }, actions, title, onAdd, onShelf, previewSelected, previewSheet, refreshing, store::refresh)
         return
     }
 
@@ -253,6 +254,8 @@ private fun PhoneLibrary(
     onShelf: (Owner, String) -> Unit,
     previewSelected: List<Int>,
     previewSheet: Int?,
+    refreshing: Boolean,
+    onRefresh: () -> Unit,
 ) {
     val resources = LocalContext.current.resources
     val dimens = DeskTheme.dimens
@@ -273,7 +276,6 @@ private fun PhoneLibrary(
         }
     }
     val listState = rememberSaveable(owner, saver = LazyListState.Saver) { LazyListState() }
-    val fabExpanded by remember(listState) { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
 
     PhoneListTopBar(list, sorted, actions, normalActions = listOf(TopBarAction(DeskIcons.Sort, stringResource(R.string.touchlist_sort), { sorting = true })))
 
@@ -290,18 +292,15 @@ private fun PhoneLibrary(
                 !state.isLinked -> Message(stringResource(R.string.library_not_linked))
                 books == null -> Message(LibraryTexts.status(resources, state))
                 books.isEmpty() -> Message(stringResource(R.string.library_empty))
-                else -> PhoneBookList(sorted, list, actions, onShelf, listState, Modifier.fillMaxSize(), appearKey = owner)
+                else -> PhoneBookList(
+                    sorted, list, actions, onShelf, listState, Modifier.fillMaxSize(), appearKey = owner,
+                    refreshing = refreshing, onRefresh = onRefresh,
+                )
             }
-            AnimatedFab(
-                visible = !list.selection.active && state.isLinked,
-                label = stringResource(R.string.library_add),
-                icon = DeskIcons.Plus,
-                onClick = onAdd,
-                expanded = fabExpanded,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(fabPadding()),
-            )
         }
     }
+    // "Kitap ekle": the kit's floating button, above the bottom bar, the label folding away once the list scrolls
+    if (!list.selection.active && state.isLinked) ShellPrimaryAction(stringResource(R.string.library_add), DeskIcons.Plus, onAdd)
     // the kit's "⋯" sheet: the orders, the chosen one ticked
     val sortLabels = PhoneSort.entries.associateWith { sortLabel(it) }
     MoreSheet(
@@ -362,7 +361,8 @@ fun PhoneListTopBar(
 /**
  * The phone list of books: two-line rows (title over author, the shelf on the right). A tap opens
  * the book's action sheet, a long press starts selecting; while selecting a tap ticks a row.
- * [header] goes above the rows. The last rows stay clear of the floating button.
+ * [header] goes above the rows. The last rows stay clear of the floating button (the kit counts it
+ * in the shell's padding). With [onRefresh] a pull from the top of the list reads both files again.
  */
 @Composable
 fun PhoneBookList(
@@ -375,8 +375,13 @@ fun PhoneBookList(
     header: (LazyListScope.() -> Unit)? = null,
     /** False on an open shelf, where every row would repeat the shelf's code. */
     showShelf: Boolean = true,
-    /** The rows come in one after the other when this changes (another list, another shelf). */
+    /**
+     * The rows come in one after the other when this changes after the list has appeared (the other
+     * person's list); a list that opens with its rows shows them at once (kit 2.8.0).
+     */
     appearKey: Any? = null,
+    refreshing: Boolean = false,
+    onRefresh: (() -> Unit)? = null,
 ) {
     // Rows are not animated (no animateItem): a list holds thousands of books, and a new sort
     // order moving every row at once looked jerky on a phone. The list simply shows the new order.
@@ -386,24 +391,26 @@ fun PhoneBookList(
         if (first[0]) first[0] = false else state.selection = TouchSelection.None
     }
     val selection = state.selection
-    // the rows run on under the glass bottom bar; the last ones stay clear of the floating button
+    // the rows run on under the glass bottom bar; the kit's padding keeps the last ones clear of the floating button
     val shellPadding = rememberShellContentPadding()
     val appear = rememberListAppear(appearKey)
-    LazyColumn(modifier, state = listState, contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding() + 96.dp)) {
-        header?.invoke(this)
-        itemsIndexed(rows, key = { _, row -> rowKey(row) }, contentType = { _, _ -> "book" }) { index, row ->
-            val key = rowKey(row)
-            PhoneBookRow(
-                row,
-                modifier = Modifier.listAppear(appear, index),
-                selected = key in selection,
-                selecting = selection.active,
-                showShelf = showShelf,
-                onClick = { if (state.selection.active) state.selection = state.selection.toggle(key) else state.sheet = row },
-                onLongClick = { state.selection = state.selection.toggle(key) },
-                onEdit = { actions.edit(row.owner, row.book) },
-                onDelete = { actions.delete(row.owner, row.book) },
-            )
+    PullToRefresh(refreshing, onRefresh ?: {}, modifier, enabled = onRefresh != null && DeskTheme.inputMode == InputMode.Touch) {
+        LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = shellPadding.calculateBottomPadding())) {
+            header?.invoke(this)
+            itemsIndexed(rows, key = { _, row -> rowKey(row) }, contentType = { _, _ -> "book" }) { index, row ->
+                val key = rowKey(row)
+                PhoneBookRow(
+                    row,
+                    modifier = Modifier.listAppear(appear, index),
+                    selected = key in selection,
+                    selecting = selection.active,
+                    showShelf = showShelf,
+                    onClick = { if (state.selection.active) state.selection = state.selection.toggle(key) else state.sheet = row },
+                    onLongClick = { state.selection = state.selection.toggle(key) },
+                    onEdit = { actions.edit(row.owner, row.book) },
+                    onDelete = { actions.delete(row.owner, row.book) },
+                )
+            }
         }
     }
     state.sheet?.let { row -> BookSheet(row, actions, onShelf, onDismiss = { state.sheet = null }) }
@@ -672,7 +679,7 @@ fun BookTable(rows: List<LibraryRow>, actions: BookActions, onShelf: ((Owner, St
             enter = fadeIn(tween(200)) + expandVertically(tween(200)),
             exit = fadeOut(tween(120)) + shrinkVertically(tween(120)),
         ) {
-            SelectionBar(
+            TableSelectionBar(
                 count = chosen.size,
                 picking = picking,
                 showPick = touch,
@@ -738,26 +745,25 @@ fun BookTable(rows: List<LibraryRow>, actions: BookActions, onShelf: ((Owner, St
     }
 }
 
-/** "3 kitap seçili · Rafa koy… · Seçimi kaldır"; on touch also the "Seç" switch that makes taps tick rows. */
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * "× 3 kitap seçili … Rafa koy…" in the kit's selection bar while several rows are chosen (or, on
+ * touch, while taps tick rows); on touch otherwise only the "Seç" button that starts ticking. The
+ * × ends the selection ("Seçimi kaldır") or the ticking ("Seçmeyi bitir").
+ */
 @Composable
-private fun SelectionBar(count: Int, picking: Boolean, showPick: Boolean, onPick: () -> Unit, onPlace: () -> Unit, onClear: () -> Unit) {
+private fun TableSelectionBar(count: Int, picking: Boolean, showPick: Boolean, onPick: () -> Unit, onPlace: () -> Unit, onClear: () -> Unit) {
     val dimens = DeskTheme.dimens
-    FlowRow(
-        Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding, vertical = dimens.gapXs),
-        horizontalArrangement = Arrangement.spacedBy(dimens.gapS),
-        verticalArrangement = Arrangement.spacedBy(dimens.gapXs),
-    ) {
-        if (showPick) DeskButton(stringResource(if (picking) R.string.select_done else R.string.select_start), onPick, icon = DeskIcons.Check, primary = picking)
-        if (count > 0) {
-            Text(
-                stringResource(R.string.select_count, count),
-                style = DeskTheme.type.body,
-                color = DeskTheme.colors.textSecondary,
-                modifier = Modifier.align(Alignment.CenterVertically),
-            )
-            DeskButton(stringResource(R.string.action_place), onPlace, icon = AppIcons.Shelf, primary = !showPick || !picking)
-            DeskButton(stringResource(R.string.select_clear), onClear)
+    if (count > 1 || picking) {
+        desktopkit.components.SelectionBar(
+            text = stringResource(R.string.select_count, count),
+            onClose = if (picking) onPick else onClear,
+            closeLabel = stringResource(if (picking) R.string.select_done else R.string.select_clear),
+        ) {
+            DeskButton(stringResource(R.string.action_place), onPlace, icon = AppIcons.Shelf, primary = true, enabled = count > 0)
+        }
+    } else if (showPick) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = dimens.pagePadding, vertical = dimens.gapXs)) {
+            DeskButton(stringResource(R.string.select_start), onPick, icon = DeskIcons.Check)
         }
     }
 }
