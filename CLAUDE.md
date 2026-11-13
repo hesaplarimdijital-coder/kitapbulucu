@@ -50,4 +50,5 @@
 - Uygulamanın kendi `BasicTextField`'ları `Modifier.keepsKeyboardOpen()` alır; yoksa kabuk dokununca klavyeyi kapatır.
 - Excel metin olmayan hücreleri tarihe çevirebilir ("Nis.53"); okuyucu tarih biçimli hücreyi metne çevirir, yazıcı her hücreyi metin biçiminde yazar.
 - Telefonda kabuk içinde açılan tam ekran form (Ekle/Düzenle, birleştirme) `HideBottomNavigation()` çağırır (`OverlayPage`); yoksa alt gezinme çubuğu formun Vazgeç/Kaydet çubuğunun altında kaydırmayla kayıp gelir, altında boş şerit kalır ve form zıplıyor gibi görünür (S-41). Telefon kaydında "kendiliğinden kaydı" demeden önce dokunma noktasını kare kare izle: S-41'deki "başa atlama" parmağın hızlı aşağı kaydırmasıydı.
+- `gradle/libs.versions.toml`'da `desktopKit` satırının sonuna yorum yazma: CI sürümü o satırdan olduğu gibi okur (JitPack'te bulamaz).
 - Kitin `ShellPrimaryAction`'ı (yüzen düğme) yalnızca telefon yolunda çağrılır; genişte çağrılırsa kenar çubuğuna ve raya da vurgulu düğme koyar. Listelerin sonundaki düğme boşluğunu `rememberShellContentPadding()` zaten içerir, ayrıca ekleme. `SettingRow`'un denetimi adıyla (`control =`) verilir (2.8.0'da araya `onClick` girdi).
