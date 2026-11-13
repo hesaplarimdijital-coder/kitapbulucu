@@ -332,6 +332,18 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [x] Kit testleri her karede iki sayfanın karışmadığını denetliyor; uygulamada değişiklik gerekmedi.
 - [x] Kullanıcı 2.4.0 Release'ini açtı (11.11.2026; sekmeler arası Geri düzeltmesiyle birlikte); uygulama sürüm numarasına geçti.
 
+### K-08 Kit 2.8.0'a geçiş · 3 · [O] · bitti (telefonda ve DeX'te denenecek)
+- [x] `desktopKit = "2.8.0"` (JitPack etiketi); derleme ortamı değişmedi (AGP 9.4.1, Gradle 9.8.2, Kotlin 2.4.20, BOM 2026.09.00, compileSdk 37, minSdk 34, targetSdk 36).
+- [x] Renkler: metin kutularının kenarı (`controlBorder`) Kâğıt, Gece okuması ve OLED temalarında her yüzeye en az 3:1; `overlayScrim`/`onOverlay` sıcak tonlarda; `AppPaletteTest` denetliyor.
+- [x] Kitin karşılığı olanlar kitinkiyle değişti: uyarı kartları (`NoticeCard`) → `StatusBanner`; telefonun yüzen düğmesi (`AppFab`) → `ShellPrimaryAction`; DeX tablosunun seçim çubuğu → kitin `SelectionBar`'ı.
+- [x] Kalanlar ve nedeni: `FormField` (kitin metin kutusu klavyeye büyük harf başlatmayı söyleyemiyor: raf kodları büyük harfle, adlar büyük harfle başlar), tam genişlikte segment seçimi, öneri listesi, telefon formunun alt düğme çubuğu, kabuk dışı ekranların başlığı, kitap satırlarının Fiş görünümü. `FormField` ve arama kutusu kitin 2.8.0 metin kutusu gibi çizilir.
+- [x] Telefonda Ara, Kütüphane, Raflar ve açık raf listesi parmakla aşağı çekilince iki dosya yeniden okunur (F5 ve otomatik okumalar duruyor); DeX'te uzun listelerde fareyle kaydırma çubuğu.
+- [x] Geri al bildirimi 8 sn, "güncellendi" notu 5 sn (kit sürümünden önceki süreler); imleç üstündeyken süre durur.
+- [x] Satırlar yalnızca öteki listeye geçince sırayla gelir; ekran ya da raf açılınca hemen görünür (kitin yeni kuralı).
+- [x] Klavye: tablo tek Tab durağı, içinde oklar; F2, Del, Enter, Ctrl+A, çoklu seçim ve Ara'nın ↑↓/Enter/Esc'i kodda aynı yolla çalışıyor (denemesi DeX'te). Testler yeşil (567c75b ilk seferde); 58 değişen ekran görüntüsüne açık ve koyu, telefon ve DeX bakıldı, başvurular yenilendi.
+- [ ] Telefonda: aşağı çekip yenileme, yüzen düğmenin kaydırınca küçülmesi ve klavye açılınca gizlenmesi.
+- [ ] DeX'te: kaydırma çubuğu, simge düğmelerinin ipuçları, tablonun seçim çubuğu, fare üstündeyken bildirimin beklemesi.
+
 ## Sıraya konmayı bekleyenler
 
 ### W-01 Windows sürümü (babanın bilgisayarı için) · [F] · bekliyor (kullanıcı desktop-kit 1.0.0'ı bitirince)

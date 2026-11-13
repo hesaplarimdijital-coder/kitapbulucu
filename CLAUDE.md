@@ -16,7 +16,7 @@
 ## Değişmez kararlar
 - INTERNET izni yok; hesap, reklam, analitik yok. Buluta taşımayı Google Drive uygulaması yapar; uygulama dosyalara SAF ile erişir. Ek depolama izni istenmez.
 - Bağımlılık en az. Her yeni kütüphane için tek cümleyle neden söyle ve onay al. Room yok, Apache POI yok, ML Kit yok.
-- Arayüz kiti: `com.github.hesaplarimdijital-coder:desktop-kit` (JitPack, şu an 2.4.0). Kiti uygulamada kopyalama ya da yamama: kit deposunda düzelt, sürümü artır, kullanıcıdan GitHub'da Release oluşturmasını iste (oturum etiket gönderemez). Release beklenirken uygulama kitin commit sürümüyle (commit kimliğinin ilk 10 karakteri) derlenir; Release gelince sürüm numarasına geçilir.
+- Arayüz kiti: `com.github.hesaplarimdijital-coder:desktop-kit` (JitPack, şu an 2.8.0). Kiti uygulamada kopyalama ya da yamama: kit deposunda düzelt, sürümü artır, kullanıcıdan GitHub'da Release oluşturmasını iste (oturum etiket gönderemez). Release beklenirken uygulama kitin commit sürümüyle (commit kimliğinin ilk 10 karakteri) derlenir; Release gelince sürüm numarasına geçilir.
 - Sürümler (kit 2.x'in istediği): Kotlin 2.4.20, AGP 9.4.1 (Kotlin'i kendisi derler; modülde Kotlin eklentisi yok), Gradle 9.8.2, JDK 17, minSdk 34 (Android 14), compileSdk 37, targetSdk 36, Compose BOM 2026.09.00, activity-compose 1.13.0, Robolectric 4.17.
 - Excel: `.xlsx` okuyucu ve yazıcı kendi kodumuz (`java.util.zip` + `XmlPullParser`). `.csv` desteklenir (`;` ya da `,`; UTF-8 ya da Windows-1254). `.xls` desteklenmez: ".xlsx olarak kaydedip tekrar deneyin".
 - Asıl kaynak Drive'daki `Babam.xlsx` ve `Benim.xlsx`. Herkes kendi dosyasına yazar, ikisini de okur. Öteki kişinin dosyası için onay sorulur ve yazmadan hemen önce yeniden okunur.
@@ -49,3 +49,4 @@
 - Telefonda içerik pencerenin tamamını kaplar (kit 2.x cam çubuklar): `AppShell` her ekrana üst çubuğun boşluğunu verir; listeler alt boşluğu `rememberShellContentPadding()` ile kendi `contentPadding`'ine ekler, liste olmayan ekranlar (formlar) `AppShell`'den alttan boşluk alır. Alt sayfalar ve iletişim kutuları kabuğun `overlays` yuvasında ya da ekranın içinde çizilir; kabuk dışında kitin alt sayfası ayrı pencere açar.
 - Uygulamanın kendi `BasicTextField`'ları `Modifier.keepsKeyboardOpen()` alır; yoksa kabuk dokununca klavyeyi kapatır.
 - Excel metin olmayan hücreleri tarihe çevirebilir ("Nis.53"); okuyucu tarih biçimli hücreyi metne çevirir, yazıcı her hücreyi metin biçiminde yazar.
+- Kitin `ShellPrimaryAction`'ı (yüzen düğme) yalnızca telefon yolunda çağrılır; genişte çağrılırsa kenar çubuğuna ve raya da vurgulu düğme koyar. Listelerin sonundaki düğme boşluğunu `rememberShellContentPadding()` zaten içerir, ayrıca ekleme. `SettingRow`'un denetimi adıyla (`control =`) verilir (2.8.0'da araya `onClick` girdi).

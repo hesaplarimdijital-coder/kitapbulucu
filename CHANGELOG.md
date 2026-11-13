@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 1.4.0 — 13.11.2026
+
+- **Telefon**: Ara, Kütüphane ve Raflar listesi parmakla aşağı çekilince iki Excel dosyası yeniden okunur; "Kitap ekle" / "Yeni raf" düğmesi kaydırınca küçülür, klavye açılınca gizlenir.
+- **Uyarılar**: dosya okunamadı, yazılamadı gibi uyarılar renkli simgeli şeritler olarak çıkar; metin kutularının kenarı daha belirgin.
+- **DeX**: uzun listelerde fareyle kaydırma çubuğu; tabloda başlık ve seçili satır belirgin, birden çok kitap seçilince üstte "× N kitap seçili · Rafa koy…" çubuğu; simge düğmelerinin üstüne gelince adı yazar.
+- **Bildirimler**: "Geri al" 8 saniye, "listesi güncellendi" 5 saniye kalır; fare üstündeyken kaybolmaz.
+
 ## 1.3.0 — 04.11.2026
 
 - **Telefon**: listeler alttaki buzlu cam çubuğun altından akar; satırlar açılışta sırayla belirir; alttan açılan sayfalar, menüler ve geçişler arayüz kitinin yeni, daha akıcı hareketleriyle çalışır.
