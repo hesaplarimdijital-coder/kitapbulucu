@@ -89,7 +89,8 @@ class PhoneFormScrollTest {
 
     private fun title(): SemanticsNodeInteraction = compose.onNode(hasSetTextAction() and hasText(book.title))
 
-    private fun titleTop(): Dp = title().getBoundsInRoot().top
+    /** Where the title field is, also when it is scrolled out of sight (bounds in root are clipped). */
+    private fun titleTop(): Dp = with(compose.density) { title().fetchSemanticsNode().positionInRoot.y.toDp() }
 
     /** The form's scrolling column: the tallest scrollable node on the screen. */
     private fun form(): SemanticsNodeInteraction {
