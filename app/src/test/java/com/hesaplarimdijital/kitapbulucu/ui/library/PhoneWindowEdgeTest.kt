@@ -8,7 +8,6 @@ import android.os.Looper
 import android.view.PixelCopy
 import android.view.View
 import androidx.activity.ComponentActivity
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -39,8 +38,6 @@ import com.hesaplarimdijital.kitapbulucu.xlsx.XlsxWriter
 import desktopkit.DesktopKitRoot
 import desktopkit.settings.rememberDeskPreferences
 import desktopkit.shell.ShellNavigator
-import desktopkit.theme.GlassMode
-import desktopkit.theme.LocalGlassMode
 import desktopkit.theme.ThemeMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +55,10 @@ import kotlin.math.abs
  * the library list runs on under the glass bars, and nothing of it shows below them: the kit's
  * bottom glass reaches the window's bottom edge and the last pixel rows are the chrome, not the
  * list. The app is laid out as MainActivity lays it out (DesktopKitRoot around AppShell, edge to
- * edge), the glass blurs as on the phone and the window is drawn with the hardware renderer.
+ * edge) and the window is drawn with the hardware renderer, so the app's own part is checked: it
+ * neither pads nor moves the shell, and the list ends at the window's bottom under the chrome.
+ * The glass is translucent here: Robolectric's API 34 graphics cannot compile the blur's noise
+ * shader. The blur's own edge (the cause of S-42) is checked in the kit, by WindowEdgeTest.
  */
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -97,10 +97,8 @@ class PhoneWindowEdgeTest {
             val prefs = rememberDeskPreferences(accents = AppPalette.accents, defaultTheme = ThemeMode.Dark)
             val navController = rememberNavController()
             navigator = ShellNavigator(navController)
-            CompositionLocalProvider(LocalGlassMode provides GlassMode.Blur) {
-                DesktopKitRoot(prefs, fonts = AppFonts.desk, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
-                    AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store))
-                }
+            DesktopKitRoot(prefs, fonts = AppFonts.desk, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
+                AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store))
             }
         }
         compose.waitForIdle()
