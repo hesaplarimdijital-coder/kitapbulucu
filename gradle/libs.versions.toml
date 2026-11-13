@@ -4,7 +4,7 @@ agp = "9.4.1"
 # AGP 9 compiles Kotlin itself; the root build file pins this version. Haze 2 (from the kit) needs 2.3+.
 kotlin = "2.4.20"
 # the kit 2.9.0 merge commit (PR #14) until the 2.9.0 Release exists; the CI reads this line as is
-desktopKit = "8f395b8786"
+desktopKit = "2a6c41a7e7"
 activityCompose = "1.13.0"
 composeBom = "2026.09.00"
 junit = "4.13.2"

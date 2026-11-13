@@ -353,6 +353,14 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [ ] Telefonda: form kaydırınca yerinde kalıyor, alttaki çubuk görünmüyor, form kapanınca çubuk geri geliyor.
 - [ ] Kullanıcı kit 2.9.0 Release'ini açınca `desktopKit = "2.9.0"`.
 
+### S-42 Telefonda alt çubuğun altından liste görünüyor · 1 · [O] · bitti (telefonda denenecek)
+- [x] Neden: S24 ekran görüntüsünde yalnızca en alt piksel satırı (2339) camsızdı. Kitin camı (Haze) bulanıklığı küçültülmüş kopyada yapıp büyütür; yuvarlama kopyayı pencerenin kenarında 0,52 piksel kısa bıraktı (alt cam 339 px, yoğunluk 3). Uygulamada kabuğu kaydıran ya da dolgulayan bir şey yok.
+- [x] Kit 2.9.0 (PR #16, commit `2a6c41a7e7`): cam altına saydamsız renk; sistemin alt payları tutmazsa da kabuk kenara kadar kaplar. Tablet ve DeX görünüşü aynı.
+- [x] Kitin `WindowEdgeTest`'i düzeltmeden önce CI'da kırıldı, sonra geçti (üç düğme, hareketle gezinme, çubuklar gizliyken, gizli alt gezinme, 1440 px, tutmayan paylar). Uygulamada `PhoneWindowEdgeTest`.
+- [x] Durum çubuğunun altı (üst kenar) ve Ekle/Düzenle formunda sistem çubuğunun altı da denetlendi.
+- [ ] Telefonda: Kütüphane'de liste kaydırılırken ve dururken ekranın en altında, düğmelerin altında yazı çizgisi görünmüyor.
+- [ ] Telefonda: Ekle/Düzenle açıkken ve alt sayfa (kitap sayfası) açıkken de en alt satırda liste görünmüyor.
+
 ## Sıraya konmayı bekleyenler
 
 ### W-01 Windows sürümü (babanın bilgisayarı için) · [F] · bekliyor (kullanıcı desktop-kit 1.0.0'ı bitirince)

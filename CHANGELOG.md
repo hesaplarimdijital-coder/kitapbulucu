@@ -1,5 +1,9 @@
 # Değişiklikler
 
+## 1.4.2 — 13.11.2026
+
+- **Telefon**: ekranın en altında, sistemin düğmelerinin altında listenin bir sonraki satırı ince bir çizgi olarak görünmüyor; alt çubuğun camı ekranın kenarına kadar uzanır (arayüz kiti düzeltildi).
+
 ## 1.4.1 — 13.11.2026
 
 - **Telefon**: kitap ekleme, düzenleme ve Excel birleştirme açıkken alttaki Ara / Kütüphane / Raflar / Ayarlar çubuğu görünmez. Form kaydırılırken altında çubuk kayıp gidip gelmez, "Vazgeç / Kaydet" ekranın altında yerinde durur, form da bırakılan yerde kalır.
