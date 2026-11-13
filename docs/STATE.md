@@ -2,7 +2,7 @@
 
 Karar (22.10.2026): arayüzde listeler MKE ve Barış adıyla görünür; dosyalar (`Babam.xlsx`, `Benim.xlsx`), sayfa adı ve iç adlar Babam/Benim olarak kalır.
 
-Son güncelleme: 13.11.2026, sürüm 1.4.2, kit 2.9.0 commit `2a6c41a7e7` (Release bekleniyor; S-41, S-42).
+Son güncelleme: 14.11.2026, sürüm 1.4.2, kit 2.9.0 (Release açıldı; etiket `2a6c41a7e7`, S-41 ve S-42 içinde).
 
 ## Şu an
 
@@ -28,7 +28,6 @@ Son güncelleme: 13.11.2026, sürüm 1.4.2, kit 2.9.0 commit `2a6c41a7e7` (Relea
 
 ## Kullanıcıdan beklenenler
 
-- Kit 2.9.0 Release'i: GitHub'da desktop-kit → Releases → yeni sürüm, etiket `2.9.0`, hedef `main` (PR #14 birleşti). PR #14 ve #16 birleşti. Gelince `desktopKit = "2.9.0"`.
 - Windows sürümü (W-01) kullanıcının desktop-kit 1.0.0 çalışmasının bitmesini bekliyor; bitince haber verecek. Kararlar BACKLOG W-01'de.
 
 1. Gizli değer artık gerekmez (28.10.2026): CI imza anahtarını GitHub Actions önbelleğinde tutar (ARCHITECTURE 13). Önbellekteki anahtarla imzalanan ilk APK için uygulama bir kez kaldırılıp kurulur; sonrakiler üstüne kurulur. Önbellek silinirse (ör. 60 gün depo etkinliği olmazsa) bir kez daha kaldırıp kurmak gerekir.

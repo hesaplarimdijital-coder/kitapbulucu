@@ -16,7 +16,7 @@
 ## Değişmez kararlar
 - INTERNET izni yok; hesap, reklam, analitik yok. Buluta taşımayı Google Drive uygulaması yapar; uygulama dosyalara SAF ile erişir. Ek depolama izni istenmez.
 - Bağımlılık en az. Her yeni kütüphane için tek cümleyle neden söyle ve onay al. Room yok, Apache POI yok, ML Kit yok.
-- Arayüz kiti: `com.github.hesaplarimdijital-coder:desktop-kit` (JitPack; 2.9.0 Release'i beklenirken commit `2a6c41a7e7`). Kiti uygulamada kopyalama ya da yamama: kit deposunda düzelt, sürümü artır, kullanıcıdan GitHub'da Release oluşturmasını iste (oturum etiket gönderemez). Release beklenirken uygulama kitin commit sürümüyle (commit kimliğinin ilk 10 karakteri) derlenir; Release gelince sürüm numarasına geçilir.
+- Arayüz kiti: `com.github.hesaplarimdijital-coder:desktop-kit` (JitPack, şu an 2.9.0). Kiti uygulamada kopyalama ya da yamama: kit deposunda düzelt, sürümü artır, kullanıcıdan GitHub'da Release oluşturmasını iste (oturum etiket gönderemez). Release beklenirken uygulama kitin commit sürümüyle (commit kimliğinin ilk 10 karakteri) derlenir; Release gelince sürüm numarasına geçilir.
 - Sürümler (kit 2.x'in istediği): Kotlin 2.4.20, AGP 9.4.1 (Kotlin'i kendisi derler; modülde Kotlin eklentisi yok), Gradle 9.8.2, JDK 17, minSdk 34 (Android 14), compileSdk 37, targetSdk 36, Compose BOM 2026.09.00, activity-compose 1.13.0, Robolectric 4.17.
 - Excel: `.xlsx` okuyucu ve yazıcı kendi kodumuz (`java.util.zip` + `XmlPullParser`). `.csv` desteklenir (`;` ya da `,`; UTF-8 ya da Windows-1254). `.xls` desteklenmez: ".xlsx olarak kaydedip tekrar deneyin".
 - Asıl kaynak Drive'daki `Babam.xlsx` ve `Benim.xlsx`. Herkes kendi dosyasına yazar, ikisini de okur. Öteki kişinin dosyası için onay sorulur ve yazmadan hemen önce yeniden okunur.

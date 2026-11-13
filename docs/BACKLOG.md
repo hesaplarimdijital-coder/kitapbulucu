@@ -351,7 +351,7 @@ Kaynak: kullanıcının 1.0.0 denemesi.
 - [x] `PhoneFormScrollTest.theBottomNavigationIsNotShownUnderThePhoneForm` düzeltmeden önce CI'da kırıldı (`repro/s-41` dalı), düzeltmeyle geçiyor.
 - [x] Klavye açıkken Vazgeç/Kaydet formun sonunda; Yazar/Yayınevi önerileri yerinde (testler); değişen ekran görüntülerine (telefonda Ekle, Düzenle, birleştirme) bakıldı, DeX görüntüleri aynı.
 - [ ] Telefonda: form kaydırınca yerinde kalıyor, alttaki çubuk görünmüyor, form kapanınca çubuk geri geliyor.
-- [ ] Kullanıcı kit 2.9.0 Release'ini açınca `desktopKit = "2.9.0"`.
+- [x] Kullanıcı kit 2.9.0 Release'ini açtı (13.11.2026, etiket `2a6c41a7e7`; PR #14 ve #16 içinde); `desktopKit = "2.9.0"`.
 
 ### S-42 Telefonda alt çubuğun altından liste görünüyor · 1 · [O] · bitti (telefonda denenecek)
 - [x] Neden: S24 ekran görüntüsünde yalnızca en alt piksel satırı (2339) camsızdı. Kitin camı (Haze) bulanıklığı küçültülmüş kopyada yapıp büyütür; yuvarlama kopyayı pencerenin kenarında 0,52 piksel kısa bıraktı (alt cam 339 px, yoğunluk 3). Uygulamada kabuğu kaydıran ya da dolgulayan bir şey yok.
