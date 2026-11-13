@@ -9,7 +9,6 @@ import android.view.PixelCopy
 import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -72,6 +71,7 @@ class PhoneWindowEdgeTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
 
     private lateinit var view: View
+    private lateinit var navigator: ShellNavigator
 
     /** Two made-up lists long enough to fill the window. */
     private fun store(): LibraryStore {
@@ -96,13 +96,16 @@ class PhoneWindowEdgeTest {
             view = LocalView.current
             val prefs = rememberDeskPreferences(accents = AppPalette.accents, defaultTheme = ThemeMode.Dark)
             val navController = rememberNavController()
-            LaunchedEffect(Unit) { ShellNavigator(navController).navigate(Routes.LIBRARY) }
+            navigator = ShellNavigator(navController)
             CompositionLocalProvider(LocalGlassMode provides GlassMode.Blur) {
                 DesktopKitRoot(prefs, fonts = AppFonts.desk, colors = { AppPalette.warm(it, prefs.accent) }) { widthClass ->
                     AppShell(prefs, widthClass, navController, store, settings, rememberFilePicker(store))
                 }
             }
         }
+        compose.waitForIdle()
+        // the shell's graph is set up inside the root's subcomposition: the library is opened once it is there
+        compose.runOnUiThread { navigator.navigate(Routes.LIBRARY) }
         compose.waitForIdle()
         val insets = WindowInsetsCompat.Builder()
             .setInsets(Type.statusBars(), Insets.of(0, STATUS_PX, 0, 0))
